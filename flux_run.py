@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Copyright (C) 2016  Niklas Rosenstein
 # All rights reserved.
 
