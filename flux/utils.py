@@ -1,0 +1,178 @@
+# Copyright (C) 2016  Niklas Rosenstein
+# All rights reserved.
+
+import io
+import flask
+import functools
+import logging
+import shlex
+import subprocess
+
+
+def get_raise(data, key, expect_type=None):
+  ''' Helper function to retrieve an element from a JSON data structure.
+  The *key* must be a string and may contain periods to indicate nesting.
+  Parts of the key may be a string or integer used for indexing on lists.
+  If *expect_type* is not None and the retrieved value is not of the
+  specified type, TypeError is raised. If the key can not be found,
+  KeyError is raised. '''
+
+  parts = key.split('.')
+  resolved = ''
+  for part in parts:
+    resolved += part
+    try:
+      part = int(part)
+    except ValueError:
+      pass
+
+    if isinstance(part, str):
+      if not isinstance(data, dict):
+        raise TypeError('expected dictionary to access {!r}'.format(resolved))
+      try:
+        data = data[part]
+      except KeyError:
+        raise KeyError(resolved)
+    elif isinstance(part, int):
+      if not isinstance(data, list):
+        raise TypeError('expected list to access {!r}'.format(resolved))
+      try:
+        data = data[part]
+      except IndexError:
+        raise KeyError(resolved)
+    else:
+      assert False, "unreachable"
+
+    resolved += '.'
+
+  if expect_type is not None and not isinstance(data, expect_type):
+    raise TypeError('expected {!r} but got {!r} instead for {!r}'.format(
+      expect_type.__name__, type(data).__name__, key))
+  return data
+
+
+def get(data, key, expect_type=None, default=None):
+  ''' Same as :func:`get_raise`, but returns *default* if the key could
+  not be found or the datatype doesn't match. '''
+
+  try:
+    return get_raise(data, key, expect_type)
+  except (TypeError, ValueError):
+    return default
+
+
+
+def with_io_response(kwarg='stream', stream_type='text', **response_kwargs):
+  ''' Decorator for View functions that create a :class:`io.StringIO` or
+  :class:`io.BytesIO` (based on the *stream_type* parameter) and pass it
+  as *kwarg* to the wrapped function. The contents of the buffer are
+  sent back to the client. '''
+
+  if stream_type == 'text':
+    factory = io.StringIO
+  elif stream_type == 'bytes':
+    factory = io.BytesIO
+  else:
+    raise ValueError('invalid value for stream_type: {!r}'.format(stream_type))
+
+  def decorator(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+      if kwarg in kwargs:
+        raise RuntimeError('keyword argument {!r} already occupied'.format(kwarg))
+      kwargs[kwarg] = stream = factory()
+      status = func(*args, **kwargs)
+      return flask.Response(stream.getvalue(), status=status, **response_kwargs)
+    return wrapper
+
+  return decorator
+
+
+def with_logger(kwarg='logger', stream_dest_kwarg='stream', replace=True):
+  ''' Decorator that creates a new :class:`logging.Logger` object
+  additionally to or in-place for the *stream* parameter passed to
+  the wrapped function. This is usually used in combination with
+  the :func:`with_io_response` decorator.
+
+  Note that exceptions with this decorator will be logged and the
+  returned status code will be 500 Internal Server Error. '''
+
+  def decorator(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+      if replace:
+        stream = kwargs.pop(stream_dest_kwarg)
+      else:
+        stream = kwargs[stream_dest_kwarg]
+      kwargs[kwarg] = logger = create_logger(stream)
+      try:
+        return func(*args, **kwargs)
+      except BaseException as exc:
+        logger.exception(exc)
+        return 500
+    return wrapper
+
+  return decorator
+
+
+def create_logger(stream, name=__name__, fmt=None):
+  ''' Creates a new :class:`logging.Logger` object with the
+  specified *name* and *fmt* (defaults to a standard logging
+  formating including the current time, levelname and message). '''
+
+  fmt = fmt or '[%(asctime)-15s - %(levelname)s]: %(message)s'
+  formatter = logging.Formatter(fmt)
+  handler = logging.StreamHandler(stream)
+  handler.setFormatter(formatter)
+  logger = logging.Logger(name)
+  logger.addHandler(handler)
+  return logger
+
+
+
+def makedirs(path):
+  ''' Shorthand that creates a directory and stays silent when it
+  already exists. '''
+
+  if not os.path.exists(path):
+    os.makedirs(path)
+
+
+def run(command, logger, cwd=None, shell=False):
+  ''' Run a subprocess with the specified *command*. The command
+  and output of the command is logged to *logger*. *command* will
+  automatically be converted to a string or list of command arguments
+  based on the *shell* parameter.
+
+  Returns the exit code of the command. '''
+
+  if shell:
+    if not isinstance(command, str):
+      command = ' '.join(shlex.quote(x) for x in command)
+    logger.info('$ ' + command)
+  else:
+    if isinstance(command, str):
+      command = shlex.split(command)
+    logger.info('$ ' + ' '.join(map(shlex.quote, command)))
+
+  popen = subprocess.Popen(
+    command, cwd=cwd, shell=shell, stdout=subprocess.PIPE,
+    stderr=subprocess.STDOUT, stdin=None)
+  # XXX Can we be sure the output is UTF 8 encoded?
+  stdout = popen.communicate()[0].decode()
+  if popen.returncode != 0:
+    logger.error('\n' + stdout)
+  else:
+    logger.info('\n' + stdout)
+  return popen.returncode
+
+
+def ssh_command(url, test=False, identity_file=None, options=None):
+  ''' Helper function to generate an SSH command. '''
+
+  command = ['ssh', url] + ['-o{}={}'.format(k, v) for (k, v) in options.items()]
+  if test:
+    command += ['-T']
+  if identity_file:
+    command += ['-i', identity_file]
+  return command
