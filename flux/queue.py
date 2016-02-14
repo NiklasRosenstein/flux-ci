@@ -58,6 +58,10 @@ class Builder(object):
     An open file-object to the :attr:`build_log` file.
   '''
 
+  STATUS_QUEUED = 'queued'
+  STATUS_PROCESSING = 'processing'
+  STATUS_FINISHED = 'finished'
+
   def __init__(self, repo, commit_sha, build_dir=None, build_log=None):
     if not build_dir:
       build_dir = repo.get('build_dir', config.build_dir)
@@ -69,6 +73,8 @@ class Builder(object):
     self.build_dir = build_dir
     self.build_log = build_log
     self.created = datetime.datetime.now()
+    self.status = self.STATUS_QUEUED
+    self.exitcode = 0
     self.logfile = None
 
     if os.path.exists(build_dir):
@@ -87,6 +93,8 @@ class Builder(object):
       self.logfile = None
 
   def execute_build(self):
+    self.status = self.STATUS_PROCESSING
+    self.exitcode = 255
     self.logger.info('[Flux]: Starting build on {}'.format(datetime.datetime.now()))
     self.logger.info('[Flux]: Queued since {}'.format(self.created))
 
@@ -98,15 +106,19 @@ class Builder(object):
 
     # Clone the repository.
     clone_cmd = ['git', 'clone', self.repo['clone_url'], self.build_dir, '--recursive']
-    if utils.run(clone_cmd, self.logger, env=env) != 0:
+    res = utils.run(clone_cmd, self.logger, env=env)
+    if res != 0:
       self.logger.info('[Flux]: Could not clone repository.')
-      return False
+      self.exitcode = res
+      return
 
     # Checkout the correct commit.
     checkout_cmd = ['git', 'checkout', self.commit_sha]
-    if utils.run(checkout_cmd, self.logger, cwd=self.build_dir) != 0:
+    res = utils.run(checkout_cmd, self.logger, cwd=self.build_dir)
+    if res != 0:
       self.logger.info('[Flux]: Failed to checkout {!r}'.format(self.commit_sha))
-      return False
+      self.exitcode = res
+      return
 
     # Delete the .git folder to save space. We don't need it anymore.
     shutil.rmtree(os.path.join(self.build_dir, '.git'))
@@ -122,19 +134,27 @@ class Builder(object):
     if not script_fn:
       choices = '{' + ','.join(map(str, config.buildscripts)) + '}'
       self.logger.info('[Flux]: No build script found. Available choices are ' + choices)
-      return False
+      return
 
     # Make sure the build script is executable.
     st = os.stat(script_fn)
     os.chmod(script_fn, st.st_mode | stat.S_IEXEC)
 
     # Execute the script.
-    code = utils.run([script_fn], self.logger, shell=True)
+    self.exitcode = utils.run([script_fn], self.logger, shell=True)
     self.logger.info('[Flux]: Build script returned with exit-code {}'.format(code))
-    return code == 0
+
+  def on_finished(self):
+    self.status = self.STATUS_FINISHED
 
   def on_exception(self, exc):
     self.logger.exception(exc)
+
+  def download_log_url(self):
+    return '#'
+
+  def download_artifacts_url(self):
+    return '#'
 
 
 class BuilderQueue(object):
@@ -145,6 +165,8 @@ class BuilderQueue(object):
 
   def __init__(self):
     self._queue = collections.deque()
+    self._finished = collections.deque()
+    self._processing = collections.deque()
     self._cond = threading.Condition()
     self._running = False
     self._threads = []
@@ -173,6 +195,8 @@ class BuilderQueue(object):
 
     if num_threads is None:
       num_threads = config.parallel_builds
+    if num_threads < 1:
+      raise ValueError('need at least 1 processor thread')
 
     def worker():
       while True:
@@ -182,10 +206,15 @@ class BuilderQueue(object):
           if not self._running:
             break
           builder = self._queue.popleft()
-          try:
-            builder.execute_build()
-          except BaseException as exc:
-            builder.on_exception(exc)
+          self._processing.append(builder)
+        try:
+          builder.execute_build()
+        except BaseException as exc:
+          builder.on_exception(exc)
+        finally:
+          with self._cond:
+            self._processing.remove(builder)
+            self._finished.append(builder)
 
     self._running = True
     self._threads = [threading.Thread(target=worker) for i in range(num_threads)]
@@ -198,17 +227,24 @@ class BuilderQueue(object):
     [t.join() for t in self._threads]
     self._threads = []
 
+  def queue_snapshot(self):
+    with self._cond:
+      return list(self._queue)
 
-queue = BuilderQueue()
+  def finished_snapshot(self):
+    with self._cond:
+      return list(self._finished)
+
+  def processing_snapshot(self):
+    with self._cond:
+      return list(self._processing)
 
 
-def put(*args, **kwargs):
-  return queue.put(*args, **kwargs)
+_queue = BuilderQueue()
 
-
-def start(*args, **kwargs):
-  return queue.start(*args, **kwargs)
-
-
-def stop(*args, **kwargs):
-  return queue.stop(*args, **kwargs)
+put = _queue.put
+start = _queue.start
+stop = _queue.stop
+queue_snapshot = _queue.queue_snapshot
+finished_snapshot = _queue.finished_snapshot
+processing_snapshot = _queue.processing_snapshot

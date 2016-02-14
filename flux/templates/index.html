@@ -1,0 +1,26 @@
+{% from "macros.html" import render_builder_list %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf8">
+    <title>{{ config.app_title + ((" | " + page_title) if page_title else "") }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='flux/flux.css') }}">
+    {% block head %}
+    {% endblock head %}
+  </head>
+  <body>
+    <div class="container header">
+      <span class="title">{{ config.app_title }}</span>
+    </div>
+    <div class="container">
+      <h2>Running Builds ({{ running_builds|length }})</h2>
+      {{ render_builder_list(running_builds, 'No running builds.') }}
+      <h2>Queued Builds ({{ queued_builds|length }})</h2>
+      {{ render_builder_list(queued_builds, 'No queued builds.') }}
+      <h2>Finished Builds ({{ finished_builds|length }})</h2>
+      {{ render_builder_list(finished_builds, 'No finished builds.') }}
+    </div>
+    {% block body %}
+    {% endblock body %}
+  </body>
+</html>

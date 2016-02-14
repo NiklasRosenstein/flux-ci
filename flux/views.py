@@ -95,3 +95,15 @@ def hook_push(logger):
   logger.info('  build log: {!r}'.format(builder.build_log))
   logger.info('  build directory: {!r}'.format(builder.build_dir))
   return 200
+
+
+@app.route('/')
+@utils.requires_auth
+def dashboard():
+  context = {}
+  context['page_title'] = 'Dashboard'
+  context['queued_builds'] = queue.queue_snapshot()
+  context['running_builds'] = queue.processing_snapshot()
+  context['finished_builds'] = queue.finished_snapshot()
+  print(context)
+  return render_template('index.html', **context)
