@@ -16,11 +16,16 @@ management.
 __author__ = 'Niklas Rosenstein <rosensteinniklas@gmail.com>'
 __version__ = '1.0.0-dev'
 
-
+import os, sys
 import flask
 app = flask.Flask(__name__)
+app.template_folder = os.path.join(os.path.dirname(__file__), 'templates')
+app.static_folder = os.path.join(os.path.dirname(__file__), 'static')
 
-import flux_config as config
+from . import config
+app.jinja_env.globals['config'] = config
+app.jinja_env.globals['flux'] = sys.modules[__name__]
+
 from . import views, queue
 
 

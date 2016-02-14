@@ -2,13 +2,13 @@
 # All rights reserved.
 
 import io
-import flask
 import functools
 import logging
 import shlex
 import subprocess
 
 from . import config
+from flask import request, Response
 
 
 def get_raise(data, key, expect_type=None):
@@ -63,6 +63,25 @@ def get(data, key, expect_type=None, default=None):
     return default
 
 
+def basic_auth():
+  ''' Sends a 401 response that enables basic auth. '''
+
+  headers = {'WWW-Authenticate': 'Basic realm="Login required"'}
+  return Response('Please log in.', 401, headers, mimetype='text/plain')
+
+
+def requires_auth(func):
+  ''' Decorator for view functions that require basic authentication. '''
+
+  @functools.wraps(func)
+  def wrapper(*args, **kwargs):
+    if not request.authorization:
+      return basic_auth()
+    return func(*args, **kwargs)
+
+  return wrapper
+
+
 def with_io_response(kwarg='stream', stream_type='text', **response_kwargs):
   ''' Decorator for View functions that create a :class:`io.StringIO` or
   :class:`io.BytesIO` (based on the *stream_type* parameter) and pass it
@@ -83,7 +102,7 @@ def with_io_response(kwarg='stream', stream_type='text', **response_kwargs):
         raise RuntimeError('keyword argument {!r} already occupied'.format(kwarg))
       kwargs[kwarg] = stream = factory()
       status = func(*args, **kwargs)
-      return flask.Response(stream.getvalue(), status=status, **response_kwargs)
+      return Response(stream.getvalue(), status=status, **response_kwargs)
     return wrapper
 
   return decorator

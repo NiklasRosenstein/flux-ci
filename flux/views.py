@@ -5,7 +5,7 @@ import json
 import uuid
 
 from . import app, config, utils, queue
-from flask import request
+from flask import request, render_template
 
 API_GOGS = 'gogs'
 API_GITHUB = 'github'

@@ -8,6 +8,8 @@ host = ''
 port = 4042
 debug = True
 
+app_title = 'Flux Build Server'
+
 # Available choices of build scripts. The first matching option
 # will be executed by Flux.
 if os.name == 'nt':
