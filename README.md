@@ -41,5 +41,9 @@ Next, add the following webhook to your repository:
 
 And start Flux with `./flux_run.py`.
 
+> Note: For deployment on a production server, you should make use of
+> NGinx or Apache with an SSL certificate and then do a proxy pass to
+> the local Flux server for secure exchange of the repository secret.
+
   [Flask]: http://flask.pocoo.org/
   [Gogs]: https://gogs.io/
