@@ -3,6 +3,7 @@
 
 import io
 import functools
+import hashlib
 import logging
 import shlex
 import subprocess
@@ -151,6 +152,10 @@ def create_logger(stream, name=__name__, fmt=None):
   logger.addHandler(handler)
 
   return logger
+
+
+def hash_pw(pw):
+  return hashlib.md5(pw.encode('utf8')).hexdigest()
 
 
 def makedirs(path):

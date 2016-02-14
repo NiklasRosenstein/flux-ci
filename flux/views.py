@@ -5,6 +5,7 @@ import json
 import uuid
 
 from . import app, config, utils, queue
+from .models import Session, User, Repository, Build
 from flask import request, render_template
 
 API_GOGS = 'gogs'
