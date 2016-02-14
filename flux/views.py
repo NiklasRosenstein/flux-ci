@@ -103,10 +103,9 @@ def hook_push(logger):
 def dashboard():
   session = Session()
   context = {}
-  context['page_title'] = 'Dashboard'
   context['repositories'] = session.query(Repository).all()
   context['user'] = request.user
-  return render_template('index.html', **context)
+  return render_template('dashboard.html', **context)
 
 
 @app.route('/new/repo')

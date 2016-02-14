@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% set page_title = "Dashboard" %}
+{% block body %}
+    <div class="container">
+      <h2>Repositories ({{ repositories|length }})
+        <a href="{{ url_for('new_repo') }}">+</a>
+      </h2>
+      <ul class="droplist">
+      {% for repo in repositories %}
+        <li><a href='#'>{{ repo.name }} ({{ repo.builds|length }})</a></li>
+      {% endfor %}
+      </ul>
+    </div>
+{% endblock body %}
