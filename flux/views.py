@@ -101,9 +101,15 @@ def hook_push(logger):
 @app.route('/')
 @utils.requires_auth
 def dashboard():
+  session = Session()
   context = {}
   context['page_title'] = 'Dashboard'
-  context['queued_builds'] = queue.queue_snapshot()
-  context['running_builds'] = queue.processing_snapshot()
-  context['finished_builds'] = queue.finished_snapshot()
+  context['repositories'] = session.query(Repository).all()
+  context['user'] = request.user
   return render_template('index.html', **context)
+
+
+@app.route('/new/repo')
+@utils.requires_auth
+def new_repo():
+  pass
