@@ -8,6 +8,8 @@ encrypted proxy pass server (eg. via NGinx) and only for
 internal purpose since it does not provide any mechanism
 to prevent bad code from being executed.
 
+![screenshot](http://i.imgur.com/91p3ZNX.png)
+
 __Features__
 
 * [x] Lightweight and easy to deploy
