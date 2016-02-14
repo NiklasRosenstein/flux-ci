@@ -106,5 +106,4 @@ def dashboard():
   context['queued_builds'] = queue.queue_snapshot()
   context['running_builds'] = queue.processing_snapshot()
   context['finished_builds'] = queue.finished_snapshot()
-  print(context)
   return render_template('index.html', **context)

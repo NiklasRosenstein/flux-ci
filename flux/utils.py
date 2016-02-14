@@ -9,6 +9,7 @@ import shlex
 import subprocess
 
 from . import config
+from .models import Session, User
 from flask import request, Response
 
 
@@ -64,10 +65,10 @@ def get(data, key, expect_type=None, default=None):
     return default
 
 
-def basic_auth():
+def basic_auth(message='Login required'):
   ''' Sends a 401 response that enables basic auth. '''
 
-  headers = {'WWW-Authenticate': 'Basic realm="Login required"'}
+  headers = {'WWW-Authenticate': 'Basic realm="{}"'.format(message)}
   return Response('Please log in.', 401, headers, mimetype='text/plain')
 
 
@@ -76,8 +77,16 @@ def requires_auth(func):
 
   @functools.wraps(func)
   def wrapper(*args, **kwargs):
-    if not request.authorization:
+    auth = request.authorization
+    if not auth:
       return basic_auth()
+
+    session = Session()
+    user = session.query(User).filter(User.name == auth.username).one_or_none()
+    if not user or hash_pw(auth.password) != user.passhash:
+      return basic_auth('invalid username or password')
+
+    request.user = user
     return func(*args, **kwargs)
 
   return wrapper
