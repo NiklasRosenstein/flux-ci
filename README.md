@@ -18,5 +18,28 @@ __Flux is__
 __Todo__
 
 * [ ] Support for GitLab and BitBucket
+* [ ] Support for generating build artifacts
+
+### Setup
+
+Say you have an instance of [Gogs][] running on your local machine.
+Install Flux into a virtual environment and update the `flux_config.py`
+
+```python
+ssh_identity_file = os.path.expanduser('~/.ssh/id_rsa_nopw')
+repos = {
+  'owner/repository': {
+    'secret': 'mysecretkey',
+    'clone_url': 'localhost:owner/repository.git',
+  },
+}
+```
+
+Next, add the following webhook to your repository:
+
+    http://localhost:4042/hook/push?api=gogs
+
+And start Flux with `./flux_run.py`.
 
   [Flask]: http://flask.pocoo.org/
+  [Gogs]: https://gogs.io/
