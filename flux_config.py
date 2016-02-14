@@ -42,9 +42,15 @@ ssh_verbose = True
 #   'gildarts/awesome-app': {
 #     'secret': 'your-secret-key',
 #     'clone_url': 'git@gildarts-web.com:gildarts/awesome-app.git',
-#     'ssh_identity_file': '/home/buildserver/.ssh/id_rsa',  # optional
-#     'build_dir': '/home/buildserver/builds',  # optional
 #   }
+#
+# * secret: The secret that is sent by the Git server to authenticate.
+# * clone_url: The URL from which Flux will clone the repository.
+# * ssh_identity_file: Override for the global ssh_identity_file
+#   configuration value.
+# * build_dir: Override for the global build_dir configuration value.
+# * refs: A list of Git refs on which a build is triggered. Pushes
+#   to other refs will be ignored.
 #
 repos = {
 }

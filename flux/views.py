@@ -41,14 +41,30 @@ def hook_push(logger):
   if api == API_GOGS:
     owner = utils.get(data, 'repository.owner.username', str)
     name = utils.get(data, 'repository.name', str)
+    ref = utils.get(data, 'ref', str)
+    commit = utils.get(data, 'after', str)
   elif api == API_GITHUB:
     owner = utils.get(data, 'repository.owner.name', str)
     name = utils.get(data, 'repository.name', str)
+    ref = utils.get(data, 'ref', str)
+    commit = utils.get(data, 'after', str)
   else:
     assert False, "unreachable"
 
-  if not name or not owner:
-    logger.error('"repository.name" or "repository.owner.username" not received or invalid.')
+  if not name:
+    logger.error('invalid JSON: no repository name received')
+    return 400
+  if not owner:
+    logger.error('invalid JSON: no repository owner received')
+    return 400
+  if not ref:
+    logger.error('invalid JSON: no Git ref received')
+    return 400
+  if not commit:
+    logger.error('invalid JSON: no commit SHA received')
+    return 400
+  if len(commit) != 40:
+    logger.error('invalid JSON: commit SHA has invalid length')
     return 400
 
   name = owner + '/' + name
@@ -61,10 +77,12 @@ def hook_push(logger):
     logger.error('PUSH event rejected (invalid secret)')
     return 400
 
-  commit = utils.get(data, 'after', str)
-  if not commit or len(commit) != 40:
-    logger.error('Invalid commit SHA received: {!r}'.format(commit))
-    return 400
+  if 'refs' in repo:
+    if ref not in repo['refs']:
+      logger.info('Git ref {!r} not whitelisted. No build dispatched'.format(ref))
+      return 200
+    else:
+      logger.info('Git ref {!r} whitelisted. Continue build dispatch'.format(ref))
 
   try:
     builder = queue.Builder(repo, commit)
@@ -74,6 +92,6 @@ def hook_push(logger):
 
   queue.put(builder)
   logger.info('Dispatched to build queue.')
-  logger.info('Build directory is {!r}'.format(builder.build_dir))
-  logger.info('Build log is {!r}'.format(builder.build_dir))
+  logger.info('  build log: {!r}'.format(builder.build_log))
+  logger.info('  build directory: {!r}'.format(builder.build_dir))
   return 200
