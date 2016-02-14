@@ -53,15 +53,11 @@ def hook_push(logger):
 
   name = owner + '/' + name
   if name not in config.repos:
-    print(name)
     logger.error('PUSH event rejected (unknown repository)')
     return
 
   repo = config.repos[name]
   if repo['secret'] != utils.get(data, 'secret'):
-    print(repo['secret'], utils.get(data, 'secret'))
-    print(repr(repo['secret']))
-    print(repr(data['secret']))
     logger.error('PUSH event rejected (invalid secret)')
     return
 
@@ -69,7 +65,7 @@ def hook_push(logger):
   ssh_url = repo['clone_url'].rpartition(':')[0]
   ssh_identity_file = repo.get('ssh_identity_file', config.ssh_identity_file)
   ssh_command = utils.ssh_command(
-    ssh_url, test=True, identity_file=ssh_identity_file,
+    ssh_url, 'exit', test=True, identity_file=ssh_identity_file,
     options={'BatchMode': 'yes'})
 
   # Check if we have access to the Git server. Note that cloning

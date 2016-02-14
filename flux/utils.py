@@ -61,7 +61,6 @@ def get(data, key, expect_type=None, default=None):
     return default
 
 
-
 def with_io_response(kwarg='stream', stream_type='text', **response_kwargs):
   ''' Decorator for View functions that create a :class:`io.StringIO` or
   :class:`io.BytesIO` (based on the *stream_type* parameter) and pass it
@@ -118,16 +117,23 @@ def with_logger(kwarg='logger', stream_dest_kwarg='stream', replace=True):
 def create_logger(stream, name=__name__, fmt=None):
   ''' Creates a new :class:`logging.Logger` object with the
   specified *name* and *fmt* (defaults to a standard logging
-  formating including the current time, levelname and message). '''
+  formating including the current time, levelname and message).
+
+  The logger will also output to stderr. '''
 
   fmt = fmt or '[%(asctime)-15s - %(levelname)s]: %(message)s'
   formatter = logging.Formatter(fmt)
+
+  logger = logging.Logger(name)
   handler = logging.StreamHandler(stream)
   handler.setFormatter(formatter)
-  logger = logging.Logger(name)
   logger.addHandler(handler)
-  return logger
 
+  handler = logging.StreamHandler()
+  handler.setFormatter(formatter)
+  logger.addHandler(handler)
+
+  return logger
 
 
 def makedirs(path):
@@ -158,16 +164,16 @@ def run(command, logger, cwd=None, shell=False):
   popen = subprocess.Popen(
     command, cwd=cwd, shell=shell, stdout=subprocess.PIPE,
     stderr=subprocess.STDOUT, stdin=None)
-  # XXX Can we be sure the output is UTF 8 encoded?
   stdout = popen.communicate()[0].decode()
-  if popen.returncode != 0:
-    logger.error('\n' + stdout)
-  else:
-    logger.info('\n' + stdout)
+  if stdout:
+    if popen.returncode != 0:
+      logger.error('\n' + stdout)
+    else:
+      logger.info('\n' + stdout)
   return popen.returncode
 
 
-def ssh_command(url, test=False, identity_file=None, options=None):
+def ssh_command(url, *args, test=False, identity_file=None, options=None):
   ''' Helper function to generate an SSH command. '''
 
   command = ['ssh', url] + ['-o{}={}'.format(k, v) for (k, v) in options.items()]
@@ -175,4 +181,6 @@ def ssh_command(url, test=False, identity_file=None, options=None):
     command += ['-T']
   if identity_file:
     command += ['-i', identity_file]
+  command.append('--')
+  command += args
   return command
