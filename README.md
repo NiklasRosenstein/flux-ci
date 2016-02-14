@@ -1,49 +1,46 @@
 # Flux &ndash; Lightweight private build server
 
-Flux is a simple, [Flask] based build server that responds to Git
-push events as triggered by GitHub, GitLab, BitBucket or Gogs.
-While it is cross-platform and can on Windows, Linux and Mac OS,
-it does not provide any kind of virtualization or container
-management. Thus, flux is not secure to be deployed as a public
-service!
+Flux is a simple, [Flask][] based build server that responds to
+push events triggered by [Gogs][] and GitHub.
 
-__Flux is__
+For security reasons, Flux should be deployed over an SSL
+encrypted proxy pass server (eg. via NGinx) and only for
+internal purpose since it does not provide any mechanism
+to prevent bad code from being executed.
+
+__Features__
 
 * [x] Lightweight and easy to deploy
 * [x] Operational on Windows, Linux and Mac OS
-* [x] Tested for the GitHub and Gogs PUSH webhook
-* [ ] A simple web interface to view build logs and download
-      build artifacts with user access control
+* [x] Supports [Gogs][] & GitHub
+* [ ] Web interface to view realtime build queue, build logs
+      and download artifacts with user access control
 
 __Todo__
 
 * [ ] Support for GitLab and BitBucket
 * [ ] Support for generating build artifacts
 
-### Setup
+__Requirements__
 
-Say you have an instance of [Gogs][] running on your local machine.
-Install Flux into a virtual environment and update the `flux_config.py`
+* Git 2.3 (for `GIT_SSH_COMMAND`)
+* [Flask][]
 
-```python
-ssh_identity_file = os.path.expanduser('~/.ssh/id_rsa_nopw')
-repos = {
-  'owner/repository': {
-    'secret': 'mysecretkey',
-    'clone_url': 'localhost:owner/repository.git',
-  },
-}
-```
+__Configuration__
 
-Next, add the following webhook to your repository:
+Check out [`flux_config.py`](flux_config.py) for the configuration
+template and the parameter documentation.
 
-    http://localhost:4042/hook/push?api=gogs
+__Callbacks__
 
-And start Flux with `./flux_run.py`.
+* `/hook/push?api=(gogs|github)` &ndash; the push event callback
 
-> Note: For deployment on a production server, you should make use of
-> NGinx or Apache with an SSL certificate and then do a proxy pass to
-> the local Flux server for secure exchange of the repository secret.
+__Additional Links__
+
+* [Gogs Webhook](https://gogs.io/docs/features/webhook)
+* [GitHub Push](https://developer.github.com/v3/activity/events/types/#pushevent)
+* [GitLab Push](https://gitlab.com/gitlab-org/gitlab-ce/blob/master/doc/web_hooks/web_hooks.md#push-events)
+* [BitBucket Push](https://confluence.atlassian.com/bitbucket/event-payloads-740262817.html#EventPayloads-Push)
 
   [Flask]: http://flask.pocoo.org/
   [Gogs]: https://gogs.io/
