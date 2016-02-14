@@ -8,6 +8,8 @@ import logging
 import shlex
 import subprocess
 
+from . import config
+
 
 def get_raise(data, key, expect_type=None):
   ''' Helper function to retrieve an element from a JSON data structure.
@@ -129,10 +131,6 @@ def create_logger(stream, name=__name__, fmt=None):
   handler.setFormatter(formatter)
   logger.addHandler(handler)
 
-  handler = logging.StreamHandler()
-  handler.setFormatter(formatter)
-  logger.addHandler(handler)
-
   return logger
 
 
@@ -144,7 +142,7 @@ def makedirs(path):
     os.makedirs(path)
 
 
-def run(command, logger, cwd=None, shell=False):
+def run(command, logger, cwd=None, env=None, shell=False):
   ''' Run a subprocess with the specified *command*. The command
   and output of the command is logged to *logger*. *command* will
   automatically be converted to a string or list of command arguments
@@ -162,7 +160,7 @@ def run(command, logger, cwd=None, shell=False):
     logger.info('$ ' + ' '.join(map(shlex.quote, command)))
 
   popen = subprocess.Popen(
-    command, cwd=cwd, shell=shell, stdout=subprocess.PIPE,
+    command, cwd=cwd, env=env, shell=shell, stdout=subprocess.PIPE,
     stderr=subprocess.STDOUT, stdin=None)
   stdout = popen.communicate()[0].decode()
   if stdout:
@@ -173,14 +171,27 @@ def run(command, logger, cwd=None, shell=False):
   return popen.returncode
 
 
-def ssh_command(url, *args, test=False, identity_file=None, options=None):
-  ''' Helper function to generate an SSH command. '''
+def ssh_command(url, *args, no_ptty=False, identity_file=None,
+    verbose=None, options=None):
+  ''' Helper function to generate an SSH command. If not options are
+  specified, the default option ``BatchMode=yes`` will be set. '''
 
-  command = ['ssh', url] + ['-o{}={}'.format(k, v) for (k, v) in options.items()]
-  if test:
-    command += ['-T']
+  if options is None:
+    options = {'BatchMode': 'yes'}
+  if verbose is None:
+    verbose = config.ssh_verbose
+
+  command = ['ssh']
+  if url is not None:
+    command.append(url)
+  command += ['-o{}={}'.format(k, v) for (k, v) in options.items()]
+  if no_ptty:
+    command.append('-T')
   if identity_file:
     command += ['-i', identity_file]
-  command.append('--')
-  command += args
+  if verbose:
+    command.append('-v')
+  if args:
+    command.append('--')
+    command += args
   return command

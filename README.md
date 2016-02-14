@@ -4,21 +4,19 @@ Flux is a simple, [Flask] based build server that responds to Git
 push events as triggered by GitHub, GitLab, BitBucket or Gogs.
 While it is cross-platform and can on Windows, Linux and Mac OS,
 it does not provide any kind of virtualization or container
-management.
+management. Thus, flux is not secure to be deployed as a public
+service!
 
 __Flux is__
 
 * [x] Lightweight and easy to deploy
 * [x] Operational on Windows, Linux and Mac OS
-* [x] Supporting Gogs, GitHub, GitLab and BitBucket
-
-__Flux is not__
-
-* [ ] Secure as in "deployable for the public"!
+* [x] Tested for the GitHub and Gogs PUSH webhook
+* [ ] A simple web interface to view build logs and download
+      build artifacts with user access control
 
 __Todo__
 
 * [ ] Support for GitLab and BitBucket
-* [ ] Actually run builds
 
   [Flask]: http://flask.pocoo.org/

@@ -4,7 +4,7 @@
 import json
 import uuid
 
-from . import app, config, utils
+from . import app, config, utils, queue
 from flask import request
 
 API_GOGS = 'gogs'
@@ -36,7 +36,7 @@ def hook_push(logger):
     data = json.loads(request.data.decode('utf8'))
   except (UnicodeDecodeError, ValueError) as exc:
     logger.error('Invalid JSON data received: {}'.format(exc))
-    return
+    return 400
 
   if api == API_GOGS:
     owner = utils.get(data, 'repository.owner.username', str)
@@ -49,33 +49,31 @@ def hook_push(logger):
 
   if not name or not owner:
     logger.error('"repository.name" or "repository.owner.username" not received or invalid.')
-    return
+    return 400
 
   name = owner + '/' + name
   if name not in config.repos:
     logger.error('PUSH event rejected (unknown repository)')
-    return
+    return 400
 
   repo = config.repos[name]
   if repo['secret'] != utils.get(data, 'secret'):
     logger.error('PUSH event rejected (invalid secret)')
-    return
+    return 400
 
+  commit = utils.get(data, 'after', str)
+  if not commit or len(commit) != 40:
+    logger.error('Invalid commit SHA received: {!r}'.format(commit))
+    return 400
 
-  ssh_url = repo['clone_url'].rpartition(':')[0]
-  ssh_identity_file = repo.get('ssh_identity_file', config.ssh_identity_file)
-  ssh_command = utils.ssh_command(
-    ssh_url, 'exit', test=True, identity_file=ssh_identity_file,
-    options={'BatchMode': 'yes'})
+  try:
+    builder = queue.Builder(repo, commit)
+  except ValueError as exc:
+    logger.error(str(exc))
+    return 500
 
-  # Check if we have access to the Git server. Note that cloning
-  # could still fail if the Git server denies the access, but we
-  # can't test it here.
-  access = utils.run(ssh_command, logger)
-  if access != 0:
-    logger.error('Flux can not access this Git server')
-    return
-
-  worker_id = uuid.uuid4()
-  logger.info('Dispatching worker into build queue. ID: {}'.format(worker_id))
-  logger.warning('NOTE: The above notice is a scam. I actually didn\'t dispatch a worker. Haha. Funny')
+  queue.put(builder)
+  logger.info('Dispatched to build queue.')
+  logger.info('Build directory is {!r}'.format(builder.build_dir))
+  logger.info('Build log is {!r}'.format(builder.build_dir))
+  return 200
