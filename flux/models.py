@@ -7,18 +7,19 @@ from sqlalchemy import create_engine
 from sqlalchemy import Column, Boolean, Integer, Enum, String, ForeignKey
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.ext.declarative import declarative_base
-from . import config
+from . import config, utils
 
 engine = create_engine(config.db_url, encoding=config.db_encoding)
-Base = declarative_base()
 Session = sessionmaker(bind=engine)
+
+Base = declarative_base()
 
 
 class User(Base):
   __tablename__ = 'users'
 
   id = Column(Integer, primary_key=True)
-  name = Column(String)
+  name = Column(String, unique=True)
   passhash = Column(String)
   can_manage = Column(Boolean)
   can_download_artifacts = Column(Boolean)
@@ -26,6 +27,32 @@ class User(Base):
 
   def __repr__(self):
     return '<User(id={!r}, name={!r})>'.format(self.id, self.name)
+
+  @classmethod
+  def root_user(cls, session):
+    return session.query(cls).filter(cls.name == config.root_user).one_or_none()
+
+  @classmethod
+  def create_root_if_not_exists(cls, session=None):
+    autocommit = False
+    if session is None:
+      autocommit = True
+      session = Session()
+    root = cls.root_user(session)
+    if root:
+      # Make sure the root has all privileges.
+      root.can_manage = True
+      root.can_download_artifacts = True
+      root.can_view_buildlogs = True
+    else:
+      # Create a new root user.
+      print(' * [flux] creating new root user: {!r}'.format(config.root_user))
+      root = cls(name=config.root_user, passhash=utils.hash_pw(config.root_password),
+        can_manage=True, can_download_artifacts=True, can_view_buildlogs=True)
+    session.add(root)
+    if autocommit:
+      session.commit()
+    return root
 
 
 class Repository(Base):

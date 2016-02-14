@@ -28,27 +28,21 @@ app.jinja_env.globals['flux'] = sys.modules[__name__]
 
 from . import views, queue, models
 
+import subprocess
+
 
 def main():
   ''' Runs the Flux Flask application and all required components. '''
 
-  # Make sure the root user exists and has all privileges.
-  session = models.Session()
-  root = session.query(models.User).filter(
-    models.User.name == config.root_user).one_or_none()
-  if not root:
-    root = models.User(
-      name=config.root_user, passhash=utils.hash_pw(config.root_password),
-      can_manage=True, can_download_artifacts=True, can_view_buildlogs=True)
-    session.add(root)
-  else:
-    root.can_manage = True
-    root.can_download_artifacts = True
-    root.can_view_buildlogs = True
-    session.add(root)
-  session.commit()
+  # Test if Git version is at least 2.3 (for GIT_SSH_COMMAND)
+  git_version = subprocess.check_output(['git', '--version']).decode().strip()
+  if git_version < 'git version 2.3':
+    print('Error: {!r} installed but need at least 2.3'.format(git_version))
+    sys.exit(1)
 
-  # XXX Test if Git version is at least 2.3 (for GIT_SSH_COMMAND)
+  # Make sure the root user exists and has all privileges.
+  models.User.create_root_if_not_exists()
+
   queue.start()
   try:
     app.run(host=config.host, port=config.port, debug=config.debug)
