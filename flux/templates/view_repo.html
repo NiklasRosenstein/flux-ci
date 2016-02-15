@@ -4,6 +4,12 @@
 {% block body %}
   <div class="subheader">
     <a href="{{ url_for('dashboard') }}"><i class="fa fa-arrow-left"></i> Dashboard</a>
+  {% if user.can_manage %}
+    <a href="{{ url_for('delete', repo=repo.name) }}" class="fr redt"
+      onclick="return confirm('Are you sure you want to delete this repository? This operation can not be undone.')">
+      <i class="fa fa-trash"></i> Delete Repository
+    </a>
+  {% endif %}
   </div>
   <h2>{{ repo.name }} ({{ repo.builds|length }})</h2>
   <p>This is an overview of all builds for this repository.</p>

@@ -13,6 +13,12 @@
       <a class="title" href="{{ url_for('dashboard') }}">{{ config.app_title }}</a>
       <span class="user"><i class="fa fa-user"></i> {{ user.name }}</span>
     </div></div>
+    {% set flash = flux.utils.flash() %}
+    {% if flash %}
+      <div class="header flash"><div class="container">
+        <span><b>Notice:</b> {{ flash }}</span>
+      </div></div>
+    {% endif %}
     <div class="container">
       {% block body %}
       {% endblock body %}

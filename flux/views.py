@@ -88,9 +88,11 @@ def hook_push(logger):
   #  else:
   #    logger.info('Git ref {!r} whitelisted. Continue build dispatch'.format(ref))
 
-  build = Build(repo=repo, commit_sha=commit, num=len(repo.builds), ref=ref,
+  build = Build(repo=repo, commit_sha=commit, num=repo.build_count, ref=ref,
     status=Build.Status_Queued, date_queued=datetime.now(), date_started=None,
     date_finished=None)
+  repo.build_count += 1
+  session.add(repo)
   session.add(build)
   session.commit()
 
@@ -150,7 +152,7 @@ def new_repo():
       if repo:
         errors.append('Repository {!r} already exists'.format(repo_name))
       else:
-        repo = Repository(name=repo_name, clone_url=clone_url, secret=secret)
+        repo = Repository(name=repo_name, clone_url=clone_url, secret=secret, build_count=0)
         session.add(repo)
         session.commit()
         return redirect(url_for('dashboard'))
@@ -175,3 +177,28 @@ def download():
 
   mime = 'application/zip' if mode == Build.Data_Artifact else 'text/plain'
   return utils.stream_file(build.path(mode), mime=mime)
+
+
+
+@app.route('/delete')
+@utils.requires_auth
+def delete():
+  if not request.user.can_manage:
+    return abort(403)
+  path = request.args.get('repo', '')
+  build = request.args.get('build', '')
+  if build:
+    path += '/' + build
+  session = Session()
+  obj = get_target_for(session, path)
+  if not obj:
+    return abort(404)
+  try:
+    obj.on_delete()
+  except RuntimeError as exc:
+    utils.flash(str(exc))
+    referer = request.headers.get('Referer', url_for('dashboard'))
+    return redirect(referer)
+  session.delete(obj)
+  session.commit()
+  return redirect(url_for('dashboard'))

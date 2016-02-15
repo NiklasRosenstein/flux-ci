@@ -2,7 +2,7 @@
 # All rights reserved.
 
 import enum
-import os
+import os, shutil
 
 from sqlalchemy import create_engine
 from sqlalchemy import Column, Boolean, Integer, Enum, String, DateTime, ForeignKey
@@ -68,10 +68,14 @@ class Repository(Base):
   name = Column(String)
   secret = Column(String)
   clone_url = Column(String)
+  build_count = Column(Integer)
   builds = relationship("Build", back_populates="repo", order_by=lambda: Build.date_queued)
 
   def url(self):
     return url_for('view_repo', path=self.name)
+
+  def on_delete(self):
+    pass
 
 
 class Build(Base):
@@ -136,6 +140,12 @@ class Build(Base):
       with open(path, 'r') as fp:
         return fp.read()
     return None
+
+  def on_delete(self):
+    if self.status == self.Status_Building:
+      raise RuntimeError('can not delete build in progress')
+    shutil.rmtree(self.path(self.Data_Artifact), ignore_errors=True)
+    shutil.rmtree(self.path(self.Data_Log), ignore_errors=True)
 
 
 Base.metadata.create_all(engine)

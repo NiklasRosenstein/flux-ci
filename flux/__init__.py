@@ -25,6 +25,7 @@ app.static_folder = os.path.join(os.path.dirname(__file__), 'static')
 from . import config
 app.jinja_env.globals['config'] = config
 app.jinja_env.globals['flux'] = sys.modules[__name__]
+app.secret_key = config.secret_key
 
 from . import views, build, models
 

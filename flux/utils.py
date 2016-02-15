@@ -12,7 +12,7 @@ import zipfile
 
 from . import config
 from .models import Session, User
-from flask import request, Response
+from flask import request, session, Response
 
 
 def get_raise(data, key, expect_type=None):
@@ -173,6 +173,13 @@ def stream_file(filename, mime=None):
   headers['Content-Type'] = mime or 'application/x-octet-stream'
   headers['Content-Length'] = os.stat(filename).st_size
   return Response(generate(), 200, headers)
+
+
+def flash(message=None):
+  if message is None:
+    return session.pop('flux_flash', None)
+  else:
+    session['flux_flash'] = message
 
 
 def hash_pw(pw):

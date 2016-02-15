@@ -15,6 +15,8 @@ pre {
 .header { background-color: #045CD7; color: white; }
 .header .title { font-weight: bold; color: white; }
 .header .user { float: right; }
+.header.flash { color: black; background-color: #fff6b5; font-size: 90%; }
+.header.flash .container { padding: 0.5em 1em; }
 .header a, .header span,
 .subheader a, .subheader span {
   margin: 0 0.5em;
@@ -26,10 +28,14 @@ pre {
 
 .notice { padding: 1em; border: 1px solid #CCCCCC; border-radius: 0.3em; }
 .warn { background-color: #FDB4B4; border-color: #FB6A6C; }
+
 .red { background-color: #FA2419; }
 .blue { background-color: #045CD7; }
+.redt { color: #FA2419; }
+.bluet { color: #045CD7; }
 
 .button {
+  font-size: 11px;
   margin: 1em 0;
   padding: 1em;
   border: 0px;

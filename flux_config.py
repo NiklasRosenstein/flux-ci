@@ -11,6 +11,9 @@ debug = True
 app_title = 'Flux CI'
 app_url = 'http://localhost:4042'
 
+# Secret key required for HTTP session. Generate your for deployment!
+secret_key = 'ThAHy8oxRiNIQDBnVlNjEVY78fXdWHdi'
+
 # A valid SQLAlchemy database URL. Follow this link for more information:
 # http://docs.sqlalchemy.org/en/rel_1_0/core/engines.html#database-urls
 db_url = 'sqlite:///' + os.path.expanduser('~/flux/data.db')
