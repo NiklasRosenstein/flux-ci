@@ -220,20 +220,26 @@ def download(build_id, data):
 def delete():
   if not request.user.can_manage:
     return abort(403)
-  path = request.args.get('repo', '')
-  build = request.args.get('build', '')
-  if build:
-    path += '/' + build
+  repo_id = request.args.get('repo_id', '')
+  build_id = request.args.get('build_id', '')
+
   session = request.db_session
-  obj = get_target_for(session, path)
-  if not obj:
+  delete_target = None
+  if build_id:
+    delete_target = session.query(Build).get(build_id)
+  elif repo_id:
+    delete_target = session.query(Repository).get(repo_id)
+
+  if not delete_target:
     return abort(404)
+
   try:
-    session.delete(obj)
+    session.delete(delete_target)
     session.commit()
   except Build.CanNotDelete as exc:
     session.rollback()
     utils.flash(str(exc))
     referer = request.headers.get('Referer', url_for('dashboard'))
     return redirect(referer)
+
   return redirect(url_for('dashboard'))
