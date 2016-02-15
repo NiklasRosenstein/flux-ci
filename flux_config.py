@@ -4,11 +4,12 @@ This is the Flux configuration file.
 
 import os
 
-host = ''
+host = 'localhost'
 port = 4042
 debug = True
 
 app_title = 'Flux CI'
+app_url = 'http://localhost:4042'
 
 # Database URL. Must be in the format engine://user:pw@hostname/dbname .
 db_url = 'sqlite:///' + os.path.expanduser('~/flux/data.db')

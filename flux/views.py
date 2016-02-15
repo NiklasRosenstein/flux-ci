@@ -95,7 +95,7 @@ def hook_push(logger):
   session.commit()
 
   logger.info('Build #{} for repository {} queued'.format(build.num, repo.name))
-  logger.info(build.url())
+  logger.info(config.app_url + build.url())
   return 200
 
 
@@ -110,18 +110,24 @@ def dashboard():
   return render_template('dashboard.html', **context)
 
 
-@app.route('/view/<path:path>')
+@app.route('/repo/<path:path>')
 @utils.requires_auth
 def view_repo(path):
   session = Session()
   obj = get_target_for(session, path)
-  if not obj:
+  if not isinstance(obj, Repository):
     return abort(404)
-  if isinstance(obj, Repository):
-    return render_template('view_repo.html', user=request.user, repo=obj)
-  if isinstance(obj, Build):
-    return render_template('view_build.html', user=request.user, build=obj)
-  raise TypeError('expected Repository or Build returned from get_target_for()')
+  return render_template('view_repo.html', user=request.user, repo=obj)
+
+
+@app.route('/build/<path:path>')
+@utils.requires_auth
+def view_build(path):
+  session = Session()
+  obj = get_target_for(session, path)
+  if not isinstance(obj, Build):
+    return abort(404)
+  return render_template('view_build.html', user=request.user, build=obj)
 
 
 @app.route('/new/repo', methods=['GET', 'POST'])

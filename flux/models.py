@@ -106,7 +106,7 @@ class Build(Base):
   def url(self, mode='view'):
     path = self.repo.name + '/' + str(self.num)
     if mode == 'view':
-      return url_for('view_repo', path=path)
+      return url_for('view_build', path=path)
     elif mode == 'artifact':
       return url_for('download_artifact', path=path)
     elif mode == 'log':

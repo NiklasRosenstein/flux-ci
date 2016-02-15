@@ -3,10 +3,18 @@
 {% set page_title = repo.name %}
 {% block body %}
   <h2>{{ repo.name }} ({{ repo.builds|length }})</h2>
+  <p>This is an overview of all builds for this repository.</p>
   {% if repo.builds %}
     <table>
+      <thead><tr>
+        <th>#</th>
+        <th>Queued</th>
+        <th>Finished</th>
+      </tr></thead>
       {% for build in repo.builds %}
-        <tr><td>{{ build_link(build) }}</td></tr>
+        <tr><td>{{ build_link(build) }}</td>
+          <td>{{ fmtdate(build.date_queued) }}</td>
+          <td>{{ fmtdate(build.date_finished) }}</td></tr>
       {% endfor %}
     </table>
   {% else %}
