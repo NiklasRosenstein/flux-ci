@@ -185,12 +185,14 @@ def download(build_id, data):
   build = request.db_session.query(Build).get(build_id)
   if not build or not build.exists(data):
     return abort(404)
-  if not request.user.can_download_artifacts:
+
+  if data == Build.Data_Artifact and not request.user.can_download_artifacts:
+    return abort(403)
+  if data == Build.Data_Log and not request.user.can_view_buildlogs:
     return abort(403)
 
   mime = 'application/zip' if data == Build.Data_Artifact else 'text/plain'
   return utils.stream_file(build.path(data), mime=mime)
-
 
 
 @app.route('/delete')
