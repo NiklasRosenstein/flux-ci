@@ -144,8 +144,14 @@ class Build(Base):
   def on_delete(self):
     if self.status == self.Status_Building:
       raise RuntimeError('can not delete build in progress')
-    shutil.rmtree(self.path(self.Data_Artifact), ignore_errors=True)
-    shutil.rmtree(self.path(self.Data_Log), ignore_errors=True)
+    try:
+      os.remove(self.path(self.Data_Artifact))
+    except OSError as exc:
+      print(exc)
+    try:
+      os.remove(self.path(self.Data_Log))
+    except OSError as exc:
+      print(exc)
 
 
 Base.metadata.create_all(engine)
