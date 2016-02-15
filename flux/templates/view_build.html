@@ -17,7 +17,7 @@
       </a>
     {% endif %}
   </div>
-  <h2>{{ build_icon(build) }} {{ page_title }}</h2>
+  <h2>{{ build_icon(build) }} {{ page_title }} ({{ build.ref }})</h2>
   <div class="smallinfo">
     <span><b>Queued:</b> {{ fmtdate(build.date_queued) }}</span>
     {% if build.date_started %}&ndash; <span><b>Started:</b> {{ fmtdate(build.date_started) }}</span>{% endif %}
