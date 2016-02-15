@@ -8,6 +8,8 @@ encrypted proxy pass server (eg. via NGinx) and only for
 internal purpose since it does not provide any mechanism
 to prevent bad code from being executed.
 
+__What's the license, duh?__ See [#6](https://github.com/NiklasRosenstein/flux/issues/6).
+
 __Screenshots__
 
 <table><tr>
