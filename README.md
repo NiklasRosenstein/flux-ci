@@ -1,7 +1,7 @@
-# Flux &ndash; Lightweight private build server
+# Flux &ndash; Lightweight CI server
 
-Flux is a simple, [Flask][] based build server that responds to
-push events triggered by [Gogs][] and GitHub.
+Flux is a simple, [Flask][] based continours integration server
+that responds to push events triggered by [Gogs][] and GitHub.
 
 For security reasons, Flux should be deployed over an SSL
 encrypted proxy pass server (eg. via NGinx) and only for

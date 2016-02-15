@@ -7,6 +7,7 @@ import uuid
 from . import app, config, utils, queue
 from .models import Session, User, Repository, Build
 from flask import request, redirect, url_for, render_template
+from datetime import datetime
 
 API_GOGS = 'gogs'
 API_GITHUB = 'github'
@@ -69,32 +70,32 @@ def hook_push(logger):
     return 400
 
   name = owner + '/' + name
-  if name not in config.repos:
+
+  session = Session()
+  repo = session.query(Repository).filter(Repository.name == name).one_or_none()
+  if not repo:
     logger.error('PUSH event rejected (unknown repository)')
     return 400
-
-  repo = config.repos[name]
-  if repo['secret'] != utils.get(data, 'secret'):
+  if repo.secret != utils.get(data, 'secret'):
     logger.error('PUSH event rejected (invalid secret)')
     return 400
 
-  if 'refs' in repo:
-    if ref not in repo['refs']:
-      logger.info('Git ref {!r} not whitelisted. No build dispatched'.format(ref))
-      return 200
-    else:
-      logger.info('Git ref {!r} whitelisted. Continue build dispatch'.format(ref))
+  # XXX Support whitelisting repositories
+  #if 'refs' in repo:
+  #  if ref not in repo['refs']:
+  #    logger.info('Git ref {!r} not whitelisted. No build dispatched'.format(ref))
+  #    return 200
+  #  else:
+  #    logger.info('Git ref {!r} whitelisted. Continue build dispatch'.format(ref))
 
-  try:
-    builder = queue.Builder(repo, commit)
-  except ValueError as exc:
-    logger.error(str(exc))
-    return 500
+  build = Build(repo=repo, commit_sha=commit, num=len(repo.builds),
+    status=Build.Status_Queued, date_queued=datetime.now(),
+    date_started=None, date_finished=None)
+  session.add(build)
+  session.commit()
 
-  queue.put(builder)
-  logger.info('Dispatched to build queue.')
-  logger.info('  build log: {!r}'.format(builder.build_log))
-  logger.info('  build directory: {!r}'.format(builder.build_dir))
+  logger.info('Build #{} for repository {} queued'.format(build.num, repo.name))
+  logger.info(build.url())
   return 200
 
 
@@ -106,6 +107,12 @@ def dashboard():
   context['repositories'] = session.query(Repository).order_by(Repository.name).all()
   context['user'] = request.user
   return render_template('dashboard.html', **context)
+
+
+@app.route('/view/<path:path>')
+@utils.requires_auth
+def view_repo(path):
+  return path
 
 
 @app.route('/new/repo', methods=['GET', 'POST'])

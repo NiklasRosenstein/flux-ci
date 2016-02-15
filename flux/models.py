@@ -8,6 +8,7 @@ from sqlalchemy import Column, Boolean, Integer, Enum, String, DateTime, Foreign
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.ext.declarative import declarative_base
 from . import config, utils
+from flask import url_for
 
 engine = create_engine(config.db_url, encoding=config.db_encoding)
 Session = sessionmaker(bind=engine)
@@ -66,7 +67,10 @@ class Repository(Base):
   name = Column(String)
   secret = Column(String)
   clone_url = Column(String)
-  builds = relationship("Build", back_populates="repo")
+  builds = relationship("Build", back_populates="repo", order_by=lambda: Build.date_queued)
+
+  def url(self):
+    return url_for('view_repo', path=self.name)
 
 
 class Build(Base):
@@ -91,11 +95,14 @@ class Build(Base):
   repo_id = Column(Integer, ForeignKey('repos.id'))
   repo = relationship("Repository", back_populates="builds")
   commit_sha = Column(String)
-  uuid = Column(String)
+  num = Column(Integer)
   status = Column(Enum(*Status))
   date_queued = Column(DateTime)
   date_started = Column(DateTime)
   date_finished = Column(DateTime)
+
+  def url(self):
+    return url_for('view_repo', path=self.repo.name + '/' + str(self.num))
 
 
 Base.metadata.create_all(engine)

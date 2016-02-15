@@ -4,9 +4,27 @@
   <h2>Repositories ({{ repositories|length }})
     <a href="{{ url_for('new_repo') }}">+</a>
   </h2>
-  <ul class="droplist">
-  {% for repo in repositories %}
-    <li><a href='#'>{{ repo.name }} ({{ repo.builds|length }})</a></li>
-  {% endfor %}
-  </ul>
+  <p>This is a list of all registered repositories. You can view the state
+    of the most recently added build for a repository and follow the link
+    to view all information, the logs and download build artifacts.</p>
+  <table>
+    <thead>
+      <tr>
+        <th>Repository</th>
+        <th>Latest Build</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for repo in repositories %}
+      <tr>
+        <td><a href="{{ repo.url() }}">{{ repo.name }}</a></td>
+        {% if repo.builds %}
+        {% set build = repo.builds[-1] %}
+        <td><a href="{{ build.url() }}">#{{ build.num }}</a></td>
+        {% else %}
+        <td>none</td>
+        {% endif %}
+      </tr>
+    {% endfor %}
+  </table>
 {% endblock body %}

@@ -1,10 +1,12 @@
 @import url("base.css");
 
 html { font-family: "Helvetica Neue", "Arial", "sans-serif"; }
+table th, table td { padding: 0.2em 1em 0.2em 0; }
+a { color: #6EA4FC; }
 
 .container { padding: 1em; width: 800px; margin: auto; }
 .header { background-color: #045CD7; color: white; }
-.header .title { font-weight: bold; }
+.header .title { font-weight: bold; color: white; }
 .header .user { float: right; }
 
 .green {

@@ -2,7 +2,12 @@
 {% set page_title = "Add Repository" %}
 {% block body %}
     <h2>Add Repository</h2>
+    <p>You must ensure that the Flux CI server has read permission for
+      the clone URL that you specify below. The URL is stored unencrypted
+      in the database, thus you should avoid using the
+      <code>https://username:password@host/name</code> format.</p>
     {% if errors %}
+      <b>Errors</b>
       <ul>
       {% for msg in errors %}
         <li>{{ msg }}</li>

@@ -10,7 +10,7 @@
   </head>
   <body>
     <div class="header"><div class="container">
-      <span class="title">{{ config.app_title }}</span>
+      <a class="title" href="{{ url_for('dashboard') }}">{{ config.app_title }}</a>
       <span class="user"><i class="fa fa-user"></i> {{ user.name }}</span>
     </div></div>
     <div class="container">

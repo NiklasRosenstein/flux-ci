@@ -8,7 +8,7 @@ host = ''
 port = 4042
 debug = True
 
-app_title = 'Flux Build Server'
+app_title = 'Flux CI'
 
 # Database URL. Must be in the format engine://user:pw@hostname/dbname .
 db_url = 'sqlite:///' + os.path.expanduser('~/flux/data.db')
