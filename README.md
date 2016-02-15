@@ -1,4 +1,4 @@
-# Flux &ndash; Lightweight CI server
+# Flux &ndash; Lightweight CI Server
 
 Flux is a simple, [Flask][] based continours integration server
 that responds to push events triggered by [Gogs][] and GitHub.
@@ -11,7 +11,7 @@ to prevent bad code from being executed.
 __Screenshots__
 
 <table><tr>
-  <td><a href="http://i.imgur.com/9z2POq2.png"><img src="http://i.imgur.com/9z2POq2.png" width="250"></a></td>
+  <td><a href="http://i.imgur.com/lWGo5sU.png"><img src="http://i.imgur.com/lWGo5sU.png" width="250"></a></td>
   <td><a href="http://i.imgur.com/TNQvcTb.png"><img src="http://i.imgur.com/TNQvcTb.png" width="250"></a></td>
   <td><a href="http://i.imgur.com/MMNKLqw.png"><img src="http://i.imgur.com/MMNKLqw.png" width="250"></a></td>
 </tr></table>
@@ -32,6 +32,7 @@ __Requirements__
 
 * Git 2.3 (for `GIT_SSH_COMMAND`)
 * [Flask][]
+* [SQLAlchemy][]
 
 __Configuration__
 
@@ -50,4 +51,5 @@ __Additional Links__
 * [BitBucket Push](https://confluence.atlassian.com/bitbucket/event-payloads-740262817.html#EventPayloads-Push)
 
   [Flask]: http://flask.pocoo.org/
+  [SQLAlchemy]: http://www.sqlalchemy.org/
   [Gogs]: https://gogs.io/
