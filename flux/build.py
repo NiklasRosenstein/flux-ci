@@ -55,6 +55,8 @@ class BuildConsumer(object):
 
   def stop(self, join=True):
     with self._cond:
+      for event in self._terminate_events.values():
+        event.set()
       self._running = False
       self._cond.notify()
     if join:
@@ -79,6 +81,9 @@ class BuildConsumer(object):
           do_build(build, do_terminate)
         except BaseException as exc:
           traceback.print_exc()
+        finally:
+          with self._cond:
+            self._terminate_events.pop(build_id)
 
     if num_threads < 1:
       raise ValueError('num_threads must be >= 1')
