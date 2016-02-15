@@ -23,14 +23,11 @@ textarea {
 .header .user { float: right; }
 .header.flash { color: black; background-color: #fff6b5; font-size: 90%; }
 .header.flash .container { padding: 0.5em 1em; }
-.header a, .header span,
-.subheader a, .subheader span {
-  margin: 0 0.5em;
-}
 .smallinfo {
   font-size: 80%;
   color: #888888;
 }
+.smallinfo a { margin-right: 1em; }
 
 .notice { padding: 1em; border: 1px solid #CCCCCC; border-radius: 0.3em; }
 .warn { background-color: #FDB4B4; border-color: #FB6A6C; }

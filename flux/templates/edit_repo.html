@@ -2,7 +2,7 @@
 {% set page_title = "Add Repository" %}
 {% block body %}
   <div class="subheader">
-    <a href="{{ url_for('dashboard') }}"><i class="fa fa-arrow-left"></i> Dashboard</a>
+    <a href="{{ repo.url() if repo else url_for('dashboard') }}"><i class="fa fa-arrow-left"></i> {{ repo.name if repo else "Dashboard" }}</a>
   </div>
   <h2>{{ "Edit" if repo else "Add" }} Repository</h2>
   <p>You must ensure that the Flux CI server has read permission for
