@@ -26,8 +26,9 @@ __Features__
 * [x] Lightweight and easy to deploy
 * [x] Operational on Windows, Linux and Mac OS
 * [x] Supports [Gogs][] & GitHub
-* [x] Web interface to view realtime build queue, build logs
-      and download artifacts with user access control
+* [x] Stop & Restart builds
+* [x] View and download build logs and artifacts
+* [x] User access control
 
 __Todo__
 
@@ -41,7 +42,6 @@ __Requirements__
 * Git 2.3 (for `GIT_SSH_COMMAND`)
 * [Flask][]
 * [SQLAlchemy][]
-* [pyOpenSSL][] (only if you use SSL directly with Flux, on by default)
 
 __Configuration__
 
@@ -68,5 +68,4 @@ __Additional Links__
 
   [Flask]: http://flask.pocoo.org/
   [SQLAlchemy]: http://www.sqlalchemy.org/
-  [pyOpenSSL]: https://pypi.python.org/pypi/pyOpenSSL
   [Gogs]: https://gogs.io/
