@@ -11,7 +11,8 @@ debug = True
 app_title = 'Flux CI'
 app_url = 'http://localhost:4042'
 
-# Database URL. Must be in the format engine://user:pw@hostname/dbname .
+# A valid SQLAlchemy database URL. Follow this link for more information:
+# http://docs.sqlalchemy.org/en/rel_1_0/core/engines.html#database-urls
 db_url = 'sqlite:///' + os.path.expanduser('~/flux/data.db')
 db_encoding = 'utf8'
 
