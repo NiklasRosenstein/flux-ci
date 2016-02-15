@@ -114,20 +114,20 @@ def dashboard():
 @utils.requires_auth
 def view_repo(path):
   session = Session()
-  obj = get_target_for(session, path)
-  if not isinstance(obj, Repository):
+  repo = get_target_for(session, path)
+  if not isinstance(repo, Repository):
     return abort(404)
-  return render_template('view_repo.html', user=request.user, repo=obj)
+  return render_template('view_repo.html', user=request.user, repo=repo)
 
 
 @app.route('/build/<path:path>')
 @utils.requires_auth
 def view_build(path):
   session = Session()
-  obj = get_target_for(session, path)
-  if not isinstance(obj, Build):
+  build = get_target_for(session, path)
+  if not isinstance(build, Build):
     return abort(404)
-  return render_template('view_build.html', user=request.user, build=obj)
+  return render_template('view_build.html', user=request.user, build=build)
 
 
 @app.route('/new/repo', methods=['GET', 'POST'])
@@ -159,17 +159,21 @@ def new_repo():
 @utils.requires_auth
 def download_artifact(path):
   session = Session()
-  obj = get_target_for(session, path)
-  if not isinstance(obj, Build):
+  build = get_target_for(session, path)
+  if not isinstance(build, Build) or not build.exists(Build.Data_Artifact):
     return abort(404)
-  return 'xxx: Todo'
+  if not request.user.can_download_artifacts:
+    return abort(403)
+  return utils.stream_file(build.path(Build.Data_Artifact), mime='application/zip')
 
 
 @app.route('/download/log/<path:path>')
 @utils.requires_auth
 def download_log(path):
   session = Session()
-  obj = get_target_for(session, path)
-  if not isinstance(obj, Build):
+  build = get_target_for(session, path)
+  if not isinstance(build, Build) or not build.exists(Build.Data_Log):
     return abort(404)
-  return 'xxx: Todo'
+  if not request.user.can_view_buildlogs:
+    return abort(403)
+  return utils.stream_file(build.path(Build.Data_Log), mime='text/plain')

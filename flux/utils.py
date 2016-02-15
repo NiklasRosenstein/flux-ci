@@ -165,6 +165,16 @@ def create_logger(stream, name=__name__, fmt=None):
   return logger
 
 
+def stream_file(filename, mime=None):
+  def generate():
+    with open(filename, 'rb') as fp:
+      yield from fp
+  headers = {}
+  headers['Content-Type'] = mime or 'application/x-octet-stream'
+  headers['Content-Length'] = os.stat(filename).st_size
+  return Response(generate(), 200, headers)
+
+
 def hash_pw(pw):
   return hashlib.md5(pw.encode('utf8')).hexdigest()
 

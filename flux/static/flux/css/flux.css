@@ -15,6 +15,10 @@ pre {
 .header { background-color: #045CD7; color: white; }
 .header .title { font-weight: bold; color: white; }
 .header .user { float: right; }
+.header a, .header span,
+.subheader a, .subheader span {
+  margin: 0 0.5em;
+}
 
 .notice { padding: 1em; border: 1px solid #CCCCCC; border-radius: 0.3em; }
 .warn { background-color: #FDB4B4; border-color: #FB6A6C; }

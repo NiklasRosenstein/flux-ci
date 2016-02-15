@@ -2,24 +2,31 @@
 {% from "macros.html" import build_icon, fmtdate %}
 {% set page_title = build.repo.name + " #" + build.num|string %}
 {% block body %}
-  <a href="{{ build.repo.url() }}"><i class="fa fa-arrow-left"></i> {{ build.repo.name }}</a>
-  {% if build.status in (build.Status_Error, build.Status_Success) %}
-    {% if not build.artifact_exists() %}
-      <span class="fr" style="color: red;" title="Artifacts missing"><i class="fa fa-download">Download Artifacts</i></span>
-    {% else %}
-      <a class="fr" href="{{ build.url('artifact') }}"><i class="fa fa-download"></i>Download Artifacts</a>
+  <div class="subheader">
+    <a href="{{ build.repo.url() }}"><i class="fa fa-arrow-left"></i> {{ build.repo.name }}</a>
+    {% if build.status in (build.Status_Error, build.Status_Success) %}
+      {% if not build.exists(build.Data_Artifact) %}
+        <span class="fr" style="color: red;" title="Artifacts missing"><i class="fa fa-download"></i> Download Artifacts</span>
+      {% else %}
+        <a class="fr" href="{{ build.url(build.Data_Artifact) }}"><i class="fa fa-download"></i> Download Artifacts</a>
+      {% endif %}
+      {% if not build.exists(build.Data_Log) %}
+        <span class="fr" style="color: red;" title="Build log missing"><i class="fa fa-download"></i> Download Log</span>
+      {% else %}
+        <a class="fr" href="{{ build.url(build.Data_Log) }}"><i class="fa fa-download"></i> Download Log</a>
+      {% endif %}
     {% endif %}
-  {% endif %}
+  </div>
   <h2>{{ build_icon(build) }} {{ page_title }}</h2>
   <p><b>Queued:</b> {{ fmtdate(build.date_queued) }}</p>
   {% if build.date_started %}<p><b>Started:</b> {{ fmtdate(build.date_started) }}</p>{% endif %}
   {% if build.date_finished %}<p><b>Finished:</b> {{ fmtdate(build.date_finished) }}</p>{% endif %}
   {% if build.status != build.Status_Queued %}
     <h3>Build Log</h3>
-    {% if not build.log_exists() %}
+    {% if not build.exists(build.Data_Log) %}
       <p class="notice warn">Build log missing.</p>
     {% else %}
-      <pre class="build-log"><code>{{ build.get_log() }}</code></pre>
+      <pre class="build-log"><code>{{ build.log_contents() }}</code></pre>
     {% endif %}
   {% endif %}
 {% endblock %}

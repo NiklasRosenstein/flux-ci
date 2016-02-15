@@ -92,6 +92,10 @@ class Build(Base):
   Status_Success = 'success'
   Status = [Status_Queued, Status_Building, Status_Error, Status_Success]
 
+  Data_BuildDir = 'build_dir'
+  Data_Artifact = 'artifact'
+  Data_Log = 'log'
+
   id = Column(Integer, primary_key=True)
   repo_id = Column(Integer, ForeignKey('repos.id'))
   repo = relationship("Repository", back_populates="builds")
@@ -103,28 +107,33 @@ class Build(Base):
   date_started = Column(DateTime)
   date_finished = Column(DateTime)
 
-  def url(self, mode='view'):
+  def url(self, data=None):
     path = self.repo.name + '/' + str(self.num)
-    if mode == 'view':
+    if not data:
       return url_for('view_build', path=path)
-    elif mode == 'artifact':
+    elif data == self.Data_Artifact:
       return url_for('download_artifact', path=path)
-    elif mode == 'log':
+    elif data == self.Data_Log:
       return url_for('download_log', path=path)
     else:
       raise ValueError('invalid mode: {!r}'.format(mode))
 
-  def build_path(self):
-    return os.path.join(config.build_dir, self.repo.name.replace('/', os.sep), str(self.num))
+  def path(self, data=Data_BuildDir):
+    base = os.path.join(config.build_dir, self.repo.name.replace('/', os.sep), str(self.num))
+    if data == self.Data_BuildDir:
+      return base
+    elif data == self.Data_Artifact:
+      return base + '.zip'
+    elif data == self.Data_Log:
+      return base + '.log'
+    else:
+      raise ValueError('invalid value for "data": {!r}'.format(data))
 
-  def log_exists(self):
-    return os.path.isfile(self.build_path() + '.log')
+  def exists(self, data):
+    return os.path.exists(self.path(data))
 
-  def artifact_exists(self):
-    return os.path.isfile(self.build_path() + '.zip')
-
-  def get_log(self):
-    path = self.build_path() + '.log'
+  def log_contents(self):
+    path = self.path(self.Data_Log)
     if os.path.isfile(path):
       with open(path, 'r') as fp:
         return fp.read()

@@ -46,7 +46,7 @@ def main():
   print(' * starting builder threads...')
   build.start_threads()
   try:
-    app.run(host=config.host, port=config.port, debug=config.debug, use_reloader=False)
+    app.run(host=config.host, port=config.port, debug=config.debug)
   finally:
     print(' * stopping builder threads...')
     build.stop_threads()

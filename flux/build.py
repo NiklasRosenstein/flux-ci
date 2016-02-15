@@ -66,13 +66,14 @@ def do_build(session, build):
   session.add(build)
   session.commit()
 
+  logfile = None
   logger = None
 
   try:
-    build_path = build.build_path()
+    build_path = build.path()
     print(build_path)
     utils.makedirs(os.path.dirname(build_path))
-    logfile = open(build_path + '.log', 'w')
+    logfile = open(build.path(build.Data_Log), 'w')
     logger = utils.create_logger(logfile)
 
     try:
@@ -94,6 +95,8 @@ def do_build(session, build):
     else:
       traceback.print_exc()
   finally:
+    if logfile:
+      logfile.close()
     build.date_finished = datetime.now()
     session.add(build)
     session.commit()
