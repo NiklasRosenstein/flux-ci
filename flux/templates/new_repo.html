@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% set page_title = "Add Repository" %}
+{% block body %}
+    <h2>Add Repository</h2>
+    {% if errors %}
+      <ul>
+      {% for msg in errors %}
+        <li>{{ msg }}</li>
+      {% endfor %}
+      </ul>
+    {% endif %}
+    <form method="post">
+      <div class="field required">
+        <label for="repo_name">Owner/Name</label>
+        <input type="text" name="repo_name">
+      </div>
+      <div class="field">
+        <label>Secret</label>
+        <input type="password" name="repo_secret">
+      </div>
+      <div class="field required">
+        <label>Clone URL</label>
+        <input type="text" name="repo_clone_url">
+      </div>
+      <button class="button green">Add Repository</button>
+    </form>
+{% endblock body %}

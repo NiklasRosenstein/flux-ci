@@ -6,7 +6,7 @@ import uuid
 
 from . import app, config, utils, queue
 from .models import Session, User, Repository, Build
-from flask import request, render_template
+from flask import request, redirect, url_for, render_template
 
 API_GOGS = 'gogs'
 API_GITHUB = 'github'
@@ -103,12 +103,31 @@ def hook_push(logger):
 def dashboard():
   session = Session()
   context = {}
-  context['repositories'] = session.query(Repository).all()
+  context['repositories'] = session.query(Repository).order_by(Repository.name).all()
   context['user'] = request.user
   return render_template('dashboard.html', **context)
 
 
-@app.route('/new/repo')
+@app.route('/new/repo', methods=['GET', 'POST'])
 @utils.requires_auth
 def new_repo():
-  pass
+  errors = []
+  if request.method == 'POST':
+    secret = request.form.get('repo_secret', '')
+    clone_url = request.form.get('repo_clone_url', '')
+    repo_name = request.form.get('repo_name', '').strip()
+    if len(repo_name) < 3 or repo_name.count('/') != 1:
+      errors.append('Invalid repository name. Format must be owner/repo')
+    if not clone_url:
+      errors.append('No clone URL specified')
+    if not errors:
+      session = Session()
+      repo = session.query(Repository).filter(Repository.name == repo_name).one_or_none()
+      if repo:
+        errors.append('Repository {!r} already exists'.format(repo_name))
+      else:
+        repo = Repository(name=repo_name, clone_url=clone_url, secret=secret)
+        session.add(repo)
+        session.commit()
+        return redirect(url_for('dashboard'))
+  return render_template('new_repo.html', user=request.user, errors=errors)

@@ -4,7 +4,7 @@
 import enum
 
 from sqlalchemy import create_engine
-from sqlalchemy import Column, Boolean, Integer, Enum, String, ForeignKey
+from sqlalchemy import Column, Boolean, Integer, Enum, String, DateTime, ForeignKey
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.ext.declarative import declarative_base
 from . import config, utils
@@ -93,6 +93,9 @@ class Build(Base):
   commit_sha = Column(String)
   uuid = Column(String)
   status = Column(Enum(*Status))
+  date_queued = Column(DateTime)
+  date_started = Column(DateTime)
+  date_finished = Column(DateTime)
 
 
 Base.metadata.create_all(engine)

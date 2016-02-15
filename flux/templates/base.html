@@ -9,11 +9,13 @@
     {% endblock head %}
   </head>
   <body>
-    <div class="container header">
+    <div class="header"><div class="container">
       <span class="title">{{ config.app_title }}</span>
-      <span class="fr"><i class="fa fa-user"></i> {{ user.name }}</span>
+      <span class="user"><i class="fa fa-user"></i> {{ user.name }}</span>
+    </div></div>
+    <div class="container">
+      {% block body %}
+      {% endblock body %}
     </div>
-    {% block body %}
-    {% endblock body %}
   </body>
 </html>

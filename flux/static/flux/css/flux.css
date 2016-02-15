@@ -2,66 +2,28 @@
 
 html { font-family: "Helvetica Neue", "Arial", "sans-serif"; }
 
+.container { padding: 1em; width: 800px; margin: auto; }
+.header { background-color: #045CD7; color: white; }
+.header .title { font-weight: bold; }
+.header .user { float: right; }
 
-.container {
-  padding: 1em;
+.green {
+  background-color: #04D72B;
 }
 
-.header {
-  background-color: #045CD7;
+.button {
+  margin: 1em 0;
+  padding: 1em;
+  border: 0px;
+  border-radius: 0.5em;
+  font-weight: bold;
   color: white;
 }
-
-.title {
-  font-weight: bold;
+.field { margin-bottom: 0.5em; }
+.field label { font-weight: bold; display: block; margin-bottom: 0.3em; }
+.field input {
+  padding: 0.5em 1em;
+  border: 1px solid #CCCCCC;
+  border-radius: 0.2em;
 }
-
-.build-list {
-  padding: 0;
-  margin: 0;
-}
-
-.build-list li {
-  list-style: none;
-  border: 1px solid #ccc;
-}
-
-.build-list li .head {
-  padding: 1em;
-  background-color: #E8F5FD;
-}
-
-.build-list li:nth-child(even) {
-  border-top-width: 0;
-}
-
-.build-list li:nth-child(even) .head {
-  background-color: #D0E8FB;
-}
-
-.build-list .repo {
-  font-weight: bold;
-}
-
-.build-list .repo::after {
-  font-weight: normal;
-  content: " \2013 ";
-}
-
-.build-list .commit {
-  font-family: monospace;
-}
-
-.build-list .download-log,
-.build-list .download-artifacts,
-.build-list .date {
-  float: right;
-  margin-left: 1em;
-}
-
-.build-list .output {
-  padding: 1em;
-  background-color: #eee;
-  white-space: pre;
-  font-family: monospace;
-}
+.required.field label::after { content: " *"; color: red; }
