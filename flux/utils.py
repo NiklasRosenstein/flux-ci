@@ -8,6 +8,7 @@ import logging
 import os
 import shlex
 import subprocess
+import uuid
 import zipfile
 
 from . import config
@@ -180,6 +181,10 @@ def flash(message=None):
     return session.pop('flux_flash', None)
   else:
     session['flux_flash'] = message
+
+
+def make_secret():
+  return str(uuid.uuid4())
 
 
 def hash_pw(pw):

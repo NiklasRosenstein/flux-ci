@@ -22,13 +22,17 @@
       <label for="repo_name">Owner/Name</label>
       <input type="text" name="repo_name">
     </div>
-    <div class="field">
-      <label>Secret</label>
-      <input type="password" name="repo_secret">
-    </div>
     <div class="field required">
       <label>Clone URL</label>
       <input type="text" name="repo_clone_url">
+    </div>
+    <div class="field">
+      <label>Secret</label>
+      <small><p>The secret key that is sent by the Git server for
+        authentication purpose. The default value is a randomly
+        generated UUID that serves the purpose. You can also leave
+        the field blank if the secret sent by the server is an empty string.</p></small>
+      <input type="text" name="repo_secret" value="{{ flux.utils.make_secret() }}">
     </div>
     <button class="button blue">Add Repository</button>
   </form>

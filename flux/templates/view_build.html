@@ -7,9 +7,7 @@
     {% if build.status in (build.Status_Error, build.Status_Success) %}
       <a class="fr" href="{{ build.url(build.Data_Log) }}"><i class="fa fa-download"></i> Download Log</a>
       <a class="fr" href="{{ build.url(build.Data_Artifact) }}"><i class="fa fa-download"></i> Download Artifacts</a>
-
     {% endif %}
-
     {% if user.can_manage %}
       <a href="{{ url_for('delete', repo=build.repo.name, build=build.num) }}" class="fr redt"
         onclick="return confirm('Are you sure you want to delete this build? This operation can not be undone.')">
