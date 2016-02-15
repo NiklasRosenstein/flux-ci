@@ -94,6 +94,7 @@ class Build(Base):
   id = Column(Integer, primary_key=True)
   repo_id = Column(Integer, ForeignKey('repos.id'))
   repo = relationship("Repository", back_populates="builds")
+  ref = Column(String)
   commit_sha = Column(String)
   num = Column(Integer)
   status = Column(Enum(*Status))

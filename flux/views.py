@@ -88,9 +88,9 @@ def hook_push(logger):
   #  else:
   #    logger.info('Git ref {!r} whitelisted. Continue build dispatch'.format(ref))
 
-  build = Build(repo=repo, commit_sha=commit, num=len(repo.builds),
-    status=Build.Status_Queued, date_queued=datetime.now(),
-    date_started=None, date_finished=None)
+  build = Build(repo=repo, commit_sha=commit, num=len(repo.builds), ref=ref,
+    status=Build.Status_Queued, date_queued=datetime.now(), date_started=None,
+    date_finished=None)
   session.add(build)
   session.commit()
 
