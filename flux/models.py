@@ -90,7 +90,7 @@ class Build(Base):
   Status_Building = 'building'
   Status_Error = 'error'
   Status_Success = 'success'
-  Status = [Status_Queued, Status_Building, Status_Error, Status_Error]
+  Status = [Status_Queued, Status_Building, Status_Error, Status_Success]
 
   id = Column(Integer, primary_key=True)
   repo_id = Column(Integer, ForeignKey('repos.id'))
@@ -116,6 +116,12 @@ class Build(Base):
 
   def build_path(self):
     return os.path.join(config.build_dir, self.repo.name.replace('/', os.sep), str(self.num))
+
+  def log_exists(self):
+    return os.path.isfile(self.build_path() + '.log')
+
+  def artifact_exists(self):
+    return os.path.isfile(self.build_path() + '.zip')
 
   def get_log(self):
     path = self.build_path() + '.log'
@@ -152,8 +158,10 @@ def get_public_key():
   ''' Returns the servers SSH public key. '''
 
   # XXX Support all valid options and eventually parse the config file?
-  path = os.path.expanduser('~/.ssh/id_rsa.pub')
-  if os.path.isfile(path):
-    with open(path) as fp:
+  filename = config.ssh_identity_file or os.path.expanduser('~/.ssh/id_rsa')
+  if not filename.endswith('.pub'):
+    filename += '.pub'
+  if os.path.isfile(filename):
+    with open(filename) as fp:
       return fp.read()
   return None

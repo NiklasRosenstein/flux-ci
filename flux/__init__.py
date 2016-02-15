@@ -43,9 +43,10 @@ def main():
   # Make sure the root user exists and has all privileges.
   models.User.create_root_if_not_exists()
 
-  build.start_queue()
+  print(' * starting builder threads...')
+  build.start_threads()
   try:
-    app.run(host=config.host, port=config.port, debug=config.debug)
+    app.run(host=config.host, port=config.port, debug=config.debug, use_reloader=False)
   finally:
-    build.stop_queue()
-    pass
+    print(' * stopping builder threads...')
+    build.stop_threads()

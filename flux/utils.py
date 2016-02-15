@@ -5,8 +5,10 @@ import io
 import functools
 import hashlib
 import logging
+import os
 import shlex
 import subprocess
+import zipfile
 
 from . import config
 from .models import Session, User
@@ -173,6 +175,16 @@ def makedirs(path):
 
   if not os.path.exists(path):
     os.makedirs(path)
+
+
+def zipdir(dirname, filename):
+  dirname = os.path.abspath(dirname)
+  zipf = zipfile.ZipFile(filename, 'w')
+  for root, dirs, files in os.walk(dirname):
+    for fname in files:
+      arcname = os.path.join(os.path.relpath(root, dirname), fname)
+      zipf.write(os.path.join(root, fname), arcname)
+  zipf.close()
 
 
 def run(command, logger, cwd=None, env=None, shell=False):
