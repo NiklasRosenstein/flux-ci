@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "macros.html" import build_icon %}
+{% from "macros.html" import build_link, fmtdate %}
 {% set page_title = "Dashboard" %}
 {% block body %}
   <h2>Repositories ({{ repositories|length }})
@@ -9,21 +9,15 @@
     of the most recently added build for a repository and follow the link
     to view all information, the logs and download build artifacts.</p>
   <table>
-    <thead>
-      <tr>
-        <th>Repository</th>
-        <th>Latest Build</th>
-      </tr>
-    </thead>
-    <tbody>
     {% for repo in repositories %}
       <tr>
         <td><a href="{{ repo.url() }}">{{ repo.name }}</a></td>
         {% if repo.builds %}
         {% set build = repo.builds[-1] %}
-        <td><a href="{{ build.url() }}">{{ build_icon(build) }} #{{ build.num }} ({{ build.ref }})</a></td>
+        <td>{{ build_link(build) }}</td>
         {% else %}
-        <td>none</td>
+        <td></td>
+        <td></td>
         {% endif %}
       </tr>
     {% endfor %}

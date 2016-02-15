@@ -28,3 +28,10 @@ a { color: #045CD7; }
   border-radius: 0.2em;
 }
 .required.field label::after { content: " *"; color: red; }
+
+.build-log {
+  padding: 1em;
+  background-color: #EEEEEE;
+  border: 1px solid #CCCCCC;
+  border-radius: 0.3em;
+}

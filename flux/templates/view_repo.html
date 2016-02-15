@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% from "macros.html" import build_link, fmtdate %}
+{% set page_title = repo.name %}
+{% block body %}
+  <h2>{{ repo.name }} ({{ repo.builds|length }})</h2>
+  {% if repo.builds %}
+    <table>
+      {% for build in repo.builds %}
+        <tr><td>{{ build_link(build) }}</td></tr>
+      {% endfor %}
+    </table>
+  {% else %}
+    <p>No builds for {{ repo.name }}</p>
+  {% endif %}
+{% endblock %}

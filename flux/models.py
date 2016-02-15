@@ -2,6 +2,7 @@
 # All rights reserved.
 
 import enum
+import os
 
 from sqlalchemy import create_engine
 from sqlalchemy import Column, Boolean, Integer, Enum, String, DateTime, ForeignKey
@@ -31,7 +32,7 @@ class User(Base):
 
   @classmethod
   def root_user(cls, session):
-    return session.query(cls).filter(cls.name == config.root_user).one_or_none()
+    return session.query(cls).filter_by(name=config.root_user).one_or_none()
 
   @classmethod
   def create_root_if_not_exists(cls, session=None):
@@ -102,8 +103,45 @@ class Build(Base):
   date_started = Column(DateTime)
   date_finished = Column(DateTime)
 
-  def url(self):
-    return url_for('view_repo', path=self.repo.name + '/' + str(self.num))
+  def url(self, mode='view'):
+    path = self.repo.name + '/' + str(self.num)
+    if mode == 'view':
+      return url_for('view_repo', path=path)
+    elif mode == 'artifact':
+      return url_for('download_artifact', path=path)
+    elif mode == 'log':
+      return url_for('download_log', path=path)
+    else:
+      raise ValueError('invalid mode: {!r}'.format(mode))
+
+  def build_path(self):
+    return os.path.join(config.build_dir, self.repo.name.replace('/', os.sep), str(self.num))
+
+  def get_log(self):
+    path = self.build_path() + '.log'
+    if os.path.isfile(path):
+      with open(path, 'r') as fp:
+        return fp.read()
+    return None
 
 
 Base.metadata.create_all(engine)
+
+
+def get_target_for(session, path):
+  ''' Given a path, returns either a :class:`Repository` or :class:`Build`
+  based on the format and value. Returns None if the path is invalid or
+  the repository or build does not exist. '''
+
+  parts = path.split('/')
+  if len(parts) not in (2, 3):
+    return None
+  repo_name = parts[0] + '/' + parts[1]
+  repo = session.query(Repository).filter_by(name=repo_name).one_or_none()
+  if not repo:
+    return None
+  if len(parts) == 3:
+    try: num = int(parts[2])
+    except ValueError: return None
+    return session.query(Build).filter_by(repo=repo, num=num).one_or_none()
+  return repo

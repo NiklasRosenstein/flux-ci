@@ -10,4 +10,14 @@
   {% else %}
     <i class="fa fa-question-circle"></i>
   {% endif %}
-{% endmacro %}
+{%- endmacro %}
+
+{% macro build_link(build) %}
+  <a href="{{ build.url() }}">{{ build_icon(build) }} #{{ build.num }} ({{ build.ref }})</a>
+{%- endmacro %}
+
+{% macro fmtdate(date) %}
+  {% if date %}
+    {{ date.strftime("%Y/%m/%d %H:%M") }}
+  {%- endif %}
+{%- endmacro %}

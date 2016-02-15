@@ -82,7 +82,7 @@ def requires_auth(func):
       return basic_auth()
 
     session = Session()
-    user = session.query(User).filter(User.name == auth.username).one_or_none()
+    user = session.query(User).filter_by(name=auth.username).one_or_none()
     if not user or hash_pw(auth.password) != user.passhash:
       return basic_auth('invalid username or password')
 

@@ -5,8 +5,8 @@ import json
 import uuid
 
 from . import app, config, utils, queue
-from .models import Session, User, Repository, Build
-from flask import request, redirect, url_for, render_template
+from .models import Session, User, Repository, Build, get_target_for
+from flask import request, redirect, url_for, render_template, abort
 from datetime import datetime
 
 API_GOGS = 'gogs'
@@ -72,7 +72,7 @@ def hook_push(logger):
   name = owner + '/' + name
 
   session = Session()
-  repo = session.query(Repository).filter(Repository.name == name).one_or_none()
+  repo = session.query(Repository).filter_by(name=name).one_or_none()
   if not repo:
     logger.error('PUSH event rejected (unknown repository)')
     return 400
@@ -112,7 +112,15 @@ def dashboard():
 @app.route('/view/<path:path>')
 @utils.requires_auth
 def view_repo(path):
-  return path
+  session = Session()
+  obj = get_target_for(session, path)
+  if not obj:
+    return abort(404)
+  if isinstance(obj, Repository):
+    return render_template('view_repo.html', user=request.user, repo=obj)
+  if isinstance(obj, Build):
+    return render_template('view_build.html', user=request.user, build=obj)
+  raise TypeError('expected Repository or Build returned from get_target_for()')
 
 
 @app.route('/new/repo', methods=['GET', 'POST'])
@@ -129,7 +137,7 @@ def new_repo():
       errors.append('No clone URL specified')
     if not errors:
       session = Session()
-      repo = session.query(Repository).filter(Repository.name == repo_name).one_or_none()
+      repo = session.query(Repository).filter_by(name=repo_name).one_or_none()
       if repo:
         errors.append('Repository {!r} already exists'.format(repo_name))
       else:
@@ -138,3 +146,23 @@ def new_repo():
         session.commit()
         return redirect(url_for('dashboard'))
   return render_template('new_repo.html', user=request.user, errors=errors)
+
+
+@app.route('/download/artifact/<path:path>')
+@utils.requires_auth
+def download_artifact(path):
+  session = Session()
+  obj = get_target_for(session, path)
+  if not isinstance(obj, Build):
+    return abort(404)
+  return 'xxx: Todo'
+
+
+@app.route('/download/log/<path:path>')
+@utils.requires_auth
+def download_log(path):
+  session = Session()
+  obj = get_target_for(session, path)
+  if not isinstance(obj, Build):
+    return abort(404)
+  return 'xxx: Todo'

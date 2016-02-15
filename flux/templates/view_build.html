@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% from "macros.html" import build_icon, fmtdate %}
+{% set page_title = build.repo.name + " #" + build.num|string %}
+{% block body %}
+  <a href="{{ build.repo.url() }}"><i class="fa fa-arrow-left"></i> {{ build.repo.name }}</a>
+  {% if build.status in (build.Status_Error, build.Status_Finished, build.Status_Queued) %}
+    <a class="fr" href="{{ build.url('artifact') }}"><i class="fa fa-download"></i>
+ Download Artifacts</a>
+  {% endif %}
+  <h2>{{ build_icon(build) }} {{ page_title }}</h2>
+  <p><b>Queued:</b> {{ fmtdate(build.date_queued) }}</p>
+  {% if build.date_started %}<p><b>Started:</b> {{ fmtdate(build.date_started) }}</p>{% endif %}
+  {% if build.date_finished %}<p><b>Finished:</b> {{ fmtdate(build.date_finished) }}</p>{% endif %}
+  {% set log = build.get_log() %}
+  {% if log is not none %}
+    <h3>Build Log</h3>
+    <pre class="build-log"><code>{{ log }}</code></pre>
+  {% endif %}
+{% endblock %}
