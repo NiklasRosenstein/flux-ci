@@ -17,7 +17,7 @@
     {% endif %}
     {% if user.can_manage %}
       {% if build.status == build.Status_Building %}
-        <a href="{{ build.url(stop=True) }}"><i class="fa fa-stop-circle-o"></i>Stop Build</a>
+        <a href="{{ build.url(stop=True) }}"><i class="fa fa-stop-circle-o"></i> Stop Build</a>
       {% else %}
         {% if build.status != build.Status_Queued %}
           <a href="{{ build.url(restart=True) }}"><i class="fa fa-refresh"></i> Restart</a>
