@@ -27,12 +27,18 @@
       <input type="text" name="repo_clone_url" value="{{ repo.clone_url if repo else ""}}">
     </div>
     <div class="field">
-      <label>Secret</label>
+      <label for="repo_secret">Secret</label>
       <small><p>The secret key that is sent by the Git server for
         authentication purpose. The default value is a randomly
         generated UUID that serves the purpose. You can also leave
         the field blank if the secret sent by the server is an empty string.</p></small>
       <input type="text" name="repo_secret" value="{{ repo.secret if repo else flux.utils.make_secret() }}">
+    </div>
+    <div class="field">
+      <label for="repo_ref_whitelist">Ref Whitelist</label>
+      <small><p>A list of Git refs on which builds are triggered. If no refs are
+        listed, a build is triggered for any ref. One Git ref per line.</p></small>
+      <textarea name="repo_ref_whitelist">{{ repo.ref_whitelist }}</textarea>
     </div>
     <button class="button blue">{{ "Update" if repo else "Add Repository" }}</button>
   </form>

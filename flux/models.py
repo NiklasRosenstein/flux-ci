@@ -1,24 +1,18 @@
 # Copyright (C) 2016  Niklas Rosenstein
 # All rights reserved.
 
-import enum
 import os, shutil
 
-from sqlalchemy import create_engine, event, desc
+from sqlalchemy import create_engine, desc
 from sqlalchemy import Column, Boolean, Integer, Enum, String, DateTime, ForeignKey
 from sqlalchemy.orm import sessionmaker, relationship
-from sqlalchemy.ext.declarative import declarative_base
+
 from . import config, utils
+from .model_base import Base, Session
 from flask import url_for
 
 engine = create_engine(config.db_url, encoding=config.db_encoding)
-Session = sessionmaker(bind=engine)
-
-Base = declarative_base()
-
-
-def on_delete_propagator(mapper, connection, target):
-  target.on_delete()
+Session = sessionmaker(bind=engine, class_=Session)
 
 
 class User(Base):
@@ -39,11 +33,7 @@ class User(Base):
     return session.query(cls).filter_by(name=config.root_user).one_or_none()
 
   @classmethod
-  def create_root_if_not_exists(cls, session=None):
-    autocommit = False
-    if session is None:
-      autocommit = True
-      session = Session()
+  def create_root_if_not_exists(cls, session):
     root = cls.root_user(session)
     if root:
       # Make sure the root has all privileges.
@@ -56,8 +46,6 @@ class User(Base):
       root = cls(name=config.root_user, passhash=utils.hash_pw(config.root_password),
         can_manage=True, can_download_artifacts=True, can_view_buildlogs=True)
     session.add(root)
-    if autocommit:
-      session.commit()
     return root
 
 
@@ -75,12 +63,19 @@ class Repository(Base):
   build_count = Column(Integer)
   builds = relationship("Build", back_populates="repo",
     order_by=lambda: desc(Build.num), cascade='all, delete-orphan')
+  ref_whitelist = Column(String)  # ; separated list of accepted refs
 
   def url(self):
     return url_for('view_repo', path=self.name)
 
-  def on_delete(self):
-    pass
+  def check_accept_ref(self, ref):
+    whitelist = list(filter(bool, self.ref_whitelist.split('\n')))
+    if not whitelist or ref in whitelist:
+      return True
+    return False
+
+  def validate_ref_whitelist(self, value, oldvalue, initiator):
+    return '\n'.join(filter(bool, (x.strip() for x in value.split('\n'))))
 
 
 class Build(Base):
@@ -149,7 +144,7 @@ class Build(Base):
         return fp.read()
     return None
 
-  def on_delete(self):
+  def delete(self):
     if self.status == self.Status_Building:
       raise self.CanNotDelete('can not delete build in progress')
     try:
@@ -194,7 +189,4 @@ def get_public_key():
   return None
 
 
-
-event.listen(Repository, 'before_delete', on_delete_propagator)
-event.listen(Build, 'before_delete', on_delete_propagator)
 Base.metadata.create_all(engine)

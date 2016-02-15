@@ -39,16 +39,16 @@ class BuilderThread(threading.Thread):
       with self.lock:
         if not self.running:
           break
-      session = Session()
-      build = session.query(Build).filter_by(status=Build.Status_Queued).first()
-      if build:
-        try:
-          do_build(session, build)
-        except BaseException:
-          traceback.print_exc()
-      else:
-        # Sleep five seconds before checking the next check.
-        time.sleep(5)
+      with Session() as session:
+        build = session.query(Build).filter_by(status=Build.Status_Queued).first()
+        if build:
+          try:
+            do_build(session, build)
+          except BaseException:
+            traceback.print_exc()
+        else:
+          # Sleep five seconds before checking the next check.
+          time.sleep(5)
 
 
 _thread = BuilderThread()
@@ -71,7 +71,6 @@ def do_build(session, build):
 
   try:
     build_path = build.path()
-    print(build_path)
     utils.makedirs(os.path.dirname(build_path))
     logfile = open(build.path(build.Data_Log), 'w')
     logger = utils.create_logger(logfile)

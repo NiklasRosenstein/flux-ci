@@ -148,6 +148,19 @@ def with_logger(kwarg='logger', stream_dest_kwarg='stream', replace=True):
   return decorator
 
 
+def with_dbsession(func):
+  ''' Decorator that adds a :class:`Session` object as ``db_session``
+  to the Flask request. '''
+
+  @functools.wraps(func)
+  def wrapper(*args, **kwargs):
+    with Session() as session:
+      request.db_session = session
+      return func(*args, **kwargs)
+
+  return wrapper
+
+
 def create_logger(stream, name=__name__, fmt=None):
   ''' Creates a new :class:`logging.Logger` object with the
   specified *name* and *fmt* (defaults to a standard logging

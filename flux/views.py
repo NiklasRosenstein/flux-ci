@@ -16,6 +16,7 @@ API_GITHUB = 'github'
 @app.route('/hook/push', methods=['POST'])
 @utils.with_io_response(mimetype='text/plain')
 @utils.with_logger()
+@utils.with_dbsession
 def hook_push(logger):
   ''' PUSH event webhook. The URL parameter ``api`` must be specified
   for Flux to expect the correct JSON payload format. Supported values
@@ -71,7 +72,7 @@ def hook_push(logger):
 
   name = owner + '/' + name
 
-  session = Session()
+  session = request.db_session
   repo = session.query(Repository).filter_by(name=name).one_or_none()
   if not repo:
     logger.error('PUSH event rejected (unknown repository)')
@@ -79,14 +80,9 @@ def hook_push(logger):
   if repo.secret != utils.get(data, 'secret'):
     logger.error('PUSH event rejected (invalid secret)')
     return 400
-
-  # XXX Support whitelisting repositories
-  #if 'refs' in repo:
-  #  if ref not in repo['refs']:
-  #    logger.info('Git ref {!r} not whitelisted. No build dispatched'.format(ref))
-  #    return 200
-  #  else:
-  #    logger.info('Git ref {!r} whitelisted. Continue build dispatch'.format(ref))
+  if not repo.check_accept_ref(ref):
+    logger.info('Git ref {!r} not whitelisted. No build dispatched'.format(ref))
+    return 200
 
   build = Build(repo=repo, commit_sha=commit, num=repo.build_count, ref=ref,
     status=Build.Status_Queued, date_queued=datetime.now(), date_started=None,
@@ -103,8 +99,9 @@ def hook_push(logger):
 
 @app.route('/')
 @utils.requires_auth
+@utils.with_dbsession
 def dashboard():
-  session = Session()
+  session = request.db_session
   context = {}
   context['repositories'] = session.query(Repository).order_by(Repository.name).all()
   context['user'] = request.user
@@ -114,8 +111,9 @@ def dashboard():
 
 @app.route('/repo/<path:path>')
 @utils.requires_auth
+@utils.with_dbsession
 def view_repo(path):
-  session = Session()
+  session = request.db_session
   repo = get_target_for(session, path)
   if not isinstance(repo, Repository):
     return abort(404)
@@ -124,8 +122,9 @@ def view_repo(path):
 
 @app.route('/build/<path:path>')
 @utils.requires_auth
+@utils.with_dbsession
 def view_build(path):
-  session = Session()
+  session = request.db_session
   build = get_target_for(session, path)
   if not isinstance(build, Build):
     return abort(404)
@@ -135,10 +134,11 @@ def view_build(path):
 @app.route('/edit/repo', methods=['GET', 'POST'], defaults={'repo_id': None})
 @app.route('/edit/repo/<int:repo_id>', methods=['GET', 'POST'])
 @utils.requires_auth
+@utils.with_dbsession
 def edit_repo(repo_id):
+  session = request.db_session
   if not request.user.can_manage:
     return abort(403)
-  session = Session()
   if repo_id is not None:
     repo = session.query(Repository).get(repo_id)
   else:
@@ -149,6 +149,7 @@ def edit_repo(repo_id):
     secret = request.form.get('repo_secret', '')
     clone_url = request.form.get('repo_clone_url', '')
     repo_name = request.form.get('repo_name', '').strip()
+    ref_whitelist = request.form.get('repo_ref_whitelist', '')
     if len(repo_name) < 3 or repo_name.count('/') != 1:
       errors.append('Invalid repository name. Format must be owner/repo')
     if not clone_url:
@@ -159,11 +160,13 @@ def edit_repo(repo_id):
         if repo:
           errors.append('Repository {!r} already exists'.format(repo_name))
         else:
-          repo = Repository(name=repo_name, clone_url=clone_url, secret=secret, build_count=0)
+          repo = Repository(name=repo_name, clone_url=clone_url, secret=secret,
+            build_count=0, ref_whitelist=ref_whitelist)
       else:
         repo.name = repo_name
         repo.clone_url = clone_url
         repo.secret = secret
+        repo.ref_whitelist = ref_whitelist
       session.add(repo)
       session.commit()
       return redirect(repo.url())
@@ -173,6 +176,7 @@ def edit_repo(repo_id):
 
 @app.route('/download')
 @utils.requires_auth
+@utils.with_dbsession
 def download():
   repo = request.args.get('repo', '')
   build = request.args.get('build', '')
@@ -180,7 +184,7 @@ def download():
   if mode not in (Build.Data_Artifact, Build.Data_Log):
     return abort(404)
 
-  session = Session()
+  session = request.db_session
   build = get_target_for(session, repo + '/' + build)
   if not isinstance(build, Build) or not build.exists(mode):
     return abort(404)
@@ -194,6 +198,7 @@ def download():
 
 @app.route('/delete')
 @utils.requires_auth
+@utils.with_dbsession
 def delete():
   if not request.user.can_manage:
     return abort(403)
@@ -201,7 +206,7 @@ def delete():
   build = request.args.get('build', '')
   if build:
     path += '/' + build
-  session = Session()
+  session = request.db_session
   obj = get_target_for(session, path)
   if not obj:
     return abort(404)
@@ -209,6 +214,7 @@ def delete():
     session.delete(obj)
     session.commit()
   except Build.CanNotDelete as exc:
+    session.rollback()
     utils.flash(str(exc))
     referer = request.headers.get('Referer', url_for('dashboard'))
     return redirect(referer)

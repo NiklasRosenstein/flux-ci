@@ -10,6 +10,12 @@ pre {
   border-radius: 0.3em;
   overflow: auto;
 }
+textarea {
+  width: 200px;
+  height: 50px;
+  border: 1px solid #CCCCCC;
+  border-radius: 0.3em;
+}
 
 .container { padding: 1em; width: 800px; margin: auto; }
 .header { background-color: #045CD7; color: white; }

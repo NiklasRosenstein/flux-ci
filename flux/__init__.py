@@ -42,7 +42,8 @@ def main():
     sys.exit(1)
 
   # Make sure the root user exists and has all privileges.
-  models.User.create_root_if_not_exists()
+  with models.Session() as session:
+    models.User.create_root_if_not_exists(session)
 
   print(' * starting builder threads...')
   build.start_threads()
