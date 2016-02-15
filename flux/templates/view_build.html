@@ -16,10 +16,17 @@
       {% endif %}
     {% endif %}
     {% if user.can_manage %}
-      <a href="{{ url_for('delete', build_id=build.id) }}" class="redt"
-        onclick="return confirm('Are you sure you want to delete this build? This operation can not be undone.')">
-        <i class="fa fa-trash"></i> Delete Build
-      </a>
+      {% if build.status == build.Status_Building %}
+        <a href="{{ build.url(stop=True) }}"><i class="fa fa-stop-circle-o"></i>Stop Build</a>
+      {% else %}
+        {% if build.status != build.Status_Queued %}
+          <a href="{{ build.url(restart=True) }}"><i class="fa fa-refresh"></i> Restart</a>
+        {% endif %}
+        <a href="{{ url_for('delete', build_id=build.id) }}" class="redt"
+          onclick="return confirm('Are you sure you want to delete this build? This operation can not be undone.')">
+          <i class="fa fa-trash"></i> Delete Build
+        </a>
+      {% endif %}
     {% endif %}
   </p></div>
   <div class="smallinfo"><p>

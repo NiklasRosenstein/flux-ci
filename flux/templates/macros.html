@@ -7,6 +7,8 @@
     <i class="fa fa-exclamation-triangle"></i>
   {% elif build.status == build.Status_Success %}
     <i class="fa fa-check"></i>
+  {% elif build.status == build.Status_Stopped %}
+    <i class="fa fa-stop-circle-o"></i>
   {% else %}
     <i class="fa fa-question-circle"></i>
   {% endif %}

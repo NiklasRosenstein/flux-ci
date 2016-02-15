@@ -16,6 +16,8 @@ textarea {
   border: 1px solid #CCCCCC;
   border-radius: 0.3em;
 }
+table { width: 100%; }
+table th { text-align: left; }
 
 .container { padding: 1em; width: 800px; margin: auto; }
 .header { background-color: #045CD7; color: white; }

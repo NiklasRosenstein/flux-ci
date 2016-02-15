@@ -65,8 +65,8 @@ class Repository(Base):
     order_by=lambda: desc(Build.num), cascade='all, delete-orphan')
   ref_whitelist = Column(String)  # ; separated list of accepted refs
 
-  def url(self):
-    return url_for('view_repo', path=self.name)
+  def url(self, **kwargs):
+    return url_for('view_repo', path=self.name, **kwargs)
 
   def check_accept_ref(self, ref):
     whitelist = list(filter(bool, self.ref_whitelist.split('\n')))
@@ -94,7 +94,8 @@ class Build(Base):
   Status_Building = 'building'
   Status_Error = 'error'
   Status_Success = 'success'
-  Status = [Status_Queued, Status_Building, Status_Error, Status_Success]
+  Status_Stopped = 'stopped'
+  Status = [Status_Queued, Status_Building, Status_Error, Status_Success, Status_Stopped]
 
   Data_BuildDir = 'build_dir'
   Data_Artifact = 'artifact'
@@ -114,12 +115,12 @@ class Build(Base):
   date_started = Column(DateTime)
   date_finished = Column(DateTime)
 
-  def url(self, data=None):
+  def url(self, data=None, **kwargs):
     path = self.repo.name + '/' + str(self.num)
     if not data:
-      return url_for('view_build', path=path)
+      return url_for('view_build', path=path, **kwargs)
     elif data in (self.Data_Artifact, self.Data_Log):
-      return url_for('download', build_id=self.id, data=data)
+      return url_for('download', build_id=self.id, data=data, **kwargs)
     else:
       raise ValueError('invalid mode: {!r}'.format(mode))
 

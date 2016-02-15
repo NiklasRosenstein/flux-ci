@@ -5,7 +5,7 @@ import json
 import uuid
 
 from . import app, config, utils
-from .build import enqueue
+from .build import enqueue, terminate_build
 from .models import Session, User, Repository, Build, get_target_for, get_public_key
 from flask import request, redirect, url_for, render_template, abort
 from datetime import datetime
@@ -130,6 +130,25 @@ def view_build(path):
   build = get_target_for(session, path)
   if not isinstance(build, Build):
     return abort(404)
+
+  restart = request.args.get('restart', '').strip().lower() == 'true'
+  if restart:
+    if build.status != Build.Status_Building:
+      build.delete()
+      build.status = Build.Status_Queued
+      request.db_session.add(build)
+      request.db_session.commit()
+      enqueue(build)
+    return redirect(build.url())
+
+  stop = request.args.get('stop', '').strip().lower() == 'true'
+  if stop:
+    if build.status == Build.Status_Queued:
+      build.status = Build.Status_Stopped
+    elif build.status == Build.Status_Building:
+      terminate_build(build)
+    return redirect(build.url())
+
   return render_template('view_build.html', user=request.user, build=build)
 
 

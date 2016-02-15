@@ -7,13 +7,12 @@ that will process the queue.
 '''
 
 import os, stat, shlex, shutil, subprocess
-import time
-import traceback
+import time, traceback
 
 from . import config, utils
 from .models import Session, Build
 from collections import deque
-from threading import Condition, Thread
+from threading import Event, Condition, Thread
 from datetime import datetime
 
 
@@ -25,6 +24,7 @@ class BuildConsumer(object):
     self._cond = Condition()
     self._running = False
     self._queue = deque()
+    self._terminate_events = {}
     self._threads = []
 
   def put(self, build):
@@ -36,6 +36,22 @@ class BuildConsumer(object):
       if build.id not in self._queue:
         self._queue.append(build.id)
         self._cond.notify()
+
+  def terminate(self, build):
+    ''' Given a :class:`Build` object, terminates the ongoing build
+    process or removes the build from the queue and sets its status
+    to "stopped". '''
+
+    if not isinstance(build, Build):
+      raise TypeError('expected Build instance')
+    with self._cond:
+      if build.id in self._terminate_events:
+        self._terminate_events[build.id].set()
+      elif build.id in self._queue:
+        self._queue.remove(build.id)
+        with Session() as session:
+          build.status = build.Status_Stopped
+          session.add(build)
 
   def stop(self, join=True):
     with self._cond:
@@ -57,8 +73,10 @@ class BuildConsumer(object):
           build = session.query(Build).get(build_id)
           if not build or build.status != Build.Status_Queued:
             continue
+        with self._cond:
+          do_terminate = self._terminate_events[build_id] = Event()
         try:
-          do_build(build)
+          do_build(build, do_terminate)
         except BaseException as exc:
           traceback.print_exc()
 
@@ -74,6 +92,7 @@ class BuildConsumer(object):
 
 _consumer = BuildConsumer()
 enqueue = _consumer.put
+terminate_build = _consumer.terminate
 run_consumers = _consumer.start
 stop_consumers = _consumer.stop
 
@@ -89,7 +108,7 @@ def update_queue(consumer=None):
       enqueue(build)
 
 
-def do_build(build):
+def do_build(build, terminate_event):
   print(' * build {}#{} started'.format(build.repo.name, build.num))
   assert build.status == Build.Status_Queued
 
@@ -109,10 +128,13 @@ def do_build(build):
     logger = utils.create_logger(logfile)
 
     try:
-      if do_build_(build, build_path, logger, logfile):
+      if do_build_(build, build_path, logger, logfile, terminate_event):
         build.status = Build.Status_Success
       else:
-        build.status = Build.Status_Error
+        if terminate_event.is_set():
+          build.status = Build.Status_Stopped
+        else:
+          build.status = Build.Status_Error
     finally:
       # Create a ZIP from the build directory.
       if os.path.isdir(build_path):
@@ -136,7 +158,7 @@ def do_build(build):
   return build.status == Build.Status_Success
 
 
-def do_build_(build, build_path, logger, logfile):
+def do_build_(build, build_path, logger, logfile, terminate_event):
   logger.info('[Flux]: build {}#{} started'.format(build.repo.name, build.num))
 
   # Clone the repository.
@@ -149,11 +171,19 @@ def do_build_(build, build_path, logger, logfile):
     logger.error('[Flux]: unable to clone repository')
     return False
 
+  if terminate_event.is_set():
+    logger.info('[Flux]: build stopped')
+    return False
+
   # Checkout the correct commit.
   checkout_cmd = ['git', 'checkout', build.commit_sha]
   res = utils.run(checkout_cmd, logger, cwd=build_path)
   if res != 0:
     logger.error('[Flux]: failed to checkout {!r}'.format(build.commit_sha))
+    return False
+
+  if terminate_event.is_set():
+    logger.info('[Flux]: build stopped')
     return False
 
   # Delete the .git folder to save space. We don't need it anymore.
@@ -181,6 +211,17 @@ def do_build_(build, build_path, logger, logfile):
   logger.info('$ ' + shlex.quote(script_fn))
   popen = subprocess.Popen(script_fn, cwd=build_path,
     stdout=logfile, stderr=subprocess.STDOUT, stdin=None)
-  popen.wait()
+
+  # Wait until the process finished or the terminate event is set.
+  while popen.poll() is None and not terminate_event.is_set():
+    time.sleep(0.5)
+  if terminate_event.is_set():
+    try:
+      popen.terminate()
+    except OSError as exc:
+      logger.exception(exc)
+    logger.error('[Flux]: build stopped. build script terminated')
+    return False
+
   logger.info('[Flux]: exit-code {}'.format(popen.returncode))
   return popen.returncode == 0
