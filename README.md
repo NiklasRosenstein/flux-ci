@@ -8,20 +8,19 @@ encrypted proxy pass server (eg. via NGinx) and only for
 internal purpose since it does not provide any mechanism
 to prevent bad code from being executed.
 
-![screenshot](http://i.imgur.com/91p3ZNX.png)
+![screenshot](http://i.imgur.com/9z2POq2.png)
 
 __Features__
 
 * [x] Lightweight and easy to deploy
 * [x] Operational on Windows, Linux and Mac OS
 * [x] Supports [Gogs][] & GitHub
-* [ ] Web interface to view realtime build queue, build logs
+* [x] Web interface to view realtime build queue, build logs
       and download artifacts with user access control
 
 __Todo__
 
 * [ ] Support for GitLab and BitBucket
-* [ ] Support for generating build artifacts
 
 __Requirements__
 
