@@ -3,22 +3,13 @@ This is the Flux configuration file.
 '''
 
 import os
-from werkzeug.serving import make_ssl_devcert
 
 host = 'localhost'
 port = 4042
 debug = True
 
 app_title = 'Flux CI'
-app_url = 'https://localhost:4042'
-
-# A tuple of (certfile, keyfile) for HTTPS serving. Requires pyOpenSSL.
-# make_ssl_devcert() generates a secure certificate, but without identity
-# proof.
-ssl_context = make_ssl_devcert(os.path.expanduser('~/flux/devcert'), host='localhost')
-
-# Enable/disable SSL (thus HTTPS).
-ssl_enabled = True
+app_url = 'http://localhost:4042'
 
 # Secret key required for HTTP session. Generate your for deployment!
 secret_key = 'ThAHy8oxRiNIQDBnVlNjEVY78fXdWHdi'

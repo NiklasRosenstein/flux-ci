@@ -45,13 +45,11 @@ def main():
   with models.Session() as session:
     models.User.create_root_if_not_exists(session)
 
-
   print(' * starting builder threads...')
   build.run_consumers(num_threads=config.parallel_builds)
   build.update_queue()
   try:
-    ssl_context = config.ssl_context if config.ssl_enabled else None
-    app.run(host=config.host, port=config.port, debug=config.debug, use_reloader=False, ssl_context=ssl_context)
+    app.run(host=config.host, port=config.port, debug=config.debug, use_reloader=False)
   finally:
     print(' * stopping builder threads...')
     build.stop_consumers()
