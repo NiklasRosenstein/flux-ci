@@ -7,64 +7,97 @@ that will process the queue.
 '''
 
 import os, stat, shlex, shutil, subprocess
-import time, threading
+import time
 import traceback
 
 from . import config, utils
 from .models import Session, Build
+from collections import deque
+from threading import Condition, Thread
 from datetime import datetime
 
 
-class BuilderThread(threading.Thread):
+class BuildConsumer(object):
+  ''' This class can start a number of threads that consume
+  :class:`Build` objects and execute them. '''
 
   def __init__(self):
-    super().__init__()
-    self.running = False
-    self.lock = threading.Lock()
+    self._cond = Condition()
+    self._running = False
+    self._queue = deque()
+    self._threads = []
+
+  def put(self, build):
+    if not isinstance(build, Build):
+      raise TypeError('expected Build instance')
+    if build.status != Build.Status_Queued:
+      raise TypeError('build status must be {!r}'.format(Build.Status_Queued))
+    with self._cond:
+      if build.id not in self._queue:
+        self._queue.append(build.id)
+        self._cond.notify()
 
   def stop(self, join=True):
-    with self.lock:
-      self.running = False
-    self.join()
+    with self._cond:
+      self._running = False
+      self._cond.notify()
+    if join:
+      [t.join() for t in self._threads]
 
-  def start(self):
-    with self.lock:
-      if self.running:
+  def start(self, num_threads=1):
+    def worker():
+      while True:
+        with self._cond:
+          while not self._queue and self._running:
+            self._cond.wait()
+          if not self._running:
+            break
+          build_id = self._queue.popleft()
+        with Session() as session:
+          build = session.query(Build).get(build_id)
+          if not build or build.status != Build.Status_Queued:
+            continue
+        try:
+          do_build(build)
+        except BaseException as exc:
+          traceback.print_exc()
+
+    if num_threads < 1:
+      raise ValueError('num_threads must be >= 1')
+    with self._cond:
+      if self._running:
         raise RuntimeError('already running')
-      self.running = True
-    return super().start()
-
-  def run(self):
-    while True:
-      with self.lock:
-        if not self.running:
-          break
-      with Session() as session:
-        build = session.query(Build).filter_by(status=Build.Status_Queued).first()
-        if build:
-          try:
-            do_build(session, build)
-          except BaseException:
-            traceback.print_exc()
-        else:
-          # Sleep five seconds before checking the next check.
-          time.sleep(5)
+      self._running = True
+      self._threads = [Thread(target=worker) for i in range(num_threads)]
+      [t.start() for t in self._threads]
 
 
-_thread = BuilderThread()
-start_threads = _thread.start
-stop_threads = _thread.stop
+_consumer = BuildConsumer()
+enqueue = _consumer.put
+run_consumers = _consumer.start
+stop_consumers = _consumer.stop
 
 
-def do_build(session, build):
+def update_queue(consumer=None):
+  ''' Make sure all builds in the database that are still queued
+  are actually queued in the BuildConsumer. '''
+
+  if consumer is None:
+    consumer = _consumer
+  with Session() as session:
+    for build in session.query(Build).filter_by(status=Build.Status_Queued):
+      enqueue(build)
+
+
+def do_build(build):
   print(' * build {}#{} started'.format(build.repo.name, build.num))
   assert build.status == Build.Status_Queued
 
-  # Mark the build as started.
-  build.status = Build.Status_Building
-  build.date_started = datetime.now()
-  session.add(build)
-  session.commit()
+  with Session() as session:
+    # Mark the build as started.
+    build.status = Build.Status_Building
+    build.date_started = datetime.now()
+    session.add(build)
 
   logfile = None
   logger = None
@@ -97,8 +130,8 @@ def do_build(session, build):
     if logfile:
       logfile.close()
     build.date_finished = datetime.now()
-    session.add(build)
-    session.commit()
+    with Session() as session:
+      session.add(build)
 
   return build.status == Build.Status_Success
 

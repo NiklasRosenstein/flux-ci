@@ -46,9 +46,10 @@ def main():
     models.User.create_root_if_not_exists(session)
 
   print(' * starting builder threads...')
-  build.start_threads()
+  build.run_consumers(num_threads=config.parallel_builds)
+  build.update_queue()
   try:
-    app.run(host=config.host, port=config.port, debug=config.debug)
+    app.run(host=config.host, port=config.port, debug=config.debug, use_reloader=False)
   finally:
     print(' * stopping builder threads...')
-    build.stop_threads()
+    build.stop_consumers()

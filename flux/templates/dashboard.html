@@ -15,7 +15,7 @@
       <tr>
         <td><a href="{{ repo.url() }}">{{ repo.name }}</a></td>
         {% if repo.builds %}
-        {% set build = repo.builds[-1] %}
+        {% set build = repo.builds[0] %}
         <td>{{ build_link(build) }}</td>
         {% else %}
         <td></td>

@@ -5,6 +5,7 @@ import json
 import uuid
 
 from . import app, config, utils
+from .build import enqueue
 from .models import Session, User, Repository, Build, get_target_for, get_public_key
 from flask import request, redirect, url_for, render_template, abort
 from datetime import datetime
@@ -92,6 +93,7 @@ def hook_push(logger):
   session.add(build)
   session.commit()
 
+  enqueue(build)
   logger.info('Build #{} for repository {} queued'.format(build.num, repo.name))
   logger.info(config.app_url + build.url())
   return 200

@@ -12,7 +12,7 @@ from .model_base import Base, Session
 from flask import url_for
 
 engine = create_engine(config.db_url, encoding=config.db_encoding)
-Session = sessionmaker(bind=engine, class_=Session)
+Session = sessionmaker(bind=engine, class_=Session, expire_on_commit=False)
 
 
 class User(Base):
@@ -105,7 +105,7 @@ class Build(Base):
 
   id = Column(Integer, primary_key=True)
   repo_id = Column(Integer, ForeignKey('repos.id'))
-  repo = relationship("Repository", back_populates="builds")
+  repo = relationship("Repository", back_populates="builds", lazy='joined')
   ref = Column(String)
   commit_sha = Column(String)
   num = Column(Integer)

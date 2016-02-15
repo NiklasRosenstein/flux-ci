@@ -23,6 +23,11 @@ db_encoding = 'utf8'
 root_user = 'root'
 root_password = 'alpine'
 
+# The number of builds that may be executed in parallel. One is
+# usually a good value since the builds themselfs are usually
+# multiprocessed.
+parallel_builds = 1
+
 # Available choices of build scripts. The first matching option
 # will be executed by Flux.
 if os.name == 'nt':
