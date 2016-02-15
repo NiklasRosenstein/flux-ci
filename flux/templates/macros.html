@@ -1,0 +1,13 @@
+{% macro build_icon(build) %}
+  {% if build.status == build.Status_Queued %}
+    <i class="fa fa-clock-o"></i>
+  {% elif build.status == build.Status_Building %}
+    <i class="fa fa-tasks"></i>
+  {% elif build.status == build.Status_Error %}
+    <i class="fa fa-exclamation-triangle"></i>
+  {% elif build.status == build.Status_Sucess %}
+    <i class="fa fa-check"></i>
+  {% else %}
+    <i class="fa fa-question-circle"></i>
+  {% endif %}
+{% endmacro %}

@@ -2,16 +2,15 @@
 
 html { font-family: "Helvetica Neue", "Arial", "sans-serif"; }
 table th, table td { padding: 0.2em 1em 0.2em 0; }
-a { color: #6EA4FC; }
+a { color: #045CD7; }
 
 .container { padding: 1em; width: 800px; margin: auto; }
 .header { background-color: #045CD7; color: white; }
 .header .title { font-weight: bold; color: white; }
 .header .user { float: right; }
 
-.green {
-  background-color: #04D72B;
-}
+.red { background-color: #FA2419; }
+.blue { background-color: #045CD7; }
 
 .button {
   margin: 1em 0;

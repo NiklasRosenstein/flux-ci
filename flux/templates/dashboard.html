@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "macros.html" import build_icon %}
 {% set page_title = "Dashboard" %}
 {% block body %}
   <h2>Repositories ({{ repositories|length }})
@@ -20,7 +21,7 @@
         <td><a href="{{ repo.url() }}">{{ repo.name }}</a></td>
         {% if repo.builds %}
         {% set build = repo.builds[-1] %}
-        <td><a href="{{ build.url() }}">#{{ build.num }}</a></td>
+        <td><a href="{{ build.url() }}">{{ build_icon(build) }} #{{ build.num }}</a></td>
         {% else %}
         <td>none</td>
         {% endif %}
