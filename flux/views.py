@@ -194,11 +194,10 @@ def delete():
   if not obj:
     return abort(404)
   try:
-    obj.check_deletable()
-  except RuntimeError as exc:
+    session.delete(obj)
+    session.commit()
+  except Build.CanNotDelete as exc:
     utils.flash(str(exc))
     referer = request.headers.get('Referer', url_for('dashboard'))
     return redirect(referer)
-  session.delete(obj)
-  session.commit()
   return redirect(url_for('dashboard'))

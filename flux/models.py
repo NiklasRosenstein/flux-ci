@@ -105,6 +105,9 @@ class Build(Base):
   Data_Artifact = 'artifact'
   Data_Log = 'log'
 
+  class CanNotDelete(Exception):
+    pass
+
   id = Column(Integer, primary_key=True)
   repo_id = Column(Integer, ForeignKey('repos.id'))
   repo = relationship("Repository", back_populates="builds")
@@ -146,12 +149,9 @@ class Build(Base):
         return fp.read()
     return None
 
-  def check_deletable(self):
-    if self.status == self.Status_Building:
-      raise RuntimeError('can not delete build in progress')
-
   def on_delete(self):
-    self.check_deletable()
+    if self.status == self.Status_Building:
+      raise self.CanNotDelete('can not delete build in progress')
     try:
       os.remove(self.path(self.Data_Artifact))
     except OSError as exc:
