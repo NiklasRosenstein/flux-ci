@@ -32,6 +32,7 @@ __Todo__
 
 __Requirements__
 
+* Python 3
 * Git 2.3 (for `GIT_SSH_COMMAND`)
 * [Flask][]
 * [SQLAlchemy][]
