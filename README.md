@@ -31,7 +31,11 @@ __Features__
 
 __Todo__
 
-* [ ] Support for GitLab and BitBucket
+* [ ] Support for GitLab and BitBucket [#12](https://github.com/NiklasRosenstein/flux/issues/11)
+* [ ] Decide on a license [#6](https://github.com/NiklasRosenstein/flux/issues/6)
+* [ ] Distributed/multi-platform builds with build slaves [#9](https://github.com/NiklasRosenstein/flux/issues/9)
+* [ ] Built-in SSL support using pyOpenSSL [#10](https://github.com/NiklasRosenstein/flux/issues/10)
+* [ ] Ability to re-queue builds [#11](https://github.com/NiklasRosenstein/flux/issues/11)
 
 __Requirements__
 
