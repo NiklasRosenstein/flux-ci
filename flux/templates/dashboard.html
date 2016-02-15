@@ -22,4 +22,12 @@
       </tr>
     {% endfor %}
   </table>
+  <h2>Public Key</h2>
+  {% if public_key %}
+    <p>This is the public key of the Flux CI server that needs to be added
+      to the Git server from which repositories are cloned.</p>
+    <pre><code>{{ public_key }}</code></pre>
+  {% else %}
+    <p class="notice warn">The server has no SSH public key!</p>
+  {% endif %}
 {% endblock body %}

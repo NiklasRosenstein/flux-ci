@@ -26,7 +26,7 @@ from . import config
 app.jinja_env.globals['config'] = config
 app.jinja_env.globals['flux'] = sys.modules[__name__]
 
-from . import views, queue, models
+from . import views, build, models
 
 import subprocess
 
@@ -43,8 +43,9 @@ def main():
   # Make sure the root user exists and has all privileges.
   models.User.create_root_if_not_exists()
 
-  queue.start()
+  build.start_queue()
   try:
     app.run(host=config.host, port=config.port, debug=config.debug)
   finally:
-    queue.stop()
+    build.stop_queue()
+    pass

@@ -145,3 +145,15 @@ def get_target_for(session, path):
     except ValueError: return None
     return session.query(Build).filter_by(repo=repo, num=num).one_or_none()
   return repo
+
+
+
+def get_public_key():
+  ''' Returns the servers SSH public key. '''
+
+  # XXX Support all valid options and eventually parse the config file?
+  path = os.path.expanduser('~/.ssh/id_rsa.pub')
+  if os.path.isfile(path):
+    with open(path) as fp:
+      return fp.read()
+  return None

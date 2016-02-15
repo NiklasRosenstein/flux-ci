@@ -4,8 +4,8 @@
 import json
 import uuid
 
-from . import app, config, utils, queue
-from .models import Session, User, Repository, Build, get_target_for
+from . import app, config, utils
+from .models import Session, User, Repository, Build, get_target_for, get_public_key
 from flask import request, redirect, url_for, render_template, abort
 from datetime import datetime
 
@@ -106,6 +106,7 @@ def dashboard():
   context = {}
   context['repositories'] = session.query(Repository).order_by(Repository.name).all()
   context['user'] = request.user
+  context['public_key'] = get_public_key()
   return render_template('dashboard.html', **context)
 
 

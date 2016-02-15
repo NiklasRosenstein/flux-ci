@@ -3,7 +3,7 @@
 {% set page_title = build.repo.name + " #" + build.num|string %}
 {% block body %}
   <a href="{{ build.repo.url() }}"><i class="fa fa-arrow-left"></i> {{ build.repo.name }}</a>
-  {% if build.status in (build.Status_Error, build.Status_Finished, build.Status_Queued) %}
+  {% if build.status in (build.Status_Error, build.Status_Finished) %}
     <a class="fr" href="{{ build.url('artifact') }}"><i class="fa fa-download"></i>
  Download Artifacts</a>
   {% endif %}
