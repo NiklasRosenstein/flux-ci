@@ -12,7 +12,6 @@ import uuid
 import zipfile
 
 from . import config
-from .models import Session, User
 from flask import request, session, Response
 
 
@@ -78,16 +77,18 @@ def basic_auth(message='Login required'):
 def requires_auth(func):
   ''' Decorator for view functions that require basic authentication. '''
 
+  from .models import Session, User
+
   @functools.wraps(func)
   def wrapper(*args, **kwargs):
     auth = request.authorization
     if not auth:
       return basic_auth()
 
-    session = Session()
-    user = session.query(User).filter_by(name=auth.username).one_or_none()
-    if not user or hash_pw(auth.password) != user.passhash:
-      return basic_auth('invalid username or password')
+    with Session() as session:
+      user = session.query(User).filter_by(name=auth.username).one_or_none()
+      if not user or hash_pw(auth.password) != user.passhash:
+        return basic_auth('invalid username or password')
 
     request.user = user
     return func(*args, **kwargs)
@@ -151,6 +152,8 @@ def with_logger(kwarg='logger', stream_dest_kwarg='stream', replace=True):
 def with_dbsession(func):
   ''' Decorator that adds a :class:`Session` object as ``db_session``
   to the Flask request. '''
+
+  from .models import Session
 
   @functools.wraps(func)
   def wrapper(*args, **kwargs):
