@@ -15,9 +15,10 @@ __What's the license, duh?__ See [#6](https://github.com/NiklasRosenstein/flux/i
 __Screenshots__
 
 <table><tr>
-  <td><a href="http://i.imgur.com/lWGo5sU.png"><img src="http://i.imgur.com/lWGo5sU.png" width="250"></a></td>
-  <td><a href="http://i.imgur.com/TNQvcTb.png"><img src="http://i.imgur.com/TNQvcTb.png" width="250"></a></td>
-  <td><a href="http://i.imgur.com/MMNKLqw.png"><img src="http://i.imgur.com/MMNKLqw.png" width="250"></a></td>
+  <td><p align="center">Dashboard</p><a href="http://i.imgur.com/je9SrzQ.png"><img src="http://i.imgur.com/je9SrzQ.png"></a></td>
+  <td><p align="center">Repository Overview</p><a href="http://i.imgur.com/sj85Pav.png"><img src="http://i.imgur.com/sj85Pav.png"></a></td>
+  <td><p align="center">Repository Settings</p><a href="http://i.imgur.com/0cHh7ui.png"><img src="http://i.imgur.com/0cHh7ui.png"></a></td>
+  <td><p align="center">Build Details</p><a href="http://i.imgur.com/hXKJhLs.png"><img src="http://i.imgur.com/hXKJhLs.png"></a></td>
 </tr></table>
 
 __Features__
