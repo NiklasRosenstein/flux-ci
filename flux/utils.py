@@ -182,13 +182,16 @@ def create_logger(stream, name=__name__, fmt=None):
   return logger
 
 
-def stream_file(filename, mime=None):
+def stream_file(filename, name=None, mime=None):
   def generate():
     with open(filename, 'rb') as fp:
       yield from fp
+  if name is None:
+    name = os.path.basename(filename)
   headers = {}
   headers['Content-Type'] = mime or 'application/x-octet-stream'
   headers['Content-Length'] = os.stat(filename).st_size
+  headers['Content-Disposition'] = 'attachment; filename="' + name + '"'
   return Response(generate(), 200, headers)
 
 

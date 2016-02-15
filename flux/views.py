@@ -176,25 +176,20 @@ def edit_repo(repo_id):
   return render_template('edit_repo.html', user=request.user, repo=repo, errors=errors)
 
 
-@app.route('/download')
+@app.route('/download/<int:build_id>/<string:data>')
 @utils.requires_auth
 @utils.with_dbsession
-def download():
-  repo = request.args.get('repo', '')
-  build = request.args.get('build', '')
-  mode = request.args.get('data', '')
-  if mode not in (Build.Data_Artifact, Build.Data_Log):
+def download(build_id, data):
+  if data not in (Build.Data_Artifact, Build.Data_Log):
     return abort(404)
-
-  session = request.db_session
-  build = get_target_for(session, repo + '/' + build)
-  if not isinstance(build, Build) or not build.exists(mode):
+  build = request.db_session.query(Build).get(build_id)
+  if not build or not build.exists(data):
     return abort(404)
   if not request.user.can_download_artifacts:
     return abort(403)
 
-  mime = 'application/zip' if mode == Build.Data_Artifact else 'text/plain'
-  return utils.stream_file(build.path(mode), mime=mime)
+  mime = 'application/zip' if data == Build.Data_Artifact else 'text/plain'
+  return utils.stream_file(build.path(data), mime=mime)
 
 
 
