@@ -8,7 +8,13 @@ encrypted proxy pass server (eg. via NGinx) and only for
 internal purpose since it does not provide any mechanism
 to prevent bad code from being executed.
 
-![screenshot](http://i.imgur.com/9z2POq2.png)
+__Screenshots__
+
+<table><tr>
+  <td><a href="http://i.imgur.com/9z2POq2.png"><img src="http://i.imgur.com/9z2POq2.png" width="250"></a></td>
+  <td><a href="http://i.imgur.com/TNQvcTb.png"><img src="http://i.imgur.com/TNQvcTb.png" width="250"></a></td>
+  <td><a href="http://i.imgur.com/MMNKLqw.png"><img src="http://i.imgur.com/MMNKLqw.png" width="250"></a></td>
+</tr></table>
 
 __Features__
 
