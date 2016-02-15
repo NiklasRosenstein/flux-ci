@@ -1,12 +1,14 @@
 # Flux &ndash; Lightweight CI Server
 
-Flux is a simple, [Flask][] based continours integration server
+Flux is a simple, [Flask][] based continuous integration server
 that responds to push events triggered by [Gogs][] and GitHub.
 
 For security reasons, Flux should be deployed over an SSL
 encrypted proxy pass server (eg. via NGinx) and only for
 internal purpose since it does not provide any mechanism
 to prevent bad code from being executed.
+
+__Development Status__ alpha (active)
 
 __What's the license, duh?__ See [#6](https://github.com/NiklasRosenstein/flux/issues/6).
 
