@@ -1,32 +1,35 @@
 {% extends "base.html" %}
 {% set page_title = "Add Repository" %}
 {% block body %}
-    <h2>Add Repository</h2>
-    <p>You must ensure that the Flux CI server has read permission for
-      the clone URL that you specify below. The URL is stored unencrypted
-      in the database, thus you should avoid using the
-      <code>https://username:password@host/name</code> format.</p>
-    {% if errors %}
-      <b>Errors</b>
-      <ul>
-      {% for msg in errors %}
-        <li>{{ msg }}</li>
-      {% endfor %}
-      </ul>
-    {% endif %}
-    <form method="post">
-      <div class="field required">
-        <label for="repo_name">Owner/Name</label>
-        <input type="text" name="repo_name">
-      </div>
-      <div class="field">
-        <label>Secret</label>
-        <input type="password" name="repo_secret">
-      </div>
-      <div class="field required">
-        <label>Clone URL</label>
-        <input type="text" name="repo_clone_url">
-      </div>
-      <button class="button blue">Add Repository</button>
-    </form>
+  <div class="subheader">
+    <a href="{{ url_for('dashboard') }}"><i class="fa fa-arrow-left"></i> Dashboard</a>
+  </div>
+  <h2>Add Repository</h2>
+  <p>You must ensure that the Flux CI server has read permission for
+    the clone URL that you specify below. The URL is stored unencrypted
+    in the database, thus you should avoid using the
+    <code>https://username:password@host/name</code> format.</p>
+  {% if errors %}
+    <b>Errors</b>
+    <ul>
+    {% for msg in errors %}
+      <li>{{ msg }}</li>
+    {% endfor %}
+    </ul>
+  {% endif %}
+  <form method="post">
+    <div class="field required">
+      <label for="repo_name">Owner/Name</label>
+      <input type="text" name="repo_name">
+    </div>
+    <div class="field">
+      <label>Secret</label>
+      <input type="password" name="repo_secret">
+    </div>
+    <div class="field required">
+      <label>Clone URL</label>
+      <input type="text" name="repo_clone_url">
+    </div>
+    <button class="button blue">Add Repository</button>
+  </form>
 {% endblock body %}

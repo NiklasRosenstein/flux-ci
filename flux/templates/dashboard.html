@@ -3,7 +3,9 @@
 {% set page_title = "Dashboard" %}
 {% block body %}
   <h2>Repositories ({{ repositories|length }})
-    <a href="{{ url_for('new_repo') }}">+</a>
+    {% if user.can_manage %}
+      <a href="{{ url_for('new_repo') }}">+</a>
+    {% endif %}
   </h2>
   <p>This is a list of all registered repositories. You can view the state
     of the most recently added build for a repository and follow the link
@@ -22,12 +24,14 @@
       </tr>
     {% endfor %}
   </table>
-  <h2>Public Key</h2>
-  {% if public_key %}
-    <p>This is the public key of the Flux CI server that needs to be added
-      to the Git server from which repositories are cloned.</p>
-    <pre><code>{{ public_key }}</code></pre>
-  {% else %}
-    <p class="notice warn">The server has no SSH public key!</p>
+  {% if user.can_manage %}
+    <h2>Public Key</h2>
+    {% if public_key %}
+      <p>This is the public key of the Flux CI server that needs to be added
+        to the Git server from which repositories are cloned.</p>
+      <pre><code>{{ public_key }}</code></pre>
+    {% else %}
+      <p class="notice warn">The server has no SSH public key!</p>
+    {% endif %}
   {% endif %}
 {% endblock body %}

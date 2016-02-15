@@ -133,6 +133,8 @@ def view_build(path):
 @app.route('/new/repo', methods=['GET', 'POST'])
 @utils.requires_auth
 def new_repo():
+  if not request.user.can_manage:
+    return abort(403)
   errors = []
   if request.method == 'POST':
     secret = request.form.get('repo_secret', '')

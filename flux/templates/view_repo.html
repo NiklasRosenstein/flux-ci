@@ -2,6 +2,9 @@
 {% from "macros.html" import build_link, fmtdate %}
 {% set page_title = repo.name %}
 {% block body %}
+  <div class="subheader">
+    <a href="{{ url_for('dashboard') }}"><i class="fa fa-arrow-left"></i> Dashboard</a>
+  </div>
   <h2>{{ repo.name }} ({{ repo.builds|length }})</h2>
   <p>This is an overview of all builds for this repository.</p>
   {% if repo.builds %}
