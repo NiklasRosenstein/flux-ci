@@ -4,7 +4,7 @@
 import enum
 import os, shutil
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event, desc
 from sqlalchemy import Column, Boolean, Integer, Enum, String, DateTime, ForeignKey
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.ext.declarative import declarative_base
@@ -15,6 +15,10 @@ engine = create_engine(config.db_url, encoding=config.db_encoding)
 Session = sessionmaker(bind=engine)
 
 Base = declarative_base()
+
+
+def on_delete_propagator(mapper, connection, target):
+  target.on_delete()
 
 
 class User(Base):
@@ -69,7 +73,8 @@ class Repository(Base):
   secret = Column(String)
   clone_url = Column(String)
   build_count = Column(Integer)
-  builds = relationship("Build", back_populates="repo", order_by=lambda: Build.date_queued)
+  builds = relationship("Build", back_populates="repo",
+    order_by=lambda: desc(Build.num), cascade='all, delete-orphan')
 
   def url(self):
     return url_for('view_repo', path=self.name)
@@ -141,9 +146,12 @@ class Build(Base):
         return fp.read()
     return None
 
-  def on_delete(self):
+  def check_deletable(self):
     if self.status == self.Status_Building:
       raise RuntimeError('can not delete build in progress')
+
+  def on_delete(self):
+    self.check_deletable()
     try:
       os.remove(self.path(self.Data_Artifact))
     except OSError as exc:
@@ -152,9 +160,6 @@ class Build(Base):
       os.remove(self.path(self.Data_Log))
     except OSError as exc:
       print(exc)
-
-
-Base.metadata.create_all(engine)
 
 
 def get_target_for(session, path):
@@ -176,7 +181,6 @@ def get_target_for(session, path):
   return repo
 
 
-
 def get_public_key():
   ''' Returns the servers SSH public key. '''
 
@@ -188,3 +192,9 @@ def get_public_key():
     with open(filename) as fp:
       return fp.read()
   return None
+
+
+
+event.listen(Repository, 'before_delete', on_delete_propagator)
+event.listen(Build, 'before_delete', on_delete_propagator)
+Base.metadata.create_all(engine)

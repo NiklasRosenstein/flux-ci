@@ -194,7 +194,7 @@ def delete():
   if not obj:
     return abort(404)
   try:
-    obj.on_delete()
+    obj.check_deletable()
   except RuntimeError as exc:
     utils.flash(str(exc))
     referer = request.headers.get('Referer', url_for('dashboard'))
