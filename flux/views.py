@@ -157,25 +157,21 @@ def new_repo():
   return render_template('new_repo.html', user=request.user, errors=errors)
 
 
-@app.route('/download/artifact/<path:path>')
+@app.route('/download')
 @utils.requires_auth
-def download_artifact(path):
+def download():
+  repo = request.args.get('repo', '')
+  build = request.args.get('build', '')
+  mode = request.args.get('data', '')
+  if mode not in (Build.Data_Artifact, Build.Data_Log):
+    return abort(404)
+
   session = Session()
-  build = get_target_for(session, path)
-  if not isinstance(build, Build) or not build.exists(Build.Data_Artifact):
+  build = get_target_for(session, repo + '/' + build)
+  if not isinstance(build, Build) or not build.exists(mode):
     return abort(404)
   if not request.user.can_download_artifacts:
     return abort(403)
-  return utils.stream_file(build.path(Build.Data_Artifact), mime='application/zip')
 
-
-@app.route('/download/log/<path:path>')
-@utils.requires_auth
-def download_log(path):
-  session = Session()
-  build = get_target_for(session, path)
-  if not isinstance(build, Build) or not build.exists(Build.Data_Log):
-    return abort(404)
-  if not request.user.can_view_buildlogs:
-    return abort(403)
-  return utils.stream_file(build.path(Build.Data_Log), mime='text/plain')
+  mime = 'application/zip' if mode == Build.Data_Artifact else 'text/plain'
+  return utils.stream_file(build.path(mode), mime=mime)

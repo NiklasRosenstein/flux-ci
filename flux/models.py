@@ -111,10 +111,8 @@ class Build(Base):
     path = self.repo.name + '/' + str(self.num)
     if not data:
       return url_for('view_build', path=path)
-    elif data == self.Data_Artifact:
-      return url_for('download_artifact', path=path)
-    elif data == self.Data_Log:
-      return url_for('download_log', path=path)
+    elif data in (self.Data_Artifact, self.Data_Log):
+      return url_for('download', data=data, repo=self.repo.name, build=self.num)
     else:
       raise ValueError('invalid mode: {!r}'.format(mode))
 

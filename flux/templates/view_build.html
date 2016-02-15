@@ -18,9 +18,11 @@
     {% endif %}
   </div>
   <h2>{{ build_icon(build) }} {{ page_title }}</h2>
-  <p><b>Queued:</b> {{ fmtdate(build.date_queued) }}</p>
-  {% if build.date_started %}<p><b>Started:</b> {{ fmtdate(build.date_started) }}</p>{% endif %}
-  {% if build.date_finished %}<p><b>Finished:</b> {{ fmtdate(build.date_finished) }}</p>{% endif %}
+  <div class="smallinfo">
+    <span><b>Queued:</b> {{ fmtdate(build.date_queued) }}</span>
+    {% if build.date_started %}&ndash; <span><b>Started:</b> {{ fmtdate(build.date_started) }}</span>{% endif %}
+    {% if build.date_finished %}&ndash; <span><b>Finished:</b> {{ fmtdate(build.date_finished) }}</span>{% endif %}
+  </div>
   {% if build.status != build.Status_Queued %}
     <h3>Build Log</h3>
     {% if not build.exists(build.Data_Log) %}

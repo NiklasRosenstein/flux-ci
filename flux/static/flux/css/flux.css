@@ -19,6 +19,10 @@ pre {
 .subheader a, .subheader span {
   margin: 0 0.5em;
 }
+.smallinfo {
+  font-size: 80%;
+  color: #888888;
+}
 
 .notice { padding: 1em; border: 1px solid #CCCCCC; border-radius: 0.3em; }
 .warn { background-color: #FDB4B4; border-color: #FB6A6C; }
