@@ -42,6 +42,7 @@ __Requirements__
 * Git 2.3 (for `GIT_SSH_COMMAND`)
 * [Flask][]
 * [SQLAlchemy][]
+* [pyOpenSSL][] (only if you use SSL directly with Flux, on by default)
 
 __Configuration__
 
@@ -68,4 +69,5 @@ __Additional Links__
 
   [Flask]: http://flask.pocoo.org/
   [SQLAlchemy]: http://www.sqlalchemy.org/
+  [pyOpenSSL]: https://pypi.python.org/pypi/pyOpenSSL
   [Gogs]: https://gogs.io/
