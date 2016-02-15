@@ -4,7 +4,7 @@
 {% block body %}
   <h2>Repositories ({{ repositories|length }})
     {% if user.can_manage %}
-      <a href="{{ url_for('new_repo') }}">+</a>
+      <a href="{{ url_for('edit_repo') }}">+</a>
     {% endif %}
   </h2>
   <p>This is a list of all registered repositories. You can view the state

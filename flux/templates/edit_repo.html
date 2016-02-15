@@ -4,7 +4,7 @@
   <div class="subheader">
     <a href="{{ url_for('dashboard') }}"><i class="fa fa-arrow-left"></i> Dashboard</a>
   </div>
-  <h2>Add Repository</h2>
+  <h2>{{ "Edit" if repo else "Add" }} Repository</h2>
   <p>You must ensure that the Flux CI server has read permission for
     the clone URL that you specify below. The URL is stored unencrypted
     in the database, thus you should avoid using the
@@ -20,11 +20,11 @@
   <form method="post">
     <div class="field required">
       <label for="repo_name">Owner/Name</label>
-      <input type="text" name="repo_name">
+      <input type="text" name="repo_name" value="{{ repo.name if repo else "" }}">
     </div>
     <div class="field required">
       <label>Clone URL</label>
-      <input type="text" name="repo_clone_url">
+      <input type="text" name="repo_clone_url" value="{{ repo.clone_url if repo else ""}}">
     </div>
     <div class="field">
       <label>Secret</label>
@@ -32,8 +32,8 @@
         authentication purpose. The default value is a randomly
         generated UUID that serves the purpose. You can also leave
         the field blank if the secret sent by the server is an empty string.</p></small>
-      <input type="text" name="repo_secret" value="{{ flux.utils.make_secret() }}">
+      <input type="text" name="repo_secret" value="{{ repo.secret if repo else flux.utils.make_secret() }}">
     </div>
-    <button class="button blue">Add Repository</button>
+    <button class="button blue">{{ "Update" if repo else "Add Repository" }}</button>
   </form>
 {% endblock body %}

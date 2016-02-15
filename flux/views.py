@@ -132,11 +132,18 @@ def view_build(path):
   return render_template('view_build.html', user=request.user, build=build)
 
 
-@app.route('/new/repo', methods=['GET', 'POST'])
+@app.route('/edit/repo', methods=['GET', 'POST'], defaults={'repo_id': None})
+@app.route('/edit/repo/<int:repo_id>', methods=['GET', 'POST'])
 @utils.requires_auth
-def new_repo():
+def edit_repo(repo_id):
   if not request.user.can_manage:
     return abort(403)
+  session = Session()
+  if repo_id is not None:
+    repo = session.query(Repository).get(repo_id)
+  else:
+    repo = None
+
   errors = []
   if request.method == 'POST':
     secret = request.form.get('repo_secret', '')
@@ -147,16 +154,21 @@ def new_repo():
     if not clone_url:
       errors.append('No clone URL specified')
     if not errors:
-      session = Session()
-      repo = session.query(Repository).filter_by(name=repo_name).one_or_none()
-      if repo:
-        errors.append('Repository {!r} already exists'.format(repo_name))
+      if not repo:
+        repo = session.query(Repository).filter_by(name=repo_name).one_or_none()
+        if repo:
+          errors.append('Repository {!r} already exists'.format(repo_name))
+        else:
+          repo = Repository(name=repo_name, clone_url=clone_url, secret=secret, build_count=0)
       else:
-        repo = Repository(name=repo_name, clone_url=clone_url, secret=secret, build_count=0)
-        session.add(repo)
-        session.commit()
-        return redirect(url_for('dashboard'))
-  return render_template('new_repo.html', user=request.user, errors=errors)
+        repo.name = repo_name
+        repo.clone_url = clone_url
+        repo.secret = secret
+      session.add(repo)
+      session.commit()
+      return redirect(repo.url())
+
+  return render_template('edit_repo.html', user=request.user, repo=repo, errors=errors)
 
 
 @app.route('/download')
