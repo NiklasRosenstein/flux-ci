@@ -1,5 +1,6 @@
 {% extends "base.html" %}
-{% set page_title = "Add Repository" %}
+{% from "macros.html" import render_error_list %}
+{% set page_title = "Edit Repository" if repo else "Add Repository" %}
 {% block body %}
   <div class="subheader">
     <a href="{{ repo.url() if repo else url_for('dashboard') }}"><i class="fa fa-arrow-left"></i> {{ repo.name if repo else "Dashboard" }}</a>
@@ -9,14 +10,7 @@
     the clone URL that you specify below. The URL is stored unencrypted
     in the database, thus you should avoid using the
     <code>https://username:password@host/name</code> format.</p>
-  {% if errors %}
-    <b>Errors</b>
-    <ul>
-    {% for msg in errors %}
-      <li>{{ msg }}</li>
-    {% endfor %}
-    </ul>
-  {% endif %}
+  {{ render_error_list(errors) }}
   <form method="post">
     <div class="field required">
       <label for="repo_name">Owner/Name</label>

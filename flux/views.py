@@ -7,7 +7,7 @@ import uuid
 from . import app, config, utils
 from .build import enqueue, terminate_build
 from .models import Session, User, Repository, Build, get_target_for, get_public_key
-from flask import request, redirect, url_for, render_template, abort
+from flask import request, session, redirect, url_for, render_template, abort
 from datetime import datetime
 
 API_GOGS = 'gogs'
@@ -108,6 +108,7 @@ def dashboard():
   context['repositories'] = session.query(Repository).order_by(Repository.name).all()
   context['user'] = request.user
   context['public_key'] = get_public_key()
+  context['all_users'] = session.query(User).all()
   return render_template('dashboard.html', **context)
 
 
@@ -175,14 +176,13 @@ def edit_repo(repo_id):
       errors.append('Invalid repository name. Format must be owner/repo')
     if not clone_url:
       errors.append('No clone URL specified')
+    other = session.query(Repository).filter_by(name=repo_name).one_or_none()
+    if (other and not repo) or (other and other.id != repo.id):
+      errors.append('Repository {!r} already exists'.format(repo_name))
     if not errors:
       if not repo:
-        repo = session.query(Repository).filter_by(name=repo_name).one_or_none()
-        if repo:
-          errors.append('Repository {!r} already exists'.format(repo_name))
-        else:
-          repo = Repository(name=repo_name, clone_url=clone_url, secret=secret,
-            build_count=0, ref_whitelist=ref_whitelist)
+        repo = Repository(name=repo_name, clone_url=clone_url, secret=secret,
+          build_count=0, ref_whitelist=ref_whitelist)
       else:
         repo.name = repo_name
         repo.clone_url = clone_url
@@ -193,6 +193,59 @@ def edit_repo(repo_id):
       return redirect(repo.url())
 
   return render_template('edit_repo.html', user=request.user, repo=repo, errors=errors)
+
+
+@app.route('/user/new', defaults={'user_id': None}, methods=['GET', 'POST'])
+@app.route('/user/<int:user_id>', methods=['GET', 'POST'])
+@utils.requires_auth
+@utils.with_dbsession
+def edit_user(user_id):
+  session = request.db_session
+  cuser = None
+  if user_id is not None:
+    cuser = session.query(User).get(user_id)
+    if not cuser:
+      return abort(404)
+    if cuser.id != request.user.id and not request.user.can_manage:
+      return abort(403)
+  elif not request.user.can_manage:
+    return abort(403)
+
+  errors = []
+  if request.method == 'POST':
+    if not cuser and not request.user.can_manage:
+      return abort(403)
+
+    user_name = request.form.get('user_name')
+    password = request.form.get('user_password')
+    can_manage = request.form.get('user_can_manage') == 'on'
+    can_view_buildlogs = request.form.get('user_can_view_buildlogs') == 'on'
+    can_download_artifacts = request.form.get('user_can_download_artifacts') == 'on'
+
+    if not cuser:  # Create a new user
+      assert request.user.can_manage
+      other = session.query(User).filter_by(name=user_name).one_or_none()
+      if other:
+        errors.append('User {!r} already exists'.format(user_name))
+      else:
+        cuser = User(name=user_name, passhash=utils.hash_pw(password),
+          can_manage=can_manage, can_view_buildlogs=can_view_buildlogs,
+          can_download_artifacts=can_download_artifacts)
+    else:  # Update user settings
+      if password:
+        cuser.passhash = utils.hash_pw(password)
+      # The user can only update privileges if he has managing privileges.
+      if request.user.can_manage:
+        cuser.can_manage = can_manage
+        cuser.can_view_buildlogs = can_view_buildlogs
+        cuser.can_download_artifacts = can_download_artifacts
+    if not errors:
+      session.add(cuser)
+      session.commit()
+      return redirect(cuser.url())
+
+  return render_template('edit_user.html', user=request.user, cuser=cuser,
+    errors=errors)
 
 
 @app.route('/download/<int:build_id>/<string:data>')
@@ -218,19 +271,25 @@ def download(build_id, data):
 @utils.requires_auth
 @utils.with_dbsession
 def delete():
-  if not request.user.can_manage:
-    return abort(403)
   repo_id = request.args.get('repo_id', '')
   build_id = request.args.get('build_id', '')
+  user_id = request.args.get('user_id', '')
 
   session = request.db_session
   delete_target = None
   if build_id:
     delete_target = session.query(Build).get(build_id)
+    if not request.user.can_manage:
+      return abort(403)
   elif repo_id:
     delete_target = session.query(Repository).get(repo_id)
-
-  if not delete_target:
+    if not request.user.can_manage:
+      return abort(403)
+  elif user_id:
+    delete_target = session.query(User).get(user_id)
+    if delete_target.id != request.user.id and not request.user.can_manage:
+      return abort(403)
+  else:
     return abort(404)
 
   try:
@@ -242,4 +301,5 @@ def delete():
     referer = request.headers.get('Referer', url_for('dashboard'))
     return redirect(referer)
 
+  utils.flash('{} deleted'.format(type(delete_target).__name__))
   return redirect(url_for('dashboard'))

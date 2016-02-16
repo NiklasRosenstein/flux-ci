@@ -22,7 +22,7 @@ table th { text-align: left; }
 .container { padding: 1em; width: 800px; margin: auto; }
 .header { background-color: #045CD7; color: white; }
 .header .title { font-weight: bold; color: white; }
-.header .user { float: right; }
+.header .user { float: right; color: white; }
 .header.flash { color: black; background-color: #fff6b5; font-size: 90%; }
 .header.flash .container { padding: 0.5em 1em; }
 .smallinfo {

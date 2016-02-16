@@ -23,3 +23,14 @@
     {{ date.strftime("%Y/%m/%d %H:%M") }}
   {%- endif %}
 {%- endmacro %}
+
+{% macro render_error_list(errors) %}
+  {% if errors %}
+    <b>Errors</b>
+    <ul>
+    {% for msg in errors %}
+      <li>{{ msg }}</li>
+    {% endfor %}
+    </ul>
+  {% endif %}
+{% endmacro %}

@@ -48,6 +48,9 @@ class User(Base):
     session.add(root)
     return root
 
+  def url(self):
+    return url_for('edit_user', user_id=self.id)
+
 
 class Repository(Base):
   ''' Represents a repository for which push events are being accepted.

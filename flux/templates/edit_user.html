@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% from "macros.html" import render_error_list %}
+{% set page_title = ("User Settings" if cuser else "Add User")|safe %}
+{% block body %}
+	<div class="subheader">
+		<a href="{{ url_for('dashboard') }}"><i class="fa fa-arrow-left"></i> Dashboard</a>
+	</div>
+	<h2>{{ page_title }}</h2>
+	{{ render_error_list(errors) }}
+	<form method="post">
+		<div class="required field">
+			<label for="user_name">Username</label>
+			<input type="text" name="user_name" value="{{ cuser.name if cuser else "" }}" {{ 'disabled="disabled"' if cuser else "" }}>
+		</div>
+		<div class="required field">
+			<label for="user_password">Password</label>
+			<input type="password" name="user_password" value="" placeholder="leave blank to keep old">
+		</div>
+		<div class="field">
+			{% macro checked_with(cond) %}{{ "checked"|safe if cond else "" }}{% endmacro %}
+			{% set checkbox_flags = 'disabled="disabled"'|safe if not user.can_manage else '' %}
+			<label>Privileges</label>
+			<input type="checkbox" name="user_can_manage" {{ checked_with(cuser.can_manage) }} {{ checkbox_flags }}>can manage</input><br/>
+			<input type="checkbox" name="user_can_download_artifacts" {{ checked_with(cuser.can_download_artifacts) }} {{ checkbox_flags }}>can download artifacts</input><br/>
+			<input type="checkbox" name="user_can_view_buildlogs" {{ checked_with(cuser.can_view_buildlogs) }} {{ checkbox_flags }}>can view buildlogs</input><br/>
+		</div>
+		<button class="button blue">{{ "Update" if cuser else "Add User" }}</button>
+		<a class="button red" href="{{ url_for('delete', user_id=cuser.id) }}">Delete User</a>
+	</form>
+{% endblock %}

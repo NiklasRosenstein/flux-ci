@@ -25,6 +25,15 @@
     {% endfor %}
   </table>
   {% if user.can_manage %}
+    <h2>Users ({{ all_users|length }})
+      <small><a href="{{ url_for('edit_user') }}">+</a></small>
+    </h2>
+    <table>
+    {% for auser in all_users %}
+      <tr><td><a href="{{ auser.url() }}">{{ auser.name }}</a></td></tr>
+    {% endfor %}
+    </table>
+
     <h2>Public Key</h2>
     {% if public_key %}
       <p>This is the public key of the Flux CI server that needs to be added
@@ -33,6 +42,7 @@
     {% else %}
       <p class="notice warn">The server has no SSH public key!</p>
     {% endif %}
+
     <h2>Webhook</h2>
     <p>This is the Webhook URL. You should use the appropriate name of
       the Git server for the <code>?api=</code> url parameter.</p>

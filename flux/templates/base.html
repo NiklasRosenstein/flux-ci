@@ -11,7 +11,8 @@
   <body>
     <div class="header"><div class="container">
       <a class="title" href="{{ url_for('dashboard') }}">{{ config.app_title|safe }}</a>
-      <span class="user"><i class="fa fa-user"></i> {{ user.name }}</span>
+      <a href="{{ user.url() }}" class="user"><i class="fa fa-user"></i> {{ user.name }}</a>
+      <div class="cl"></div>
     </div></div>
     {% set flash = flux.utils.flash() %}
     {% if flash %}
