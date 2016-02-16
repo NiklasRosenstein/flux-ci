@@ -287,10 +287,12 @@ def delete():
       return abort(403)
   elif user_id:
     delete_target = session.query(User).get(user_id)
-    if delete_target.id != request.user.id and not request.user.can_manage:
+    if delete_target and delete_target.id != request.user.id and not request.user.can_manage:
       return abort(403)
-  else:
+
+  if not delete_target:
     return abort(404)
+
 
   try:
     session.delete(delete_target)
