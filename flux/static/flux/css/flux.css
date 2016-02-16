@@ -1,6 +1,6 @@
 @import url("base.css");
 
-html { font-family: "Helvetica Neue", "Arial", "sans-serif"; }
+html, body { font-family: "Helvetica Neue", "Arial", "sans-serif"; height: 100%; }
 table th, table td { padding: 0.2em 1em 0.2em 0; }
 a { color: #045CD7; }
 pre {
@@ -19,17 +19,23 @@ textarea {
 table { width: 100%; }
 table th { text-align: left; }
 
-.container { padding: 1em; width: 800px; margin: auto; }
-.header { background-color: #045CD7; color: white; }
-.header .title { font-weight: bold; color: white; }
-.header .user { float: right; color: white; }
-.header.flash { color: black; background-color: #fff6b5; font-size: 90%; }
-.header.flash .container { padding: 0.5em 1em; }
+#wrapper { min-height: 100%; position: relative; }
+#content { padding-bottom: 3em; }
+
+#header { background-color: #045CD7; color: white; }
+#header .title { font-weight: bold; color: white; }
+#header .user { float: right; color: white; }
+#header.flash { color: black; background-color: #fff6b5; font-size: 90%; }
+#header.flash .container { padding: 0.5em 1em; }
+
+#footer { background-color: #EEEEEE; width: 100%; position: absolute; bottom: 0; left: 0; color: gray; }
+
 .smallinfo {
   font-size: 80%;
   color: #888888;
 }
 .smallinfo a { margin-right: 1em; }
+.container { padding: 1em; width: 800px; margin: auto; }
 
 .notice { padding: 1em; border: 1px solid #CCCCCC; border-radius: 0.3em; }
 .warn { background-color: #FDB4B4; border-color: #FB6A6C; }

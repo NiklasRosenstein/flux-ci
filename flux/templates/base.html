@@ -8,8 +8,8 @@
     {% block head %}
     {% endblock head %}
   </head>
-  <body>
-    <div class="header"><div class="container">
+  <body><div id="wrapper">
+    <div id="header"><div class="container">
       <a class="title" href="{{ url_for('dashboard') }}">{{ config.app_title|safe }}</a>
       {% if user %}
         <a href="{{ url_for('logout') }}" class="fr title"><i class="fa fa-sign-out"></i></a>
@@ -24,9 +24,12 @@
         <span><b>Notice:</b> {{ flash }}</span>
       </div></div>
     {% endif %}
-    <div class="container">
+    <div id="content"><div class="container">
       {% block body %}
       {% endblock body %}
-    </div>
-  </body>
+    </div></div>
+    <div id="footer"><div class="container">
+      <small>Powered by <a href="https://github.com/NiklasRosenstein/flxu">Flux</a> v{{ flux.__version__ }}</small>
+    </div></div>
+  </div></body>
 </html>
