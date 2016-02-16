@@ -196,14 +196,14 @@ def do_build_(build, build_path, logger, logfile, terminate_event):
 
   # Find the build script that we need to execute.
   script_fn = None
-  for fname in config.buildscripts:
+  for fname in config.build_scripts:
     script_fn = os.path.join(build_path, fname)
     if os.path.isfile(script_fn):
       break
     script_fn = None
 
   if not script_fn:
-    choices = '{' + ','.join(map(str, config.buildscripts)) + '}'
+    choices = '{' + ','.join(map(str, config.build_scripts)) + '}'
     logger.error('[Flux]: no build script found, choices are ' + choices)
     return False
 

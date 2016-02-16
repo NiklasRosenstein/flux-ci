@@ -31,17 +31,16 @@ parallel_builds = 1
 # Available choices of build scripts. The first matching option
 # will be executed by Flux.
 if os.name == 'nt':
-  buildscripts = ['.flux-build.cmd']
+  build_scripts = ['.flux-build.cmd']
 else:
-  buildscripts = ['.flux-build.sh']
+  build_scripts = ['.flux-build.sh']
 
 # The directory in which all repositories are cloned to
-# and the builds are executed in. This can also be overwritten
-# on a per-repository basis.
+# and the builds are executed in. The directory structure that
+# is created by flux is <owner>/<repo>/<build_num> .
 build_dir = os.path.expanduser('~/flux/builds')
 
 # Full path to the SSH identity file, or None to let SSH decide.
-# This option can also be overwritten on a per-repository basis.
 ssh_identity_file = None
 
 # True if SSH verbose mode should be used.
