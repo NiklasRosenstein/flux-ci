@@ -11,7 +11,11 @@
   <body>
     <div class="header"><div class="container">
       <a class="title" href="{{ url_for('dashboard') }}">{{ config.app_title|safe }}</a>
-      <a href="{{ user.url() }}" class="user"><i class="fa fa-user"></i> {{ user.name }}</a>
+      {% if user %}
+        <a href="{{ url_for('logout') }}" class="fr title"><i class="fa fa-sign-out"></i></a>
+        <div class="spacer fr"></div>
+        <a href="{{ user.url() }}" class="fr title"><i class="fa fa-user"></i> {{ user.name }}</a>
+      {% endif %}
       <div class="cl"></div>
     </div></div>
     {% set flash = flux.utils.flash() %}

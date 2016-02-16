@@ -112,6 +112,33 @@ def dashboard():
   return render_template('dashboard.html', **context)
 
 
+@app.route('/login', methods=['GET', 'POST'])
+@utils.with_dbsession
+def login():
+  db_session = request.db_session
+  errors = []
+  if request.method == 'POST':
+    user_name = request.form['user_name']
+    user_password = request.form['user_password']
+    user = User.get_by(db_session, user_name, utils.hash_pw(user_password))
+    if user:
+      # XXX User login keys rather than storing the password hash
+      # in a cookie. See issue #16.
+      session['user_name'] = user.name
+      session['user_passhash'] = user.passhash
+      return redirect(url_for('dashboard'))
+    errors.append('Username or password invalid.')
+  return render_template('login.html', errors=errors)
+
+
+@app.route('/logout')
+@utils.with_dbsession
+def logout():
+  session.pop('user_name', '')
+  session.pop('user_passhash', '')
+  return redirect(url_for('dashboard'))
+
+
 @app.route('/repo/<path:path>')
 @utils.requires_auth
 @utils.with_dbsession
@@ -292,7 +319,6 @@ def delete():
 
   if not delete_target:
     return abort(404)
-
 
   try:
     session.delete(delete_target)

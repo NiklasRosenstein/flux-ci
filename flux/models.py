@@ -51,6 +51,10 @@ class User(Base):
   def url(self):
     return url_for('edit_user', user_id=self.id)
 
+  @classmethod
+  def get_by(cls, session, user_name, passhash):
+    return session.query(cls).filter_by(name=user_name, passhash=passhash).one_or_none()
+
 
 class Repository(Base):
   ''' Represents a repository for which push events are being accepted.

@@ -12,7 +12,7 @@ import uuid
 import zipfile
 
 from . import config
-from flask import request, session, Response
+from flask import request, session, redirect, url_for, Response
 
 
 def get_raise(data, key, expect_type=None):
@@ -81,14 +81,12 @@ def requires_auth(func):
 
   @functools.wraps(func)
   def wrapper(*args, **kwargs):
-    auth = request.authorization
-    if not auth:
-      return basic_auth()
-
-    with Session() as session:
-      user = session.query(User).filter_by(name=auth.username).one_or_none()
-      if not user or hash_pw(auth.password) != user.passhash:
-        return basic_auth('invalid username or password')
+    user_name = session.get('user_name')
+    user_passhash = session.get('user_passhash')
+    with Session() as db_session:
+      user = User.get_by(db_session, user_name, user_passhash)
+      if not user:
+        return redirect(url_for('login'))
 
     request.user = user
     return func(*args, **kwargs)

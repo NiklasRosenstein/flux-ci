@@ -2,6 +2,7 @@
 .fl { float: left; }
 .fr { float: right; }
 .cl { clear: both; }
+.spacer { display: inline-block; width: 1em; height: 1em; }
 
 /* Style resets. */
 html, body { margin: 0; padding: 0; }
