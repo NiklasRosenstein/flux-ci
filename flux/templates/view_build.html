@@ -8,10 +8,10 @@
   <h2>{{ build_icon(build) }} {{ page_title }} ({{ build.ref }})</h2>
   <div class="smallinfo"><p>
     {% if build.status in (build.Status_Error, build.Status_Success) %}
-      {% if user.can_download_artifacts %}
+      {% if user.can_view_buildlogs %}
         <a href="{{ build.url(build.Data_Log) }}"><i class="fa fa-download"></i> Download Log</a>
       {% endif %}
-      {% if user.can_view_buildlogs %}
+      {% if user.can_download_artifacts %}
         <a href="{{ build.url(build.Data_Artifact) }}"><i class="fa fa-download"></i> Download Artifacts</a>
       {% endif %}
     {% endif %}
@@ -35,7 +35,7 @@
     {% if build.date_finished %}&ndash; <span><b>Finished:</b> {{ fmtdate(build.date_finished) }}</span>{% endif %}<br/>
     <span><b>Commit SHA:</b> <span>{{ build.commit_sha }}</span></span>
   </p></div>
-  {% if build.status != build.Status_Queued %}
+  {% if build.status != build.Status_Queued and user.can_view_buildlogs %}
     <h3>Build Log</h3>
     {% if not build.exists(build.Data_Log) %}
       <p class="notice warn">Build log missing.</p>
