@@ -152,6 +152,15 @@ class Build(Base):
         return fp.read()
     return None
 
+  def check_download_permission(self, data, user):
+    if data == self.Data_Artifact:
+      return user.can_download_artifacts and (
+        self.status == self.Status_Success or user.can_view_buildlogs)
+    elif data == self.Data_Log:
+      return user.can_view_buildlogs
+    else:
+      raise ValueError('invalid value for data: {!r}'.format(data))
+
   def delete(self):
     if self.status == self.Status_Building:
       raise self.CanNotDelete('can not delete build in progress')

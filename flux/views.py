@@ -284,14 +284,12 @@ def download(build_id, data):
   if data not in (Build.Data_Artifact, Build.Data_Log):
     return abort(404)
   build = request.db_session.query(Build).get(build_id)
-  if not build or not build.exists(data):
+  if not build:
     return abort(404)
-
-  if data == Build.Data_Artifact and not request.user.can_download_artifacts:
+  if not build.check_download_permission(data, request.user):
     return abort(403)
-  if data == Build.Data_Log and not request.user.can_view_buildlogs:
-    return abort(403)
-
+  if not build.exists(data):
+    return abort(404)
   mime = 'application/zip' if data == Build.Data_Artifact else 'text/plain'
   return utils.stream_file(build.path(data), mime=mime)
 
