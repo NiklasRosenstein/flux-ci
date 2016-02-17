@@ -1,24 +1,21 @@
-# Flux &ndash; Lightweight CI Server
+# Flux &ndash; Lightweight CI Server <img src="http://i.imgur.com/IJ6EHnq.png"/> <img src="http://i.imgur.com/59R7gD9.png"/>
 
 Flux is a simple, [Flask][] based continuous integration server
-that responds to push events triggered by [Gogs][] and GitHub.
+that responds to push events triggered by [Gogs][] and GitHub. It
+is licensed under the MIT license.
 
 For security reasons, Flux should be deployed over an SSL
 encrypted proxy pass server (eg. via NGinx) and only for
 internal purpose since it does not provide any mechanism
 to prevent bad code from being executed.
 
-__Development Status__ alpha (active)
-
-__What's the license, duh?__ See [#6](https://github.com/NiklasRosenstein/flux/issues/6).
-
 __Screenshots__
 
 <table><tr>
-  <td><p align="center">Dashboard</p><a href="http://i.imgur.com/pWt8LsK.png"><img src="http://i.imgur.com/pWt8LsK.png"></a></td>
-  <td><p align="center">Repository Overview</p><a href="http://i.imgur.com/jergGSS.png"><img src="http://i.imgur.com/jergGSS.png"></a></td>
-  <td><p align="center">Repository Settings</p><a href="http://i.imgur.com/4ptFWH4.png"><img src="http://i.imgur.com/4ptFWH4.png"></a></td>
-  <td><p align="center">Build Details</p><a href="http://i.imgur.com/TcJI4xc.png"><img src="http://i.imgur.com/TcJI4xc.png"></a></td>
+  <td><p align="center">Dashboard</p><a href="http://i.imgur.com/eMGBkwF.png"><img src="http://i.imgur.com/eMGBkwF.png"/></a></td>
+  <td><p align="center">Repository Overview</p><a href="http://i.imgur.com/UuUIIvy.png"><img src="http://i.imgur.com/UuUIIvy.png"/></a></td>
+  <td><p align="center">Repository Settings</p><a href="http://i.imgur.com/bgbqZDD.png"><img src="http://i.imgur.com/bgbqZDD.png"/></a></td>
+  <td><p align="center">Build Details</p><a href="http://i.imgur.com/hWe3xD2.png"><img src="http://i.imgur.com/hWe3xD2.png"/></a></td>
 </tr></table>
 
 __Features__
