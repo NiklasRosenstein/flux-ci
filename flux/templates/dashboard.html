@@ -47,7 +47,7 @@
     <p>This is the Webhook URL. You should use the appropriate name of
       the Git server for the <code>?api=</code> url parameter.</p>
     <ul>
-      <li><code>{{ config.app_url }}{{ url_for('hook_push') }}?api=(gogs|github)</code></li>
+      <li><code>{{ flux.utils.strip_url_path(config.app_url) }}{{ url_for('hook_push') }}?api=(gogs|github)</code></li>
     </ul>
   {% endif %}
 {% endblock body %}
