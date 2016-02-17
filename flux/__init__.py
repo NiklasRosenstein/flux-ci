@@ -22,10 +22,11 @@ app = flask.Flask(__name__)
 app.template_folder = os.path.join(os.path.dirname(__file__), 'templates')
 app.static_folder = os.path.join(os.path.dirname(__file__), 'static')
 
-from . import config
+from . import config, utils
 app.jinja_env.globals['config'] = config
 app.jinja_env.globals['flux'] = sys.modules[__name__]
 app.secret_key = config.secret_key
+app.route = utils.route_wrap(config.app_url, app.route)
 
 from . import views, build, models
 

@@ -12,6 +12,7 @@ import uuid
 import zipfile
 
 from . import config
+from urllib.parse import urlparse
 from flask import request, session, redirect, url_for, Response
 
 
@@ -279,3 +280,17 @@ def ssh_command(url, *args, no_ptty=False, identity_file=None,
     command.append('--')
     command += args
   return command
+
+
+def route_wrap(url_prefix, route):
+  ''' Wraps the *route* function to include *url_prefix* in the
+  route definitions. If *url_prefix* is a fully qualified URL,
+  only the path part is used. '''
+
+  url_prefix = urlparse(url_prefix).path
+
+  @functools.wraps(route)
+  def new_route(path, *args, **kwargs):
+    return route(url_prefix + path, *args, **kwargs)
+
+  return new_route
