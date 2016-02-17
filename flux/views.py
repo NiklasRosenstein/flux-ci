@@ -164,6 +164,8 @@ def view_build(path):
     if build.status != Build.Status_Building:
       build.delete()
       build.status = Build.Status_Queued
+      build.date_started = None
+      build.date_finished = None
       request.db_session.add(build)
       request.db_session.commit()
       enqueue(build)
