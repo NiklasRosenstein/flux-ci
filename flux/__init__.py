@@ -31,6 +31,7 @@ app.config['DEBUG'] = config.debug
 from . import views, build, models
 
 import subprocess
+from urllib.parse import urlparse
 
 
 def main():
