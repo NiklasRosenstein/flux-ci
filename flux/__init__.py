@@ -26,7 +26,7 @@ from . import config, utils
 app.jinja_env.globals['config'] = config
 app.jinja_env.globals['flux'] = sys.modules[__name__]
 app.secret_key = config.secret_key
-app.route = utils.route_wrap(config.app_url, app.route)
+app.config['DEBUG'] = config.debug
 
 from . import views, build, models
 
@@ -46,11 +46,23 @@ def main():
   with models.Session() as session:
     models.User.create_root_if_not_exists(session)
 
+  # Create a dispatcher for the sub-url under which the app is run.
+  url_prefix = urlparse(config.app_url).path
+  if url_prefix and url_prefix != '/':
+    print(url_prefix)
+    from werkzeug.wsgi import DispatcherMiddleware
+    target_app = DispatcherMiddleware(flask.Flask('_dummy_app'), {
+      url_prefix: app,
+    })
+  else:
+    target_app = app
+
   print(' * starting builder threads...')
   build.run_consumers(num_threads=config.parallel_builds)
   build.update_queue()
   try:
-    app.run(host=config.host, port=config.port, debug=config.debug, use_reloader=False)
+    from werkzeug.serving import run_simple
+    run_simple(config.host, config.port, target_app, use_reloader=False)
   finally:
     print(' * stopping builder threads...')
     build.stop_consumers()
