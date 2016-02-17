@@ -48,12 +48,11 @@ template and the parameter documentation.
 __Installation__
 
 ```
-$ git clone https://github.com/NiklasRosenstein/flux.git
-$ cd flux
+$ git clone https://github.com/NiklasRosenstein/flux.git -b stable && cd flux
 $ virtualenv --python python3 .env
 $ source .env/bin/activate
 (.env) $ pip install -r requirements.txt
-(.env) $ ./flux_run.py
+(.env) $ nohup ./flux_run.py &
 ```
 
 __Additional Links__
