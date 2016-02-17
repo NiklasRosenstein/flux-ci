@@ -12,7 +12,7 @@ to prevent bad code from being executed.
 __Screenshots__
 
 <table><tr>
-  <td><p align="center">Dashboard</p><a href="http://i.imgur.com/eMGBkwF.png"><img src="http://i.imgur.com/eMGBkwF.png"/></a></td>
+  <td><p align="center">Dashboard</p><a href="http://i.imgur.com/67dTFgb.png"><img src="http://i.imgur.com/67dTFgb.png"/></a></td>
   <td><p align="center">Repository Overview</p><a href="http://i.imgur.com/UuUIIvy.png"><img src="http://i.imgur.com/UuUIIvy.png"/></a></td>
   <td><p align="center">Repository Settings</p><a href="http://i.imgur.com/jt1SZZ6.png"><img src="http://i.imgur.com/jt1SZZ6.png"/></a></td>
   <td><p align="center">Build Details</p><a href="http://i.imgur.com/hWe3xD2.png"><img src="http://i.imgur.com/hWe3xD2.png"/></a></td>
