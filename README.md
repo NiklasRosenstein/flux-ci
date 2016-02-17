@@ -14,8 +14,9 @@ __Screenshots__
 <table><tr>
   <td><p align="center">Dashboard</p><a href="http://i.imgur.com/eMGBkwF.png"><img src="http://i.imgur.com/eMGBkwF.png"/></a></td>
   <td><p align="center">Repository Overview</p><a href="http://i.imgur.com/UuUIIvy.png"><img src="http://i.imgur.com/UuUIIvy.png"/></a></td>
-  <td><p align="center">Repository Settings</p><a href="http://i.imgur.com/bgbqZDD.png"><img src="http://i.imgur.com/bgbqZDD.png"/></a></td>
+  <td><p align="center">Repository Settings</p><a href="http://i.imgur.com/jt1SZZ6.png"><img src="http://i.imgur.com/jt1SZZ6.png"/></a></td>
   <td><p align="center">Build Details</p><a href="http://i.imgur.com/hWe3xD2.png"><img src="http://i.imgur.com/hWe3xD2.png"/></a></td>
+  <td><p align="center">User Settings</p><a href="http://i.imgur.com/bgbqZDD.png"><img src="http://i.imgur.com/bgbqZDD.png"/></a></td>
 </tr></table>
 
 __Features__
@@ -29,7 +30,6 @@ __Features__
 
 __Todo__
 
-* [ ] Decide on a license [#6](https://github.com/NiklasRosenstein/flux/issues/6)
 * [ ] Support for GitLab and BitBucket [#12](https://github.com/NiklasRosenstein/flux/issues/11)
 * [ ] Distributed/multi-platform builds with build slaves [#9](https://github.com/NiklasRosenstein/flux/issues/9)
 
