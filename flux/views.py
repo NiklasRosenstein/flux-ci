@@ -95,7 +95,7 @@ def hook_push(logger):
 
   enqueue(build)
   logger.info('Build #{} for repository {} queued'.format(build.num, repo.name))
-  logger.info(config.app_url + build.url())
+  logger.info(utils.strip_url_path(config.app_url) + build.url())
   return 200
 
 

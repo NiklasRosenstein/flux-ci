@@ -8,6 +8,7 @@ import logging
 import os
 import shlex
 import subprocess
+import urllib.parse
 import uuid
 import zipfile
 
@@ -280,3 +281,11 @@ def ssh_command(url, *args, no_ptty=False, identity_file=None,
     command.append('--')
     command += args
   return command
+
+
+def strip_url_path(url):
+  ''' Strips that path part of the specified *url*. '''
+
+  result = list(urllib.parse.urlparse(url))
+  result[2] = ''
+  return urllib.parse.urlunparse(result)
