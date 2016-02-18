@@ -1,4 +1,6 @@
-# Flux &ndash; Lightweight CI Server <img src="http://i.imgur.com/IJ6EHnq.png"/> <img src="http://i.imgur.com/59R7gD9.png"/>
+# Flux &ndash; Lightweight CI Server
+
+![license MIT](http://i.imgur.com/uc37iNC.png) ![status beta stable](http://i.imgur.com/4SVCaU2.png)
 
 Flux is a simple, [Flask][] based continuous integration server
 that responds to push events triggered by [Gogs][] and GitHub. It
