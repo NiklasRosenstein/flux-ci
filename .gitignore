@@ -1,1 +1,7 @@
 *.py[cod]
+*.sqlite
+__pycache__/
+dist/
+build/
+builds/
+venv/

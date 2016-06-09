@@ -21,4 +21,12 @@
 Processes the ``flux_config.py`` module.
 '''
 
+import os
+
+def prepend_path(path):
+  ''' Prepend *path* to the ``PATH`` environment variable. '''
+
+  path = os.path.normpath(os.path.abspath(os.path.expanduser(path)))
+  os.environ['PATH'] = path + os.pathsep + os.environ['PATH']
+
 from flux_config import *
