@@ -26,14 +26,14 @@ port = int(os.environ.get('FLUX_PORT', 4042))
 
 ## Enable this option to increase the logging output, wich makes it
 ## easier to find and debug problems with Flux.
-debug = False
+debug = True
 
 ## The application title displayed in the header of the website.
 app_title = 'Flux CI'
 
 ## The application URL that is required in various places. Adjust
 ## if it differs from the HOST:PORT combination.
-app_url = os.environ.get('FLUX_APP_URL', '{}:{}'.format(host, port))
+app_url = os.environ.get('FLUX_APP_URL', 'http://{}:{}'.format(host, port))
 
 ## Secret key required for HTTP session. Use your own random key
 ## for deployment! Here's a useful link to quickly get a bunch of
