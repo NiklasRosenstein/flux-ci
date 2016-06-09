@@ -49,10 +49,8 @@ __Installation__
 
 ```
 $ git clone https://github.com/NiklasRosenstein/flux.git -b stable && cd flux
-$ virtualenv --python python3 .env
-$ source .env/bin/activate
-(.env) $ pip install -r requirements.txt
-(.env) $ nohup ./flux_run.py &
+$ make deploy
+$ make run
 ```
 
 __Additional Links__
