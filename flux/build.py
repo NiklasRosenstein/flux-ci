@@ -149,21 +149,13 @@ def do_build(build, terminate_event):
     logfile = open(build.path(build.Data_Log), 'w')
     logger = utils.create_logger(logfile)
 
-    try:
-      if do_build_(build, build_path, logger, logfile, terminate_event):
-        build.status = Build.Status_Success
+    if do_build_(build, build_path, logger, logfile, terminate_event):
+      build.status = Build.Status_Success
+    else:
+      if terminate_event.is_set():
+        build.status = Build.Status_Stopped
       else:
-        if terminate_event.is_set():
-          build.status = Build.Status_Stopped
-        else:
-          build.status = Build.Status_Error
-    finally:
-      # Create a ZIP from the build directory.
-      if os.path.isdir(build_path):
-        logger.info('[Flux]: Zipping build directory...')
-        utils.zipdir(build_path, build_path + '.zip')
-        shutil.rmtree(build_path)
-        logger.info('[Flux]: Done')
+        build.status = Build.Status_Error
   except BaseException as exc:
     build.status = Build.Status_Error
     if logger:
@@ -171,6 +163,12 @@ def do_build(build, terminate_event):
     else:
       traceback.print_exc()
   finally:
+    # Create a ZIP from the build directory.
+    if os.path.isdir(build_path):
+      logger.info('[Flux]: Zipping build directory...')
+      utils.zipdir(build_path, build_path + '.zip')
+      shutil.rmtree(build_path)
+      logger.info('[Flux]: Done')
     if logfile:
       logfile.close()
     build.date_finished = datetime.now()
@@ -231,7 +229,7 @@ def do_build_(build, build_path, logger, logfile, terminate_event):
   # Execute the script.
   logger.info('[Flux]: executing {}'.format(os.path.basename(script_fn)))
   logger.info('$ ' + shlex.quote(script_fn))
-  popen = subprocess.Popen(script_fn, cwd=build_path,
+  popen = subprocess.Popen([script_fn], cwd=build_path,
     stdout=logfile, stderr=subprocess.STDOUT, stdin=None)
 
   # Wait until the process finished or the terminate event is set.

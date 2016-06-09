@@ -64,11 +64,19 @@ def hook_push(logger):
     name = utils.get(data, 'repository.name', str)
     ref = utils.get(data, 'ref', str)
     commit = utils.get(data, 'after', str)
+    secret = utils.get(data, 'secret', str)
+    get_repo_secret = lambda r: r.secret
   elif api == API_GITHUB:
+    event = request.headers.get('X-Github-Event')
+    if event != 'push':
+      logger.error("Payload rejected (expected 'push' event, got {!r})".format(event))
+      return 400
     owner = utils.get(data, 'repository.owner.name', str)
     name = utils.get(data, 'repository.name', str)
     ref = utils.get(data, 'ref', str)
     commit = utils.get(data, 'after', str)
+    secret = request.headers.get('X-Hub-Signature', '').replace('sha1=', '')
+    get_repo_secret = lambda r: utils.get_github_signature(r.secret, request.data)
   else:
     assert False, "unreachable"
 
@@ -95,7 +103,7 @@ def hook_push(logger):
   if not repo:
     logger.error('PUSH event rejected (unknown repository)')
     return 400
-  if repo.secret != utils.get(data, 'secret'):
+  if get_repo_secret(repo) != secret:
     logger.error('PUSH event rejected (invalid secret)')
     return 400
   if not repo.check_accept_ref(ref):

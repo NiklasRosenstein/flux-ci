@@ -21,6 +21,7 @@
 import io
 import functools
 import hashlib
+import hmac
 import logging
 import os
 import shlex
@@ -306,3 +307,11 @@ def strip_url_path(url):
   result = list(urllib.parse.urlparse(url))
   result[2] = ''
   return urllib.parse.urlunparse(result)
+
+
+def get_github_signature(secret, payload_data):
+  ''' Generates the Github HMAC signature from the repository
+  *secret* and the *payload_data*. The GitHub signature is sent
+  with the ``X-Hub-Signature`` header. '''
+
+  return hmac.new(secret.encode('utf8'), payload_data, hashlib.sha1).hexdigest()
