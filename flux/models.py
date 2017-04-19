@@ -134,7 +134,7 @@ class Build(Base):
   ref = Column(String)
   commit_sha = Column(String)
   num = Column(Integer)
-  status = Column(Enum(*Status))
+  status = Column(Enum(*Status, name='status'))
   date_queued = Column(DateTime)
   date_started = Column(DateTime)
   date_finished = Column(DateTime)

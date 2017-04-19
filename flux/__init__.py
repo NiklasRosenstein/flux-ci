@@ -35,6 +35,7 @@ __version__ = '1.0.0'
 
 import os, sys
 import flask
+import re
 app = flask.Flask(__name__)
 app.template_folder = os.path.join(os.path.dirname(__file__), 'templates')
 app.static_folder = os.path.join(os.path.dirname(__file__), 'static')
@@ -56,7 +57,10 @@ def main():
 
   # Test if Git version is at least 2.3 (for GIT_SSH_COMMAND)
   git_version = subprocess.check_output(['git', '--version']).decode().strip()
-  if git_version < 'git version 2.3':
+  git_version = re.search('^git version (\d\.\d+)', git_version)
+  if git_version:
+    git_version = git_version.group(1)
+  if not git_version or int(git_version.split('.')[1]) < 3:
     print('Error: {!r} installed but need at least 2.3'.format(git_version))
     sys.exit(1)
 
