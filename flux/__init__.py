@@ -45,6 +45,9 @@ app.jinja_env.globals['config'] = config
 app.jinja_env.globals['flux'] = sys.modules[__name__]
 app.secret_key = config.secret_key
 app.config['DEBUG'] = config.debug
+app.config['SERVER_NAME'] = config.server_name
+print('DEBUG = {}'.format(config.debug))
+print('SERVER_NAME = {}'.format(config.server_name))
 
 from . import views, build, models
 
