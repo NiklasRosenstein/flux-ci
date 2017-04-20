@@ -32,6 +32,10 @@ __Todo__
 
 * [ ] Support for GitLab and BitBucket [#12](https://github.com/NiklasRosenstein/flux/issues/11)
 * [ ] Distributed/multi-platform builds with build slaves [#9](https://github.com/NiklasRosenstein/flux/issues/9)
+* [ ] Support build matrices in a config file ([#24], [#23])
+
+[#24]: https://github.com/NiklasRosenstein/flux/issues/24
+[#23]: https://github.com/NiklasRosenstein/flux/issues/23
 
 __Requirements__
 
@@ -49,9 +53,32 @@ __Installation__
 
 ```
 $ git clone https://github.com/NiklasRosenstein/flux.git -b stable && cd flux
-$ make deploy
-$ make run
+$ virtualenv .env
+$ .env/bin/pip install -r requirements.txt
 ```
+
+To run Flux on a specific user, I recommend using [nocrux] daemon manager.
+
+```
+$ pip install --user nocrux
+$ cat nocrux_config.py
+register_daemon(
+  name = 'flux',
+  prog = '/home/flux/flux/.env/bin/python',
+  args = ['flux_run.py'],
+  cwd  = '/home/flux/flux',
+  user = 'flux',
+  group = 'flux'
+)
+$ nocrux flux start
+[nocrux]: (flux) starting "/home/flux/flux/.env/bin/python flux_run.py"
+[nocrux]: (flux) started. (pid: 30747)
+```
+
+Depending on the database you want to use, you may need to install additional
+modules into the virtual environment, like `psycopg2` for PostgreSQL.
+
+[nocrux]: https://github.com/NiklasRosenstein/nocrux
 
 __Additional Links__
 
