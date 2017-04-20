@@ -5,3 +5,5 @@ dist/
 build/
 builds/
 venv/
+.env/
+
