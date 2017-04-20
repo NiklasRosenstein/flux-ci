@@ -45,18 +45,23 @@ class User(Base):
   def __repr__(self):
     return '<User(id={!r}, name={!r})>'.format(self.id, self.name)
 
+  def set_password(self, password):
+    self.passhash = utils.hash_pw(password)
+
   @classmethod
   def root_user(cls, session):
     return session.query(cls).filter_by(name=config.root_user).one_or_none()
 
   @classmethod
-  def create_root_if_not_exists(cls, session):
+  def create_or_update_root(cls, session):
     root = cls.root_user(session)
     if root:
       # Make sure the root has all privileges.
       root.can_manage = True
       root.can_download_artifacts = True
       root.can_view_buildlogs = True
+      root.set_password(config.root_password)
+      root.name = config.root_user
     else:
       # Create a new root user.
       print(' * [flux] creating new root user: {!r}'.format(config.root_user))

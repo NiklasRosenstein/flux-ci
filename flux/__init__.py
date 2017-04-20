@@ -64,9 +64,10 @@ def main():
     print('Error: {!r} installed but need at least 2.3'.format(git_version))
     sys.exit(1)
 
-  # Make sure the root user exists and has all privileges.
+  # Make sure the root user exists and has all privileges, and that
+  # the password is up to date.
   with models.Session() as session:
-    models.User.create_root_if_not_exists(session)
+    models.User.create_or_update_root(session)
 
   # Create a dispatcher for the sub-url under which the app is run.
   url_prefix = urlparse(config.app_url).path
