@@ -1,36 +1,47 @@
 {% macro build_icon(build) %}
   {% if build.status == build.Status_Queued %}
-    <i class="fa fa-clock-o"></i>
+    <i class="fa fa-clock-o" title="Queued"></i>
   {% elif build.status == build.Status_Building %}
-    <i class="fa fa-tasks"></i>
+    <i class="fa fa-refresh" title="Building"></i>
   {% elif build.status == build.Status_Error %}
-    <i class="fa fa-exclamation-triangle"></i>
+    <i class="fa fa-times-circle" title="Error"></i>
   {% elif build.status == build.Status_Success %}
-    <i class="fa fa-check"></i>
+    <i class="fa fa-check-circle" title="Success"></i>
   {% elif build.status == build.Status_Stopped %}
-    <i class="fa fa-stop-circle-o"></i>
+    <i class="fa fa-stop-circle" title="Stopped"></i>
   {% else %}
-    <i class="fa fa-question-circle"></i>
+    <i class="fa fa-question-circle" title="Unknown"></i>
   {% endif %}
 {%- endmacro %}
 
-{% macro build_link(build) %}
-  <a href="{{ build.url() }}">{{ build_icon(build) }} #{{ build.num }} ({{ build.ref }})</a>
-{%- endmacro %}
+{% macro build_ref(build) %}
+  {% if build and build.ref and build.ref.startswith('refs/heads/') %}
+    <i class="fa fa-code-fork"></i>{{ build.ref.replace('refs/heads/', '', 1) }}
+  {% elif build and build.ref and build.ref.startswith('refs/tags/')%}
+    <i class="fa fa-tag"></i>{{ build.ref.replace('refs/tags/', '', 1) }}
+  {% else %}
+    <i class="fa fa-flag"></i>{{ build.ref }}
+  {% endif %}
+{% endmacro %}
 
 {% macro fmtdate(date) %}
   {% if date %}
-    {{ date.strftime("%Y/%m/%d %H:%M") }}
+    {{ date.strftime("%Y/%m/%d %H:%M:%S") }}
   {%- endif %}
 {%- endmacro %}
 
 {% macro render_error_list(errors) %}
   {% if errors %}
-    <b>Errors</b>
-    <ul>
-    {% for msg in errors %}
-      <li>{{ msg }}</li>
-    {% endfor %}
-    </ul>
+    <div class="messages error">
+      <span class="icon">
+        <i class="fa fa-exclamation-triangle"></i>
+      </span>
+      <a href="#" class="close">
+        <i class="fa fa-times"></i>
+      </a>
+      {% for msg in errors %}
+        <div>{{ msg }}</div>
+      {% endfor %}
+    </div>
   {% endif %}
 {% endmacro %}

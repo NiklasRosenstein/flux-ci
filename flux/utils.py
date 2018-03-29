@@ -33,6 +33,7 @@ import zipfile
 from . import config
 from urllib.parse import urlparse
 from flask import request, session, redirect, url_for, Response
+from datetime import datetime
 
 
 def get_raise(data, key, expect_type=None):
@@ -315,3 +316,30 @@ def get_github_signature(secret, payload_data):
   with the ``X-Hub-Signature`` header. '''
 
   return hmac.new(secret.encode('utf8'), payload_data, hashlib.sha1).hexdigest()
+
+def get_date_diff(date1, date2):
+  if (not date1) or (not date2):
+    if (not date1) and date2:
+      date1 = datetime.now()
+    else:
+      return '00:00:00'
+  diff = (date1 - date2) if date1 > date2 else (date2 - date1)
+  seconds = int(diff.seconds % 60)
+  minutes = int(((diff.seconds - seconds) / 60) % 60)
+  hours = int((diff.seconds - seconds - minutes * 60) / 3600)
+  return '{:02d}:{:02d}:{:02d}'.format(hours, minutes, seconds)
+
+def is_page_active(page, user):
+  path = request.path
+
+  if page == 'dashboard' and (not path or path == '/'):
+    return True
+  elif page == 'repositories' and (path.startswith('/repositories') or path.startswith('/repo') or path.startswith('/edit/repo') or path.startswith('/build')):
+    return True
+  elif page == 'users' and (path.startswith('/users') or (path.startswith('/user') and path != ('/user/' + str(user.id)))):
+    return True
+  elif page == 'profile' and path == ('/user/' + str(user.id)):
+    return True
+  elif page == 'integration' and path == '/integration':
+    return True
+  return False

@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% from "macros.html" import build_icon, build_ref, fmtdate %}
+{% set page_title = "404 - Not Found" %}
+
+{% block body %}
+  <div class="messages error">
+    <span class="icon">
+      <i class="fa fa-exclamation-triangle"></i>
+    </span>
+    <div>The requested URL was not found on the server.</div>
+  </div>
+{% endblock body%}

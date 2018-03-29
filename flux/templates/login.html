@@ -2,17 +2,17 @@
 {% from "macros.html" import render_error_list %}
 {% set page_title = "Login" %}
 {% block body %}
-  <h2>Login</h2>
-  {{ render_error_list(errors) }}
-  <form method="post">
-    <div class="required field">
-      <label for="user_name">Username</label>
-      <input type="text" name="user_name">
-    </div>
-    <div class="required field">
-      <label for="user_password">Password</label>
-      <input type="password" name="user_password">
-    </div>
-    <button class="button blue">Login</button>
-  </form>
+  <div class="login-form">
+    <span class="login-header">Please sign in to the application</span>
+    {{ render_error_list(errors) }}
+    <form method="post">
+      <div class="form-field">
+        <input type="text" name="user_name" placeholder="Username" autofocus />
+      </div>
+      <div class="form-field">
+        <input type="password" name="user_password" placeholder="Password" />
+      </div>
+      <button class="btn-primary">Login</button>
+    </form>
+  </div>
 {% endblock body %}

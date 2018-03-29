@@ -1,35 +1,100 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="utf8">
     <title>{{ config.app_title|safe + ((" | " + page_title) if page_title else "") }}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='flux/css/flux.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='flux/css/font-awesome.min.css') }}">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='flux/css/style.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='flux/css/open-sans.css') }}" />
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='flux/img/favicon.ico') }}" />
+    <script src="{{ url_for('static', filename='flux/js/nunjs.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='flux/js/script.js') }}"></script>
+    <noscript>
+      <style>
+        .dropdown-menu, .dropdown, .messages .close, .dropdown-list {
+          display: none !important;
+        }
+      </style>
+    </noscript>
     {% block head %}
     {% endblock head %}
   </head>
-  <body><div id="wrapper">
-    <div id="header"><div class="container">
-      <a class="title" href="{{ url_for('dashboard') }}">{{ config.app_title|safe }}</a>
-      {% if user %}
-        <a href="{{ url_for('logout') }}" class="fr title"><i class="fa fa-sign-out"></i></a>
-        <div class="spacer fr"></div>
-        <a href="{{ user.url() }}" class="fr title"><i class="fa fa-user"></i> {{ user.name }}</a>
-      {% endif %}
-      <div class="cl"></div>
-    </div></div>
-    {% set flash = flux.utils.flash() %}
-    {% if flash %}
-      <div class="header flash"><div class="container">
-        <span><b>Notice:</b> {{ flash }}</span>
-      </div></div>
-    {% endif %}
-    <div id="content"><div class="container">
-      {% block body %}
-      {% endblock body %}
-    </div></div>
-    <div id="footer"><div class="container">
-      <small>Powered by <a href="https://github.com/NiklasRosenstein/flux">Flux</a> v{{ flux.__version__ }}</small>
-    </div></div>
-  </div></body>
+  <body>
+    <div id="confirm-dialog">
+      <span class="confirm-icon">
+        <i class="fa fa-exclamation-triangle"></i>
+      </span>
+      <div class="confirm-message">confirm message</div>
+      <div class="confirm-buttons">
+        <button class="confirm-yes"><i class="fa fa-check"></i>Yes</button>
+        <button class="confirm-no"><i class="fa fa-times"></i>No</button>
+      </div>
+    </div>
+    <div id="confirm-overlay"></div>
+    <header>
+      <nav>
+        <div class="brand">
+          <a href="{{ url_for('dashboard') }}">
+            <img src="{{ url_for('static', filename='flux/img/logo.png') }}" />
+            {{ config.app_title|safe }}
+          </a>
+        </div>
+        {% if user %}
+          <button class="collapse-button">
+            <i class="fa fa-bars"></i>
+          </button>
+          <ul>
+            <li class="{{ 'active' if flux.utils.is_page_active('dashboard', user) }}">
+              <a href="{{ url_for('dashboard') }}">Dashboard</a>
+            </li>
+            <li class="{{ 'active' if flux.utils.is_page_active('repositories', user) }}">
+              <a href="{{ url_for('repositories') }}">Repositories</a>
+            </li>
+            {% if user.can_manage %}
+              <li class="{{ 'active' if flux.utils.is_page_active('users', user) }}">
+                <a href="{{ url_for('users') }}">Users</a>
+              </li>
+              <li class="{{ 'active' if flux.utils.is_page_active('integration', user) }}">
+                <a href="{{ url_for('integration') }}">Integration</a>
+              </li>
+            {% endif %}
+            <li class="{{ 'active' if flux.utils.is_page_active('profile', user) }}">
+              <a href="{{ user.url() }}">{{ user.name }}</a>
+            </li>
+            <li>
+              <a href="{{ url_for('logout') }}"><i class="fa fa-sign-out"></i>Logout</a>
+            </li>
+          </ul>
+        {% endif %}
+      </nav>
+    </header>
+    <main>
+      <div class="container">
+        <ul id="toolbar">
+          {% block toolbar %}
+          {% endblock toolbar %}
+        </ul>
+        <h2>{{ page_title if page_title and page_title != "Login" else "" }}</h2>
+        {% set flash = flux.utils.flash() %}
+        {% if flash %}
+          <div class="messages info">
+            <span class="icon">
+              <i class="fa fa-info-circle"></i>
+            </span>
+            <a href="#" class="close">
+              <i class="fa fa-times"></i>
+            </a>
+            <div>{{ flash }}</div>
+          </div>
+        {% endif %}
+        {% block body %}
+        {% endblock body %}
+      </div>
+    </main>
+    <footer>
+      <div class="container">
+        Powered by <a href="https://github.com/NiklasRosenstein/flux">Flux</a> v{{ flux.__version__ }}
+      </div>
+    </footer>
+  </body>
 </html>

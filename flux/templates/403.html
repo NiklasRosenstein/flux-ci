@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% from "macros.html" import build_icon, build_ref, fmtdate %}
+{% set page_title = "403 - Forbidden" %}
+
+{% block body %}
+  <div class="messages error">
+    <span class="icon">
+      <i class="fa fa-exclamation-triangle"></i>
+    </span>
+    <div>You don't have permission to access this page.</div>
+  </div>
+{% endblock body%}

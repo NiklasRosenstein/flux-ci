@@ -11,13 +11,22 @@ to prevent bad code from being executed.
 
 __Screenshots__
 
-<table><tr>
-  <td><p align="center">Dashboard</p><a href="http://i.imgur.com/67dTFgb.png"><img src="http://i.imgur.com/67dTFgb.png"/></a></td>
-  <td><p align="center">Repository Overview</p><a href="http://i.imgur.com/UuUIIvy.png"><img src="http://i.imgur.com/UuUIIvy.png"/></a></td>
-  <td><p align="center">Repository Settings</p><a href="http://i.imgur.com/jt1SZZ6.png"><img src="http://i.imgur.com/jt1SZZ6.png"/></a></td>
-  <td><p align="center">Build Details</p><a href="http://i.imgur.com/hWe3xD2.png"><img src="http://i.imgur.com/hWe3xD2.png"/></a></td>
-  <td><p align="center">User Settings</p><a href="http://i.imgur.com/bgbqZDD.png"><img src="http://i.imgur.com/bgbqZDD.png"/></a></td>
-</tr></table>
+<table>
+  <tr>
+    <td><p align="center">Login</p><a href="https://i.imgur.com/NIlRIFI.png"><img src="https://i.imgur.com/NIlRIFI.png"/></a></td>
+    <td><p align="center">Dashboard</p><a href="https://i.imgur.com/m5R4syk.png"><img src="https://i.imgur.com/m5R4syk.png"/></a></td>
+    <td><p align="center">Repositories</p><a href="https://i.imgur.com/5CAR1zs.png"><img src="https://i.imgur.com/5CAR1zs.png"/></a></td>
+    <td><p align="center">Repository Overview</p><a href="https://i.imgur.com/Fm6GyPI.png"><img src="https://i.imgur.com/Fm6GyPI.png"/></a></td>
+    <td><p align="center">Build overview</p><a href="https://i.imgur.com/CGEYRB6.png"><img src="https://i.imgur.com/CGEYRB6.png"/></a></td>
+  </tr>
+  <tr>
+    <td><p align="center">Users</p><a href="https://i.imgur.com/hZ7FQix.png"><img src="https://i.imgur.com/hZ7FQix.png"/></a></td>
+    <td><p align="center">User Settings</p><a href="https://i.imgur.com/ZqdIj70.png"><img src="https://i.imgur.com/ZqdIj70.png"/></a></td>
+    <td><p align="center">Integration</p><a href="https://i.imgur.com/FumaPOQ.png"><img src="https://i.imgur.com/FumaPOQ.png"/></a></td>
+    <td><p align="center">Confirmation</p><a href="https://i.imgur.com/60ox3PR.png"><img src="https://i.imgur.com/60ox3PR.png"/></a></td>
+    <td><p align="center">Logo</p><a href="https://i.imgur.com/k18t1XA.png"><img src="https://i.imgur.com/k18t1XA.png"/></a></td>
+  </tr>
+</table>
 
 __Features__
 

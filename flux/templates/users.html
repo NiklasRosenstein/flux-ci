@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% set page_title = "Users" %}
+{% block toolbar %}
+  {% if user.can_manage %}
+    <li>
+      <a href="{{ url_for('edit_user') }}">
+        <i class="fa fa-plus"></i>Add User
+      </a>
+    </li>
+  {% endif %}
+{% endblock toolbar %}
+
+{% block body %}
+
+  {% if user.can_manage %}
+    {% for auser in users %}
+      <a class="block-link" href="{{ auser.url() }}">
+        <span class="block">
+          <span class="block-item block-icon">
+            <i class="fa fa-user"></i>
+          </span>
+          <span class="block-item">
+            {{ auser.name }}
+          </span>
+        </span>
+      </a>
+    {% endfor %}
+  {% endif %}
+
+{% endblock body %}

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% set page_title = "Integration" %}
+{% block body %}
+  {% if user.can_manage %}
+    <h3>Public Key</h3>
+    {% if public_key %}
+      <div class="infobox">
+        This is the public key of the Flux CI server that needs to be added
+        to the Git server from which repositories are cloned.
+      </div>
+      <pre>{{ public_key }}</pre>
+    {% else %}
+      <div class="messages error">
+        <span class="icon">
+          <i class="fa fa-exclamation-triangle"></i>
+        </span>
+        <div>The server has no SSH public key!</div>
+      </div>
+    {% endif %}
+
+    <h3>Webhook</h3>
+    <div class="infobox">
+      This is the Webhook URL. You should use the appropriate name of
+      the Git server for the <code>?api=</code> url parameter
+    </div>
+    <pre>{{ flux.utils.strip_url_path(config.app_url) }}{{ url_for('hook_push') }}?api=(gogs|github)</pre>
+  {% endif %}
+
+{% endblock body %}

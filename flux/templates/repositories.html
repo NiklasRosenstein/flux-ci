@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% from "macros.html" import build_icon, build_ref, fmtdate %}
+{% set page_title = "Repositories" %}
+{% block toolbar %}
+  {% if user.can_manage %}
+    <li>
+      <a href="{{ url_for('edit_repo') }}">
+        <i class="fa fa-plus"></i>Add Repository
+      </a>
+    </li>
+  {% endif %}
+{% endblock toolbar %}
+
+{% block body %}
+  {% if repositories %}
+    {% for repo in repositories %}
+      <a class="block-link" href="{{ repo.url() }}">
+        <span class="block">
+          <span class="left-side">
+            <span class="block-item block-icon">
+              <i class="fa fa-share-alt"></i>
+            </span>
+            <span class="block-item">
+              <span class="block-top-item">
+                {{ repo.name }}
+              </span>
+              <span class="block-bottom-item">
+                {% if user.can_manage %}
+                  {{ repo.clone_url }}
+                {% else %}
+                  &nbsp;
+                {% endif %}
+              </span>
+            </span>
+          </span>
+          {% if repo.builds %}
+          {% set build = repo.builds[0] %}
+            <span class="right-side">
+              <span class="block-item repository-last-build-info">
+                <span class="block-top-item">
+                  &#35;{{ build.num }}
+                </span>
+                <span class="block-bottom-item block-fa">
+                  {{ build_ref(build) }}
+                </span>
+              </span>
+              <span class="block-item block-icon">
+                {{ build_icon(build) }}
+              </span>
+            </span>
+          {% endif %}
+        </span>
+      </a>
+    {% endfor %}
+  {% else %}
+    <div class="messages info">
+      <span class="icon">
+        <i class="fa fa-info-circle"></i>
+      </span>
+      <div>No repositories</div>
+    </div>
+  {% endif %}
+{% endblock body %}

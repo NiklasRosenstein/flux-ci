@@ -130,12 +130,34 @@ def hook_push(logger):
 def dashboard():
   session = request.db_session
   context = {}
-  context['repositories'] = session.query(Repository).order_by(Repository.name).all()
+  context['builds'] = session.query(Build).order_by(Build.date_queued.desc()).limit(10).all()
   context['user'] = request.user
-  context['public_key'] = get_public_key()
-  context['all_users'] = session.query(User).all()
   return render_template('dashboard.html', **context)
 
+@app.route('/repositories')
+@utils.requires_auth
+@utils.with_dbsession
+def repositories():
+  session = request.db_session
+  repositories = session.query(Repository).order_by(Repository.name).all()
+  return render_template('repositories.html', user=request.user, repositories=repositories)
+
+@app.route('/users')
+@utils.requires_auth
+@utils.with_dbsession
+def users():
+  if not request.user.can_manage:
+    return abort(403)
+  session = request.db_session
+  users = session.query(User).all()
+  return render_template('users.html', user=request.user, users=users)
+
+@app.route('/integration')
+@utils.requires_auth
+def integration():
+  if not request.user.can_manage:
+    return abort(403)
+  return render_template('integration.html', user=request.user, public_key=get_public_key())
 
 @app.route('/login', methods=['GET', 'POST'])
 @utils.with_dbsession
@@ -170,9 +192,23 @@ def logout():
 def view_repo(path):
   session = request.db_session
   repo = get_target_for(session, path)
+
   if not isinstance(repo, Repository):
     return abort(404)
-  return render_template('view_repo.html', user=request.user, repo=repo)
+
+  context = {}
+  page_size = 10
+
+  try:
+    context['page_number'] = int(request.args.get('page', 1))
+  except:
+    context['page_number'] = 1
+  context['page_from'] = (context['page_number'] - 1) * page_size
+  context['page_to'] = context['page_from'] + page_size
+  context['next_page'] = None if context['page_number'] <= 1 else context['page_number'] - 1
+  context['previous_page'] = None if len(repo.builds) <= context['page_to'] else context['page_number'] + 1
+
+  return render_template('view_repo.html', user=request.user, repo=repo, **context)
 
 
 @app.route('/build/<path:path>')
@@ -281,6 +317,10 @@ def edit_user(user_id):
       other = session.query(User).filter_by(name=user_name).one_or_none()
       if other:
         errors.append('User {!r} already exists'.format(user_name))
+      elif len(user_name) == 0:
+        errors.append('Username is empty')
+      elif len(password) == 0:
+        errors.append('Password is empty')
       else:
         cuser = User(name=user_name, passhash=utils.hash_pw(password),
           can_manage=can_manage, can_view_buildlogs=can_view_buildlogs,
@@ -329,16 +369,20 @@ def delete():
 
   session = request.db_session
   delete_target = None
+  return_to = 'dashboard'
   if build_id:
     delete_target = session.query(Build).get(build_id)
+    return_to = delete_target.repo.url()
     if not request.user.can_manage:
       return abort(403)
   elif repo_id:
     delete_target = session.query(Repository).get(repo_id)
+    return_to = url_for('repositories')
     if not request.user.can_manage:
       return abort(403)
   elif user_id:
     delete_target = session.query(User).get(user_id)
+    return_to = url_for('users')
     if delete_target and delete_target.id != request.user.id and not request.user.can_manage:
       return abort(403)
 
@@ -351,8 +395,20 @@ def delete():
   except Build.CanNotDelete as exc:
     session.rollback()
     utils.flash(str(exc))
-    referer = request.headers.get('Referer', url_for('dashboard'))
+    referer = request.headers.get('Referer', return_to)
     return redirect(referer)
 
   utils.flash('{} deleted'.format(type(delete_target).__name__))
-  return redirect(url_for('dashboard'))
+  return redirect(return_to)
+
+@app.errorhandler(403)
+def error_403(e):
+  return render_template('403.html'), 403
+
+@app.errorhandler(404)
+def error_404(e):
+  return render_template('404.html'), 404
+
+@app.errorhandler(500)
+def error_500(e):
+  return render_template('500.html'), 500
