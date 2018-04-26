@@ -315,3 +315,10 @@ def get_github_signature(secret, payload_data):
   with the ``X-Hub-Signature`` header. '''
 
   return hmac.new(secret.encode('utf8'), payload_data, hashlib.sha1).hexdigest()
+
+def get_bitbucket_signature(secret, payload_data):
+  ''' Generates the Bitbucket HMAC signature from the repository
+  *secret* and the *payload_data*. The Bitbucket signature is sent
+  with the ``X-Hub-Signature`` header. '''
+
+  return hmac.new(secret.encode('utf8'), payload_data, hashlib.sha256).hexdigest()

@@ -29,7 +29,11 @@ from datetime import datetime
 
 API_GOGS = 'gogs'
 API_GITHUB = 'github'
-
+API_GITEA = 'gitea'
+API_GITBUCKET = 'gitbucket'
+API_BITBUCKET = 'bitbucket'
+API_BITBUCKET_CLOUD = 'bitbucket-cloud'
+API_GITLAB = 'gitlab'
 
 @app.route('/hook/push', methods=['POST'])
 @utils.with_io_response(mimetype='text/plain')
@@ -42,12 +46,17 @@ def hook_push(logger):
 
   * ``gogs``
   * ``github``
+  * ``gitea``
+  * ``gitbucket``
+  * ``bitbucket``
+  * ``bitbucket-cloud``
+  * ``gitlab``
 
   If no or an invalid value is specified for this parameter, a 400
   Invalid Request response is generator. '''
 
   api = request.args.get('api')
-  if api not in (API_GOGS, API_GITHUB):
+  if api not in (API_GOGS, API_GITHUB, API_GITEA, API_GITBUCKET, API_BITBUCKET, API_BITBUCKET_CLOUD, API_GITLAB):
     logger.error('invalid `api` URL parameter: {!r}'.format(api))
     return 400
 
@@ -77,6 +86,71 @@ def hook_push(logger):
     commit = utils.get(data, 'after', str)
     secret = request.headers.get('X-Hub-Signature', '').replace('sha1=', '')
     get_repo_secret = lambda r: utils.get_github_signature(r.secret, request.data)
+  elif api == API_GITEA:
+    event = request.headers.get('X-Gitea-Event')
+    if event != 'push':
+      logger.error("Payload rejected (expected 'push' event, got {!r})".format(event))
+      return 400
+    owner = utils.get(data, 'repository.owner.username', str)
+    name = utils.get(data, 'repository.name', str)
+    ref = utils.get(data, 'ref', str)
+    commit = utils.get(data, 'after', str)
+    secret = utils.get(data, 'secret', str)
+    get_repo_secret = lambda r: r.secret
+  elif api == API_GITBUCKET:
+    event = request.headers.get('X-Github-Event')
+    if event != 'push':
+      logger.error("Payload rejected (expected 'push' event, got {!r})".format(event))
+      return 400
+    owner = utils.get(data, 'repository.owner.login', str)
+    name = utils.get(data, 'repository.name', str)
+    ref = utils.get(data, 'ref', str)
+    commit = utils.get(data, 'after', str)
+    secret = request.headers.get('X-Hub-Signature', '').replace('sha1=', '')
+    if secret:
+      get_repo_secret = lambda r: utils.get_github_signature(r.secret, request.data)
+    else:
+      get_repo_secret = lambda r: r.secret
+  elif api == API_BITBUCKET:
+    event = request.headers.get('X-Event-Key')
+    if event != 'repo:refs_changed':
+      logger.error("Payload rejected (expected 'repo:refs_changed' event, got {!r})".format(event))
+      return 400
+    owner = utils.get(data, 'repository.project.name', str)
+    name = utils.get(data, 'repository.name', str)
+    ref = utils.get(data, 'changes.0.refId', str)
+    commit = utils.get(data, 'changes.0.toHash', str)
+    secret = request.headers.get('X-Hub-Signature', '').replace('sha256=', '')
+    if secret:
+      get_repo_secret = lambda r: utils.get_bitbucket_signature(r.secret, request.data)
+    else:
+      get_repo_secret = lambda r: r.secret
+  elif api == API_BITBUCKET_CLOUD:
+    event = request.headers.get('X-Event-Key')
+    if event != 'repo:push':
+      logger.error("Payload rejected (expected 'repo:push' event, got {!r})".format(event))
+      return 400
+    owner = utils.get(data, 'repository.project.project', str)
+    name = utils.get(data, 'repository.name', str)
+
+    ref_type = utils.get(data, 'push.changes.0.new.type', str)
+    ref_name = utils.get(data, 'push.changes.0.new.name', str)
+    ref = "refs/" + ("heads/" if ref_type == "branch" else "tags/") + ref_name
+
+    commit = utils.get(data, 'push.changes.0.new.target.hash', str)
+    secret = None
+    get_repo_secret = lambda r: r.secret
+  elif api == API_GITLAB:
+    event = utils.get(data, 'object_kind', str)
+    if event != 'push' and event != 'tag_push':
+      logger.error("Payload rejected (expected 'push' or 'tag_push' event, got {!r})".format(event))
+      return 400
+    owner = utils.get(data, 'project.namespace', str)
+    name = utils.get(data, 'project.name', str)
+    ref = utils.get(data, 'ref', str)
+    commit = utils.get(data, 'checkout_sha', str)
+    secret = request.headers.get('X-Gitlab-Token')
+    get_repo_secret = lambda r: r.secret
   else:
     assert False, "unreachable"
 
@@ -95,6 +169,8 @@ def hook_push(logger):
   if len(commit) != 40:
     logger.error('invalid JSON: commit SHA has invalid length')
     return 400
+  if secret == None:
+    secret = ''
 
   name = owner + '/' + name
 
