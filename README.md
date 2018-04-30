@@ -32,14 +32,14 @@ __Features__
 
 * [x] Lightweight and easy to deploy
 * [x] Operational on Windows, Linux and Mac OS
-* [x] Supports [Gogs][] & GitHub
+* [x] Supports BitBucket, GitHub, GitLab, Gogs, Gitea, GitBucket
 * [x] Stop & Restart builds
 * [x] View and download build logs and artifacts
 * [x] User access control
+* [x] Support for GitLab and BitBucket [#12](https://github.com/NiklasRosenstein/flux/issues/11)
 
 __Todo__
 
-* [ ] Support for GitLab and BitBucket [#12](https://github.com/NiklasRosenstein/flux/issues/11)
 * [ ] Distributed/multi-platform builds with build slaves [#9](https://github.com/NiklasRosenstein/flux/issues/9)
 * [ ] Support build matrices in a config file ([#24], [#23])
 
@@ -98,4 +98,3 @@ __Additional Links__
 
   [Flask]: http://flask.pocoo.org/
   [SQLAlchemy]: http://www.sqlalchemy.org/
-  [Gogs]: https://gogs.io/
