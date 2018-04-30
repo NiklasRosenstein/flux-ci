@@ -317,6 +317,15 @@ def get_github_signature(secret, payload_data):
 
   return hmac.new(secret.encode('utf8'), payload_data, hashlib.sha1).hexdigest()
 
+
+def get_bitbucket_signature(secret, payload_data):
+  ''' Generates the Bitbucket HMAC signature from the repository
+  *secret* and the *payload_data*. The Bitbucket signature is sent
+  with the ``X-Hub-Signature`` header. '''
+
+  return hmac.new(secret.encode('utf8'), payload_data, hashlib.sha256).hexdigest()
+
+
 def get_date_diff(date1, date2):
   if (not date1) or (not date2):
     if (not date1) and date2:
@@ -328,6 +337,7 @@ def get_date_diff(date1, date2):
   minutes = int(((diff.seconds - seconds) / 60) % 60)
   hours = int((diff.seconds - seconds - minutes * 60) / 3600)
   return '{:02d}:{:02d}:{:02d}'.format(hours, minutes, seconds)
+
 
 def is_page_active(page, user):
   path = request.path
