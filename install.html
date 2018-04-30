@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf8">
+    <title>Installation</title>
+    <link href="static/style.css" rel="stylesheet">
+    <link href="static/pygments.css" rel="stylesheet">
+  </head>
+  <body>
+    
+    <div class="sidebar">
+      
+      <div class="title">
+        <p><a href="index.html">Flux CI</a></p>
+      </div>
+      <hr/>
+      <div class="toc">
+        
+    <ul>
+      
+      <li><a class="" href="index.html">Home</a></li>
+      
+      
+    <ul>
+      
+    </ul>
+    
+      
+      <li><a class="active" href="install.html">Installation</a></li>
+      
+        <div class="toc"><ul><li><a href="#Requirements">Requirements</a></li><li><a href="#Manual-Installation">Manual Installation</a></li><li><a href="#Docker-Setup">Docker Setup</a></li><li><a href="#Manage-the-server">Manage the server</a></li></ul></div>
+      
+      
+    <ul>
+      
+    </ul>
+    
+      
+      <li><a class="" href="config.html">Configuration</a></li>
+      
+      
+    <ul>
+      
+    </ul>
+    
+      
+    </ul>
+    
+      </div>
+      
+      <hr/>
+      <div class="statigen-notice">Built with <a href="https://github.com/NiklasRosenstein/statigen">statigen</a>.</div>
+    </div>
+    <div class="content">
+      <div class="content-inner">
+        
+          <h1>Installation</h1>
+        
+        <h2 id="Requirements">Requirements</h2>
+<ul>
+<li>Python 3
+</li>
+<li>Git 2.3 (for <code class="codespan">GIT_SSH_COMMAND</code>)
+</li>
+<li><a href="http://flask.pocoo.org/">Flask</a>
+</li>
+<li><a href="http://www.sqlalchemy.org/">SQLAlchemy</a>
+</li></ul><h2 id="Manual-Installation">Manual Installation</h2>
+<pre><code>$ git clone https://github.com/NiklasRosenstein/flux.git -b stable &amp;&amp; cd stable
+$ virtualenv .venv
+$ .venv/bin/pip install -r requirements.txt
+# Update the secret key and root account credentials in flux_config.py
+$ $(EDITOR) flux_config.py
+$ .venv/bin/python flux_run.py
+</pre></code>
+<p>Visit <a href="http://localhost:4042">http://localhost:4042></a>. Also check out the <a href="config.html">Configuration</a> page.</p>
+<p>Depending on the database you want to use, you may need to install additional
+modules into the virtual environment, like <code class="codespan">psycopg2</code> for PostgreSQL. The
+default database uses an SQLite database file in the current working directory.</p>
+<p>For security reasons, you should place the Flux CI server behind an SSL
+encrypted proxy pass server. This is an example configuration for nginx:</p>
+<div class="highlight"><pre><span></span><span class="k">server</span> <span class="p">{</span>
+  <span class="kn">listen</span> <span class="mi">80</span><span class="p">;</span>
+  <span class="kn">listen</span> <span class="mi">443</span><span class="p">;</span>
+  <span class="kn">ssl</span> <span class="no">on</span><span class="p">;</span>
+  <span class="kn">server_name</span> <span class="s">flux.example.com</span><span class="p">;</span>
+
+  <span class="kn">if</span> <span class="s">(</span><span class="nv">$scheme</span> <span class="p">=</span> <span class="s">http)</span> <span class="p">{</span>
+    <span class="kn">return</span> <span class="mi">301</span> <span class="s">https://</span><span class="nv">$host$request_uri</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="kn">location</span> <span class="s">/</span> <span class="p">{</span>
+    <span class="kn">proxy_pass</span> <span class="s">http://0.0.0.0:4042</span><span class="nv">$request_uri</span><span class="p">;</span>
+    <span class="kn">proxy_set_header</span> <span class="s">Host</span> <span class="nv">$host</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+<h2 id="Docker-Setup">Docker Setup</h2>
+<p><em>TODO &hellip;</em></p><h2 id="Manage-the-server">Manage the server</h2>
+<p>To run Flux on a specific user or simply for using daemon manager, I recommend
+using the <a href="https://github.com/NiklasRosenstein/nocrux">nocrux</a> daemon manager.</p>
+<pre><code>$ pip install --user nocrux
+$ cat nocrux_config.py
+register_daemon(
+  name = &#39;flux&#39;,
+  prog = &#39;/home/flux/flux/.env/bin/python&#39;,
+  args = [&#39;flux_run.py&#39;],
+  cwd  = &#39;/home/flux/flux&#39;,
+  user = &#39;flux&#39;,
+  group = &#39;flux&#39;
+)
+$ nocrux flux start
+[nocrux]:install/(flux) starting &quot;/home/flux/flux/.env/bin/python flux_run.py&quot;
+[nocrux]:install/(flux) started. (pid: 30747)
+</pre></code>
+      </div>
+    </div>
+  </body>
+</html>
