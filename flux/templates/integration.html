@@ -4,10 +4,10 @@
   {% if user.can_manage %}
     <h3>Public Key</h3>
     {% if public_key %}
-      <div class="infobox">
+      <p>
         This is the public key of the Flux CI server that needs to be added
         to the Git server from which repositories are cloned.
-      </div>
+      </p>
       <pre>{{ public_key }}</pre>
     {% else %}
       <div class="messages error">
@@ -19,11 +19,58 @@
     {% endif %}
 
     <h3>Webhook</h3>
-    <div class="infobox">
+    <p>
       This is the Webhook URL. You should use the appropriate name of
-      the Git server for the <code>?api=</code> url parameter
-    </div>
-    <pre>{{ flux.utils.strip_url_path(config.app_url) }}{{ url_for('hook_push') }}?api=(gogs|github)</pre>
+      the Git server for the <code>?api=</code> url parameter. A list of
+      Git servers for which webhooks are supported can be found below.
+    </p>
+    <pre>{{ flux.utils.strip_url_path(config.app_url) }}{{ url_for('hook_push') }}</pre>
+    <table>
+      <thead>
+        <tr>
+          <th></th>
+          <th>Service</th>
+          <th>Webhook URL Parameter</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+            <td><img class="service-icon" src="{{ url_for('static', filename='flux/img/bitbucket.png') }}"></td>
+          <td><a href="https://bitbucket.org/product/pricing?tab=self-hosted">BitBucket (Self-hosted)</a></td>
+          <td><code>?api=bitbucket</code></td>
+        </tr>
+        <tr>
+            <td><img class="service-icon" src="{{ url_for('static', filename='flux/img/bitbucket.png') }}"></td>
+          <td><a href="https://bitbucket.org/product/pricing?tab=cloud">BitBucket (Cloud)</a></td>
+          <td><code>?api=bitbucket-cloud</code></td>
+        </tr>
+        <tr>
+            <td><img class="service-icon" src="{{ url_for('static', filename='flux/img/gitbucket.png') }}"></td>
+          <td><a href="https://gitbucket.github.io/">GitBucket</a></td>
+          <td><code>?api=gitbucket</code></td>
+        </tr>
+        <tr>
+            <td><img class="service-icon" src="{{ url_for('static', filename='flux/img/gitea.png') }}"></td>
+          <td><a href="https://gitea.io/en-US/">Gitea</a></td>
+          <td><code>?api=gitea</code></td>
+        </tr>
+        <tr>
+          <td><img class="service-icon" src="{{ url_for('static', filename='flux/img/github.png') }}"></td>
+          <td><a href="https://github.com">GitHub</a></td>
+          <td><code>?api=github</code></td>
+        </tr>
+        <tr>
+            <td><img class="service-icon" src="{{ url_for('static', filename='flux/img/gitlab.png') }}"></td>
+          <td><a href="https://about.gitlab.com/">GitLab</a></td>
+          <td><code>?api=gitlab</code></td>
+        </tr>
+        <tr>
+            <td><img class="service-icon" src="{{ url_for('static', filename='flux/img/gogs.png') }}"></td>
+          <td><a href="https://gogs.io">Gogs</a></td>
+          <td><code>?api=gogs</code></td>
+        </tr>
+      </tbody>
+    </table>
   {% endif %}
 
 {% endblock body %}
