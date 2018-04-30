@@ -1,0 +1,5 @@
+[statigen]
+contentDirectory = "docs"
+
+[site]
+title = "Flux CI"
