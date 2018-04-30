@@ -214,7 +214,7 @@ dl dd {
 		margin-right: 1rem;
 	}
 
-	#confirm-dialog {
+	#confirm-dialog, #input-dialog {
 		left: 1rem;
 		right: 1rem;
 	}
@@ -297,7 +297,7 @@ dl dd {
 		display: none;
 	}
 
-	#confirm-dialog {
+	#confirm-dialog, #input-dialog {
 		left: calc(50% - 12.5rem);
 		width: 25rem;
 	}
@@ -410,7 +410,7 @@ main {
 	margin-bottom: 3.75rem;
 }
 
-#confirm-dialog {
+#confirm-dialog, #input-dialog {
 	background-color: #FFFFFF;
 	border: 0.0625rem solid #CFD8DC;
 	box-shadow: 0 3px 7px rgba(0, 0, 0, 0.3);
@@ -421,22 +421,30 @@ main {
 	z-index: 9999;
 }
 
-#confirm-dialog .confirm-icon {
+#confirm-dialog .confirm-icon, #input-dialog .input-icon {
 	color: #FF9800;
 	float: left;
 	font-size: 2rem;
 	margin-right: .3125rem;
 }
 
-#confirm-dialog .confirm-message {
+#input-dialog .input-icon {
+	color: #33AAFF;
+}
+
+#confirm-dialog .confirm-message, #input-dialog .input-message {
 	font-weight: 700;
 	padding: .5rem 0 1rem 0;
 }
 
-#confirm-dialog .confirm-buttons {
+#confirm-dialog .confirm-buttons, #input-dialog .input-buttons {
 	border-top: 0.0625rem solid #CFD8DC;
 	padding-top: .5rem;
 	text-align: right;
+}
+
+#input-dialog .input-text {
+	margin: 1em 0.5em;
 }
 
 #confirm-overlay {

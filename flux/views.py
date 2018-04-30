@@ -477,13 +477,46 @@ def delete():
   utils.flash('{} deleted'.format(type(delete_target).__name__))
   return redirect(return_to)
 
+
+@app.route('/build')
+@utils.requires_auth
+@utils.with_dbsession
+def build():
+  repo_id = request.args.get('repo_id', '')
+  ref_name = request.args.get('ref', '')
+  session = request.db_session
+  if not repo_id or not ref_name:
+    return abort(400)
+  if not request.user.can_manage:
+    return abort(403)
+
+  # TODO: Determine the commit SHA.
+  commit = '0' * 32
+  repo = session.query(Repository).get(repo_id)
+  build = Build(repo=repo, commit_sha=commit, num=repo.build_count, ref=ref_name,
+    status=Build.Status_Queued, date_queued=datetime.now(), date_started=None,
+    date_finished=None)
+  repo.build_count += 1
+  session.add(repo)
+  session.add(build)
+  session.commit()
+
+  enqueue(build)
+  print('Build #{} for repository {} queued'.format(build.num, repo.name))
+  print(utils.strip_url_path(config.app_url) + build.url())
+
+  return redirect(repo.url())
+
+
 @app.errorhandler(403)
 def error_403(e):
   return render_template('403.html'), 403
 
+
 @app.errorhandler(404)
 def error_404(e):
   return render_template('404.html'), 404
+
 
 @app.errorhandler(500)
 def error_500(e):
