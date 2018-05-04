@@ -258,21 +258,24 @@ def run(command, logger, cwd=None, env=None, shell=False):
   if shell:
     if not isinstance(command, str):
       command = ' '.join(shlex.quote(x) for x in command)
-    logger.info('$ ' + command)
+    if logger:
+      logger.info('$ ' + command)
   else:
     if isinstance(command, str):
       command = shlex.split(command)
-    logger.info('$ ' + ' '.join(map(shlex.quote, command)))
+    if logger:
+      logger.info('$ ' + ' '.join(map(shlex.quote, command)))
 
   popen = subprocess.Popen(
     command, cwd=cwd, env=env, shell=shell, stdout=subprocess.PIPE,
     stderr=subprocess.STDOUT, stdin=None)
   stdout = popen.communicate()[0].decode()
   if stdout:
-    if popen.returncode != 0:
+    if popen.returncode != 0 and logger:
       logger.error('\n' + stdout)
     else:
-      logger.info('\n' + stdout)
+      if logger:
+        logger.info('\n' + stdout)
   return popen.returncode
 
 
@@ -353,3 +356,13 @@ def is_page_active(page, user):
   elif page == 'integration' and path == '/integration':
     return True
   return False
+
+def ping_repo(repo_url):
+  if not repo_url or repo_url == '':
+    return 1
+
+  ssh_cmd = ssh_command(None, identity_file=config.ssh_identity_file)
+  env = {'GIT_SSH_COMMAND': ' '.join(map(shlex.quote, ssh_cmd))}
+  ls_remote = ['git', 'ls-remote', '--exit-code', repo_url]
+  res = run(ls_remote, None, env=env)
+  return res;

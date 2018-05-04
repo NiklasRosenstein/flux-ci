@@ -733,6 +733,33 @@ a .block:hover {
 	margin-bottom: .5rem;
 }
 
+.fa.fa-wait-spin {
+	-webkit-animation: spin 1s linear infinite;
+	-moz-animation: spin 1s linear infinite;
+	animation: spin 1s linear infinite;
+}
+
+#repo_check_result {
+	display: block;
+	margin-left: .25rem;
+}
+
+#repo_check_result .fa {
+	margin-right: .25rem;
+}
+
+#repo_check_result .fa.fa-check {
+	color: #4CAF50;
+}
+
+#repo_check_result .fa.fa-times {
+	color: #F44336;
+}
+
+#repo_check_result .fa.fa-wait-spin {
+	color: #2196F3;
+}
+
 /* footer */
 footer {
 	background-color: #ECEFF1;
@@ -814,3 +841,4 @@ footer {
 .fa-calendar-check-o:before { content: '\f274'; }
 .fa-stop-circle:before { content: '\f28d'; }
 .fa-stop-circle-o:before { content: '\f28e'; }
+.fa-wait-spin:before { content: '\e834'; }
