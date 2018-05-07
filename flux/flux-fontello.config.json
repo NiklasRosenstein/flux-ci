@@ -167,6 +167,12 @@
       "css": "chevron-right",
       "code": 59410,
       "src": "fontawesome"
+    },
+    {
+      "uid": "9bd60140934a1eb9236fd7a8ab1ff6ba",
+      "css": "wait-spin",
+      "code": 59444,
+      "src": "fontelico"
     }
   ]
 }

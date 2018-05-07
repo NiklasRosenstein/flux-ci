@@ -25,6 +25,7 @@
     <div class="field required">
       <label for="repo_clone_url">Clone URL</label>
       <input type="text" id="repo_clone_url" name="repo_clone_url" value="{{ repo.clone_url if repo else ""}}" />
+      <span id="repo_check_result" class="infobox" style="display: none;"></span>
     </div>
     <div class="field">
       <label for="repo_secret">Secret</label>
@@ -46,4 +47,29 @@
     </div>
     <button class="btn-primary">{{ "Update" if repo else "Add Repository" }}</button>
   </form>
+  <script>
+    function checkRepo() {
+      let result = $('#repo_check_result');
+      result.removeClass('ok').removeClass('fail')[0].innerHTML = '<i class="fa fa-wait-spin"></i>Checking accessibility of repository.';
+      result.show();
+      $.ajax({
+        url: '{{ url_for('ping_repo') }}',
+        type: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+        },
+        data: "url=" + encodeURI($('#repo_clone_url').val()),
+        success: function() {
+          result.addClass('ok')[0].innerHTML = '<i class="fa fa-check"></i>Git repository is accessible.';
+        },
+        error: function () {
+          result.addClass('fail')[0].innerHTML = '<i class="fa fa-times"></i>Git repository is NOT accessible.';
+        }
+      });
+    }
+
+    $('#repo_clone_url').on('blur', function() {
+      checkRepo();
+    });
+  </script>
 {% endblock body %}

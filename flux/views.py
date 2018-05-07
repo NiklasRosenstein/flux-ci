@@ -507,6 +507,15 @@ def build():
 
   return redirect(repo.url())
 
+@app.route('/ping-repo', methods=['POST'])
+@utils.requires_auth
+def ping_repo():
+  repo_url = request.form.get('url')
+  res = utils.ping_repo(repo_url)
+  if (res == 0):
+    return 'ok', 200
+  else:
+    return 'fail', 404
 
 @app.errorhandler(403)
 def error_403(e):
