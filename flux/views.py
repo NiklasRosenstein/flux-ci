@@ -432,7 +432,8 @@ def download(build_id, data):
   if not build.exists(data):
     return abort(404)
   mime = 'application/zip' if data == Build.Data_Artifact else 'text/plain'
-  return utils.stream_file(build.path(data), mime=mime)
+  download_name = "{}-{}.{}".format(build.repo.name.replace("/", "_"), build.num, "zip" if data == Build.Data_Artifact else 'log')
+  return utils.stream_file(build.path(data), name=download_name, mime=mime)
 
 
 @app.route('/delete')
