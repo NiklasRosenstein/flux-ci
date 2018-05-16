@@ -247,7 +247,7 @@ def zipdir(dirname, filename):
   zipf.close()
 
 
-def run(command, logger, cwd=None, env=None, shell=False):
+def run(command, logger, cwd=None, env=None, shell=False, return_stdout=False):
   ''' Run a subprocess with the specified *command*. The command
   and output of the command is logged to *logger*. *command* will
   automatically be converted to a string or list of command arguments
@@ -276,6 +276,8 @@ def run(command, logger, cwd=None, env=None, shell=False):
     else:
       if logger:
         logger.info('\n' + stdout)
+  if return_stdout:
+    return popen.returncode, stdout
   return popen.returncode
 
 

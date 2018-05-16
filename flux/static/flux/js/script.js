@@ -54,6 +54,14 @@ $(document).ready(function() {
 		toggleConfirmDialog();
 	});
 
+	$('#input-dialog .input-text').on('keyup', function(event) {
+		if (event !== undefined && event.keyCode === 13) {
+			$('#input-dialog .input-ok').click();
+		} else if (event !== undefined && event.keyCode === 27) {
+			$('#input-dialog .input-cancel').click();
+		}
+	});
+
 	function confirmationYes(caller) {
 		return function(event) {
 			event.preventDefault();

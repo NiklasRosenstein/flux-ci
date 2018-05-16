@@ -195,12 +195,38 @@ def do_build_(build, build_path, logger, logfile, terminate_event):
     logger.info('[Flux]: build stopped')
     return False
 
-  # Checkout the correct commit.
-  checkout_cmd = ['git', 'checkout', build.commit_sha]
+  if build.ref and build.commit_sha == ("0" * 32):
+    build_start_point = build.ref
+    is_ref_build = True
+  else:
+    build_start_point = build.commit_sha
+    is_ref_build = False
+
+  # Checkout the correct build_start_point.
+  checkout_cmd = ['git', 'checkout', build_start_point]
   res = utils.run(checkout_cmd, logger, cwd=build_path)
   if res != 0:
-    logger.error('[Flux]: failed to checkout {!r}'.format(build.commit_sha))
+    logger.error('[Flux]: failed to checkout {!r}'.format(build_start_point))
     return False
+
+  # If checkout was initiated by Start build, update commit_sha and ref of build
+  if is_ref_build:
+    # update commit sha
+    get_ref_sha_cmd = ['git', 'rev-parse', 'HEAD']
+    res_ref_sha, res_ref_sha_stdout = utils.run(get_ref_sha_cmd, logger, cwd=build_path, return_stdout=True)
+    if res_ref_sha == 0 and res_ref_sha_stdout != None:
+      build.commit_sha = res_ref_sha_stdout.strip()
+    else:
+      logger.error('[Flux]: failed to read current sha')
+      return False
+    # update ref; user could enter just branch name, e.g 'master'
+    get_ref_cmd = ['git', 'rev-parse', '--symbolic-full-name', build_start_point]
+    res_ref, res_ref_stdout = utils.run(get_ref_cmd, logger, cwd=build_path, return_stdout=True)
+    if res_ref == 0 and res_ref_stdout != None and res_ref_stdout.strip() != 'HEAD':
+      build.ref = res_ref_stdout.strip()
+    else:
+      logger.error('[Flux]: failed to read current ref')
+      return False
 
   if terminate_event.is_set():
     logger.info('[Flux]: build stopped')
