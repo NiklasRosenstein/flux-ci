@@ -222,8 +222,11 @@ def do_build_(build, build_path, logger, logfile, terminate_event):
     # update ref; user could enter just branch name, e.g 'master'
     get_ref_cmd = ['git', 'rev-parse', '--symbolic-full-name', build_start_point]
     res_ref, res_ref_stdout = utils.run(get_ref_cmd, logger, cwd=build_path, return_stdout=True)
-    if res_ref == 0 and res_ref_stdout != None and res_ref_stdout.strip() != 'HEAD':
+    if res_ref == 0 and res_ref_stdout != None and res_ref_stdout.strip() != 'HEAD' and res_ref_stdout.strip() != '':
       build.ref = res_ref_stdout.strip()
+    elif res_ref_stdout.strip() == '':
+      # keep going, used ref was probably commit sha
+      pass
     else:
       logger.error('[Flux]: failed to read current ref')
       return False
