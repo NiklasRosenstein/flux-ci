@@ -133,7 +133,7 @@ pre {
 	margin: .5rem 0;
 	overflow: hidden;
 	padding: .75rem;
-	white-space: pre-line;
+	white-space: pre-wrap;
 	word-wrap: break-word;
 }
 
@@ -251,6 +251,10 @@ dl dd {
 		padding-right: .25rem;
 	}
 
+	.block .left-side .block-top-item {
+		max-width: 21.875rem;
+	}
+
 	.block .right-side .block-item:first-child {
 		float: left;
 	}
@@ -323,6 +327,10 @@ dl dd {
 		vertical-align: middle;
 	}
 
+	.block .left-side .block-top-item {
+		max-width: 21.875rem;
+	}
+
 	.block-icon {
 		width: 2rem;
 		font-size: 2rem;
@@ -334,6 +342,12 @@ dl dd {
 		margin: 0 auto;
 		padding: .5rem;
 		width: 20rem;
+	}
+}
+
+@media (max-width: 575.8px) {
+	.block .left-side .block-top-item {
+		max-width: 10.625rem;
 	}
 }
 
@@ -501,6 +515,7 @@ main {
 	padding: .25rem 0;
 	position: absolute;
 	right: 0;
+	z-index: 10;
 }
 
 #toolbar li .dropdown-menu a {
@@ -588,6 +603,8 @@ a .block:hover {
 	display: block;
 	font-weight: 700;
 	margin-bottom: .5rem;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 .block .left-side .block-bottom-item.additional {
