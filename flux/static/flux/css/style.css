@@ -444,10 +444,10 @@ main {
 }
 
 #input-dialog .input-text {
-	margin: 1em 0.5em;
+	margin: 1rem 0;
 }
 
-#confirm-overlay {
+#confirm-overlay, #input-overlay {
 	background-color: rgba(38, 50, 56, 0.3);
 	bottom: 0;
 	display: none;
