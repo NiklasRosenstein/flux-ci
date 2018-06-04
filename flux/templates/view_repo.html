@@ -1,6 +1,12 @@
 {% extends "base.html" %}
 {% from "macros.html" import build_icon, build_ref, fmtdate %}
 {% set page_title = repo.name %}
+{% block head %}
+  <script>
+    var start_build_url = "{{ url_for('build') }}";
+  </script>
+{% endblock head %}
+
 {% block toolbar %}
   <li>
     <a href="{{ url_for('repositories') }}">
