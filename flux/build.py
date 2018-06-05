@@ -31,6 +31,7 @@ from .models import Session, Build
 from collections import deque
 from threading import Event, Condition, Thread
 from datetime import datetime
+from distutils import dir_util
 
 
 class BuildConsumer(object):
@@ -145,11 +146,12 @@ def do_build(build, terminate_event):
 
   try:
     build_path = build.path()
+    override_path = build.path(Build.Data_OverrideDir)
     utils.makedirs(os.path.dirname(build_path))
     logfile = open(build.path(build.Data_Log), 'w')
     logger = utils.create_logger(logfile)
 
-    if do_build_(build, build_path, logger, logfile, terminate_event):
+    if do_build_(build, build_path, override_path, logger, logfile, terminate_event):
       build.status = Build.Status_Success
     else:
       if terminate_event.is_set():
@@ -178,7 +180,7 @@ def do_build(build, terminate_event):
   return build.status == Build.Status_Success
 
 
-def do_build_(build, build_path, logger, logfile, terminate_event):
+def do_build_(build, build_path, override_path, logger, logfile, terminate_event):
   logger.info('[Flux]: build {}#{} started'.format(build.repo.name, build.num))
 
   # Clone the repository.
@@ -237,6 +239,10 @@ def do_build_(build, build_path, logger, logfile, terminate_event):
 
   # Delete the .git folder to save space. We don't need it anymore.
   shutil.rmtree(os.path.join(build_path, '.git'))
+
+  # Copy over overridden files if any
+  if os.path.exists(override_path):
+    dir_util.copy_tree(override_path, build_path);
 
   # Find the build script that we need to execute.
   script_fn = None

@@ -127,6 +127,7 @@ class Build(Base):
   Status = [Status_Queued, Status_Building, Status_Error, Status_Success, Status_Stopped]
 
   Data_BuildDir = 'build_dir'
+  Data_OverrideDir = 'override_dir'
   Data_Artifact = 'artifact'
   Data_Log = 'log'
 
@@ -161,6 +162,8 @@ class Build(Base):
       return base + '.zip'
     elif data == self.Data_Log:
       return base + '.log'
+    elif data == self.Data_OverrideDir:
+      return os.path.join(config.override_dir, self.repo.name.replace('/', os.sep))
     else:
       raise ValueError('invalid value for "data": {!r}'.format(data))
 

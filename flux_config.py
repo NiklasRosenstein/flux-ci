@@ -73,6 +73,18 @@ else:
 ## is created by flux is <owner>/<repo>/<build_num> .
 build_dir = os.path.join(root_dir, 'builds')
 
+## The directory which contain file overrides for repositories.
+## Anything in the corresponding repository folder
+## will overwrite repository contents after clone.
+## This is especially useful, if you want to make sure your
+## desired build script and nothing else gets executed
+## or to override e.g. an icon.
+## -> Example:
+## override_dir/<owner>/<repo>/ containing icon.png
+## -> gets copied to (after clone)
+## build_dir/<owner>/<repo>/<build_num>/icon.png
+override_dir = os.path.join(root_dir, 'overrides')
+
 ## Full path to the SSH identity file, or None to let SSH decide.
 ssh_identity_file = None
 
