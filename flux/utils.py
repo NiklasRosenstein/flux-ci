@@ -374,7 +374,7 @@ def get_override_build_script_path(repo):
 
 def read_override_build_script(repo):
   build_script_path = get_override_build_script_path(repo)
-  if (os.path.isfile(build_script_path)):
+  if os.path.isfile(build_script_path):
     build_script_file = open(build_script_path, mode='r')
     build_script = build_script_file.read()
     build_script_file.close()
@@ -384,7 +384,7 @@ def read_override_build_script(repo):
 def write_override_build_script(repo, build_script):
   build_script_path = get_override_build_script_path(repo)
   if build_script.strip() == '':
-    if (os.path.isfile(build_script_path)):
+    if os.path.isfile(build_script_path):
       os.remove(build_script_path)
   else:
     makedirs(os.path.dirname(build_script_path))
