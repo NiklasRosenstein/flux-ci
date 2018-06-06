@@ -40,7 +40,7 @@ $(document).ready(function() {
 			field.value = '';
 			if (input.length > 0) {
 				let repoId = caller.attr('data-repository')
-				let url = '/build?repo_id=' + repoId + '&ref=' + input;
+				let url = start_build_url + '?repo_id=' + repoId + '&ref=' + input;
 				window.location = url;
 			}
 		});

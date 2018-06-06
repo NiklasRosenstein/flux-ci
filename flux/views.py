@@ -491,7 +491,6 @@ def build():
   if not request.user.can_manage:
     return abort(403)
 
-  # TODO: Determine the commit SHA.
   commit = '0' * 32
   repo = session.query(Repository).get(repo_id)
   build = Build(repo=repo, commit_sha=commit, num=repo.build_count, ref=ref_name,
