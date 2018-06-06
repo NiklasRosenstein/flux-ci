@@ -23,7 +23,7 @@ bad code execution.
   </tr>
   <tr>
     <td><p align="center">Users</p><a href="https://i.imgur.com/hZ7FQix.png"><img src="https://i.imgur.com/hZ7FQix.png"/></a></td>
-    <td><p align="center">User Settings</p><a href="https://i.imgur.com/ZqdIj70.png"><img src="https://i.imgur.com/ZqdIj70.png"/></a></td>
+    <td><p align="center">User Settings</p><a href="https://i.imgur.com/TMNn9ol.jpg"><img src="https://i.imgur.com/TMNn9ol.jpg"/></a></td>
     <td><p align="center">Integration</p><a href="https://i.imgur.com/FumaPOQ.png"><img src="https://i.imgur.com/FumaPOQ.png"/></a></td>
     <td><p align="center">Confirmation</p><a href="https://i.imgur.com/60ox3PR.png"><img src="https://i.imgur.com/60ox3PR.png"/></a></td>
     <td><p align="center">Logo</p><a href="https://i.imgur.com/k18t1XA.png"><img src="https://i.imgur.com/k18t1XA.png"/></a></td>
