@@ -63,11 +63,16 @@
     {% endif %}
   </form>
 
-  <h2>Login Sessions</h2>
-  {% for token in request.user.login_tokens.select().order_by(flux.models.desc(flux.models.LoginToken.created)) %}
-    <div class="login-session{{ ' expired' if token.expired() else ''}}">
-      <div class="login-session-ip">{{ token.ip }}</div>
-      <div class="login-session-date">{{ token.created.strftime('%Y-%m-%d %H:%M') }}</div>
-    </div>
-  {% endfor %}
+  {% if cuser.id == request.user.id or request.user.can_manage %}
+    <h2>Login Sessions</h2>
+    {% for token in cuser.login_tokens %}
+      <div class="login-session{{ ' expired' if token.expired() else ''}}">
+        <div class="login-session-ip">{{ token.ip }}</div>
+        <div class="login-session-date">{{ token.created.strftime('%Y-%m-%d %H:%M') }}</div>
+      </div>
+    {% else %}
+      <p>No login session.</p>
+    {% endfor %}
+  {% endif %}
+
 {% endblock %}
