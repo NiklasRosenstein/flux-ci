@@ -724,6 +724,26 @@ a .block:hover {
 	padding-bottom: .75rem;
 }
 
+.login-session {
+	padding: 0.5em;
+	border: 1px solid grey;
+	border-bottom: none;
+	background-color: #e4f4ff;
+}
+.login-session:last-child {
+	border-bottom: 1px solid grey;
+}
+.login-session.expired {
+	background-color: #ddd;
+	color: gray;
+}
+.login-session-ip {
+	font-weight: bold;
+}
+.login-session-date {
+	font-size: 80%;
+}
+
 .field {
 	margin: .5rem 0;
 }

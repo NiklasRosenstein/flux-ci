@@ -119,7 +119,7 @@ class LoginToken(Base):
 
   def __repr__(self):
     return '<LoginToken id={!r} user={!r} token={!r} created={!r}>'\
-      .format(self.id, self.user.name, self.token, self.created)
+      .format(self.id, self.user, self.token, self.created)
 
   def expired(self):
     if config.login_token_duration is None: return False
