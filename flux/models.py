@@ -121,10 +121,9 @@ class LoginToken(Base):
     return '<LoginToken id={!r} user={!r} token={!r} created={!r}>'\
       .format(self.id, self.user.name, self.token, self.created)
 
-  def is_valid(self):
-    if config.login_token_duration is None: return True
-    if not self.created: return False
-    return (self.created + config.login_token_duration) >= datetime.datetime.now()
+  def expired(self):
+    if config.login_token_duration is None: return False
+    return (self.created + config.login_token_duration) < datetime.datetime.now()
 
 
 class Repository(Base):

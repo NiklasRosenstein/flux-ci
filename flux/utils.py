@@ -106,8 +106,8 @@ def requires_auth(func):
     token_string = session.get('flux_login_token')
     with Session() as db_session:
       token = LoginToken.get(db_session, token_string)
-      if not token or token.ip != ip or not token.is_valid():
-        if token and not token.is_valid():
+      if not token or token.ip != ip or token.expired():
+        if token and token.expired():
           flash("Your login session has expired.")
           db_session.delete(token)
         return redirect(url_for('login'))
