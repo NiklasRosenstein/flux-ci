@@ -98,18 +98,19 @@ def basic_auth(message='Login required'):
 def requires_auth(func):
   ''' Decorator for view functions that require basic authentication. '''
 
-  from .models import Session, User
+  from .models import Session, User, LoginToken
 
   @functools.wraps(func)
   def wrapper(*args, **kwargs):
-    user_name = session.get('user_name')
-    user_passhash = session.get('user_passhash')
+    ip = request.remote_addr
+    token_string = session.get('flux_login_token')
     with Session() as db_session:
-      user = User.get_by(db_session, user_name, user_passhash)
-      if not user:
+      token = LoginToken.get(db_session, token_string)
+      if not token or token.ip != ip:
         return redirect(url_for('login'))
 
-    request.user = user
+    request.login_token = token
+    request.user = db_session.query(User).get(token.user)
     return func(*args, **kwargs)
 
   return wrapper
