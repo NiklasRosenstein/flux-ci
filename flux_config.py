@@ -48,10 +48,12 @@ server_name = app_url.replace('http://', '').replace('https://', '')
 ## https://api.wordpress.org/secret-key/1.1/salt/
 secret_key = 'ThAHy8oxRiNIQDBnVlNjEVY78fXdWHdi'
 
-## A valid SQLAlchemy database URL. Follow this link for more information:
-## http://docs.sqlalchemy.org/en/rel_1_0/core/engines.html#database-urls
-db_url = 'sqlite:///{}/db.sqlite'.format(root_dir)
-db_encoding = 'utf8'
+## The PonyORM database configuration.
+## https://ponyorm.com/
+database = {
+  'provider': 'sqlite',
+  'filename': '{}/db.sqlite'.format(root_dir)
+}
 
 ## Username and password of the root user with full access.
 root_user = 'root'
