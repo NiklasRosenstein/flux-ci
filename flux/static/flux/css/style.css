@@ -777,6 +777,10 @@ a .block:hover {
 	color: #2196F3;
 }
 
+#repo_build_script {
+	min-height: 10rem;
+}
+
 /* footer */
 footer {
 	background-color: #ECEFF1;

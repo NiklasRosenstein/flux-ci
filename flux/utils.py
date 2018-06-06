@@ -367,4 +367,27 @@ def ping_repo(repo_url):
   env = {'GIT_SSH_COMMAND': ' '.join(map(shlex.quote, ssh_cmd))}
   ls_remote = ['git', 'ls-remote', '--exit-code', repo_url]
   res = run(ls_remote, None, env=env)
-  return res;
+  return res
+
+def get_override_build_script_path(repo):
+  return os.path.join(config.override_dir, repo.name.replace('/', os.sep), config.build_scripts[0])
+
+def read_override_build_script(repo):
+  build_script_path = get_override_build_script_path(repo)
+  if (os.path.isfile(build_script_path)):
+    build_script_file = open(build_script_path, mode='r')
+    build_script = build_script_file.read()
+    build_script_file.close()
+    return build_script
+  return ''
+
+def write_override_build_script(repo, build_script):
+  build_script_path = get_override_build_script_path(repo)
+  if build_script.strip() == '':
+    if (os.path.isfile(build_script_path)):
+      os.remove(build_script_path)
+  else:
+    makedirs(os.path.dirname(build_script_path))
+    build_script_file = open(build_script_path, mode='w')
+    build_script_file.write(build_script.replace('\r', ''))
+    build_script_file.close()

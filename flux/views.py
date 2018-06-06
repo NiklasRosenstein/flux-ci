@@ -338,6 +338,7 @@ def edit_repo(repo_id):
     clone_url = request.form.get('repo_clone_url', '')
     repo_name = request.form.get('repo_name', '').strip()
     ref_whitelist = request.form.get('repo_ref_whitelist', '')
+    build_script = request.form.get('repo_build_script', '')
     if len(repo_name) < 3 or repo_name.count('/') != 1:
       errors.append('Invalid repository name. Format must be owner/repo')
     if not clone_url:
@@ -354,9 +355,14 @@ def edit_repo(repo_id):
         repo.clone_url = clone_url
         repo.secret = secret
         repo.ref_whitelist = ref_whitelist
+      try:
+        utils.write_override_build_script(repo, build_script)
+      except:
+        errors.append('Could not make change on build script')
       session.add(repo)
       session.commit()
-      return redirect(repo.url())
+      if not errors:
+        return redirect(repo.url())
 
   return render_template('edit_repo.html', user=request.user, repo=repo, errors=errors)
 

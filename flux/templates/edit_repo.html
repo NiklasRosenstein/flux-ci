@@ -45,6 +45,14 @@
       </div>
       <textarea id="repo_ref_whitelist" name="repo_ref_whitelist">{{ repo.ref_whitelist }}</textarea>
     </div>
+    <div class="field">
+      <label for="repo_build_script">Build script</label>
+      <div class="infobox">
+        Build script, that overrides default build script attached in project repository.
+        This also allows to not require build script to be placed in project repository.
+      </div>
+      <textarea id="repo_build_script" name="repo_build_script">{{ flux.utils.read_override_build_script(repo) if repo else "" }}</textarea>
+    </div>
     <button class="btn-primary">{{ "Update" if repo else "Add Repository" }}</button>
   </form>
   <script>
