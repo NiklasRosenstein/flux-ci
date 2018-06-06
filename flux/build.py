@@ -23,15 +23,20 @@ more threads (based on the ``parallel_builds`` configuration value)
 that will process the queue.
 '''
 
-import os, stat, shlex, shutil, subprocess
-import time, traceback
-
-from . import config, utils
-from .models import Session, Build
+from flux import app, config, utils, models
+from flux.models import select, Build
 from collections import deque
 from threading import Event, Condition, Thread
 from datetime import datetime
 from distutils import dir_util
+
+import os
+import shlex
+import shutil
+import stat
+import subprocess
+import time
+import traceback
 
 
 class BuildConsumer(object):
@@ -48,6 +53,8 @@ class BuildConsumer(object):
   def put(self, build):
     if not isinstance(build, Build):
       raise TypeError('expected Build instance')
+    if not build.id:
+      raise RuntimeError('Build.id is not set, is the build committed?')
     if build.status != Build.Status_Queued:
       raise TypeError('build status must be {!r}'.format(Build.Status_Queued))
     with self._cond:
@@ -67,9 +74,8 @@ class BuildConsumer(object):
         self._terminate_events[build.id].set()
       elif build.id in self._queue:
         self._queue.remove(build.id)
-        with Session() as session:
-          build.status = build.Status_Stopped
-          session.add(build)
+        build.status = build.Status_Stopped
+        models.commit()
 
   def stop(self, join=True):
     with self._cond:
@@ -89,19 +95,21 @@ class BuildConsumer(object):
           if not self._running:
             break
           build_id = self._queue.popleft()
-        with Session() as session:
-          build = session.query(Build).get(build_id)
+        with models.session():
+          # TODO: Now with PonyORM, we must keep the transactio for the
+          # whole build process. I am not sure if that is a good idea, though.
+          build = Build.get(id=build_id)
           if not build or build.status != Build.Status_Queued:
             continue
-        with self._cond:
-          do_terminate = self._terminate_events[build_id] = Event()
-        try:
-          do_build(build, do_terminate)
-        except BaseException as exc:
-          traceback.print_exc()
-        finally:
           with self._cond:
-            self._terminate_events.pop(build_id)
+            do_terminate = self._terminate_events[build_id] = Event()
+          try:
+            do_build(build, do_terminate)
+          except BaseException as exc:
+            traceback.print_exc()
+          finally:
+            with self._cond:
+              self._terminate_events.pop(build_id)
 
     if num_threads < 1:
       raise ValueError('num_threads must be >= 1')
@@ -111,6 +119,10 @@ class BuildConsumer(object):
       self._running = True
       self._threads = [Thread(target=worker) for i in range(num_threads)]
       [t.start() for t in self._threads]
+
+  def is_running(self, build):
+    with self._cond:
+      return build.id in self._queue
 
 
 _consumer = BuildConsumer()
@@ -126,20 +138,22 @@ def update_queue(consumer=None):
 
   if consumer is None:
     consumer = _consumer
-  with Session() as session:
-    for build in session.query(Build).filter_by(status=Build.Status_Queued):
+  with models.session():
+    for build in select(x for x in Build if x.status == Build.Status_Queued):
       enqueue(build)
+    for build in select(x for x in Build if x.status == Build.Status_Building):
+      if not consumer.is_running(build):
+        build.status = Build.Status_Stopped
 
 
 def do_build(build, terminate_event):
-  print(' * build {}#{} started'.format(build.repo.name, build.num))
+  app.logger.info('Build {}#{} started.'.format(build.repo.name, build.num))
   assert build.status == Build.Status_Queued
 
-  with Session() as session:
-    # Mark the build as started.
-    build.status = Build.Status_Building
-    build.date_started = datetime.now()
-    session.add(build)
+  # Mark the build as started.
+  build.status = Build.Status_Building
+  build.date_started = datetime.now()
+  models.commit()
 
   logfile = None
   logger = None
@@ -174,8 +188,6 @@ def do_build(build, terminate_event):
     if logfile:
       logfile.close()
     build.date_finished = datetime.now()
-    with Session() as session:
-      session.add(build)
 
   return build.status == Build.Status_Success
 

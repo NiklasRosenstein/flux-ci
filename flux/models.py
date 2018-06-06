@@ -1,64 +1,53 @@
-# Copyright (c) 2016  Niklas Rosenstein
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+
+"""
+This package provides the database models using PonyORM.
+"""
+
+from flask import url_for
+from flux import app, config, utils
 
 import datetime
 import hashlib
 import os
+import pony.orm as orm
 import shutil
 import uuid
 
-from sqlalchemy import create_engine, desc
-from sqlalchemy import Column, Boolean, Integer, Enum, String, DateTime, ForeignKey
-from sqlalchemy.orm import sessionmaker, relationship
-
-from . import config, utils
-from .model_base import Base, Session
-from flask import url_for
-
-engine = create_engine(config.db_url, encoding=config.db_encoding)
-Session = sessionmaker(bind=engine, class_=Session, expire_on_commit=False)
+db = orm.Database(**config.database)
+session = orm.db_session
+commit = orm.commit
+rollback = orm.rollback
+select = orm.select
+desc = orm.desc
 
 
-class User(Base):
-  __tablename__ = 'users'
+class User(db.Entity):
+  _table_ = 'users'
 
-  id = Column(Integer, primary_key=True)
-  name = Column(String, unique=True)
-  passhash = Column(String)
-  can_manage = Column(Boolean)
-  can_download_artifacts = Column(Boolean)
-  can_view_buildlogs = Column(Boolean)
-
-  def __repr__(self):
-    return '<User(id={!r}, name={!r})>'.format(self.id, self.name)
+  id = orm.PrimaryKey(int)
+  name = orm.Required(str, unique=True)
+  passhash = orm.Required(str)
+  can_manage = orm.Required(bool)
+  can_download_artifacts = orm.Required(bool)
+  can_view_buildlogs = orm.Required(bool)
+  login_tokens = orm.Set('LoginToken')
 
   def set_password(self, password):
     self.passhash = utils.hash_pw(password)
 
   @classmethod
-  def root_user(cls, session):
-    return session.query(cls).filter_by(name=config.root_user).one_or_none()
+  def get_by_login_details(cls, user_name, password):
+    passhash = utils.hash_pw(password)
+    return orm.select(x for x in cls if x.name == user_name and
+                        x.passhash == passhash).first()
 
   @classmethod
-  def create_or_update_root(cls, session):
-    root = cls.root_user(session)
+  def get_root_user(cls):
+    return orm.select(x for x in cls if x.name == config.root_user).first()
+
+  @classmethod
+  def create_or_update_root(cls):
+    root = cls.get_root_user()
     if root:
       # Make sure the root has all privileges.
       root.can_manage = True
@@ -68,21 +57,20 @@ class User(Base):
       root.name = config.root_user
     else:
       # Create a new root user.
-      print(' * [flux] creating new root user: {!r}'.format(config.root_user))
-      root = cls(name=config.root_user, passhash=utils.hash_pw(config.root_password),
-        can_manage=True, can_download_artifacts=True, can_view_buildlogs=True)
-    session.add(root)
+      app.logger.info('Creating new root user: {!r}'.format(config.root_user))
+      root = cls(
+        name=config.root_user,
+        passhash=utils.hash_pw(config.root_password),
+        can_manage=True,
+        can_download_artifacts=True,
+        can_view_buildlogs=True)
     return root
 
   def url(self):
     return url_for('edit_user', user_id=self.id)
 
-  @classmethod
-  def get_by(cls, session, user_name, passhash):
-    return session.query(cls).filter_by(name=user_name, passhash=passhash).one_or_none()
 
-
-class LoginToken(Base):
+class LoginToken(db.Entity):
   """
   A login token represents the credentials that we can savely store in the
   browser's session and it will not reveal any information about the users
@@ -94,53 +82,48 @@ class LoginToken(Base):
   from expiring.
   """
 
-  __tablename__ = 'logintokens'
+  _table_ = 'logintokens'
 
-  id = Column(Integer, primary_key=True)
-  ip = Column(String)
-  user = Column(Integer, ForeignKey("users.id"))
-  token = Column(String, unique=True)
-  created = Column(DateTime)
+  id = orm.PrimaryKey(int)
+  ip = orm.Required(str)
+  user = orm.Required(User)
+  token = orm.Required(str, unique=True)
+  created = orm.Required(datetime.datetime)
 
   @classmethod
   def create(cls, ip, user):
-    """
-    Create a new login token assigned to the specified IP and user.
-    """
+    " Create a new login token assigned to the specified IP and user. "
 
     created = datetime.datetime.now()
     token = str(uuid.uuid4()).replace('-', '')
     token += hashlib.md5((token + str(created)).encode()).hexdigest()
-    return cls(ip=ip, user=user.id, token=token, created=created)
-
-  @classmethod
-  def get(cls, session, token_string):
-    return session.query(cls).filter_by(token=token_string).one_or_none()
-
-  def __repr__(self):
-    return '<LoginToken id={!r} user={!r} token={!r} created={!r}>'\
-      .format(self.id, self.user, self.token, self.created)
+    return cls(ip=ip, user=user, token=token, created=created)
 
   def expired(self):
-    if config.login_token_duration is None: return False
-    return (self.created + config.login_token_duration) < datetime.datetime.now()
+    " Returns #True if the token is expired, #False otherwise. "
+
+    if config.login_token_duration is None:
+      return False
+    now = datetime.datetime.now()
+    return (self.created + config.login_token_duration) < now
 
 
-class Repository(Base):
-  ''' Represents a repository for which push events are being accepted.
-  The Git server specified at the ``clone_url`` must accept the Flux
-  server's public key. '''
+class Repository(db.Entity):
+  """
+  Represents a repository for which push events are being accepted. The Git
+  server specified at the `clone_url` must accept the Flux server's public
+  key.
+  """
 
-  __tablename__ = 'repos'
+  _table_ = 'repos'
 
-  id = Column(Integer, primary_key=True)
-  name = Column(String)
-  secret = Column(String)
-  clone_url = Column(String)
-  build_count = Column(Integer)
-  builds = relationship("Build", back_populates="repo",
-    order_by=lambda: desc(Build.num), cascade='all, delete-orphan')
-  ref_whitelist = Column(String)  # ; separated list of accepted refs
+  id = orm.PrimaryKey(int)
+  name = orm.Required(str)
+  secret = orm.Required(str)
+  clone_url = orm.Required(str)
+  build_count = orm.Required(int, default=0)
+  builds = orm.Set('Build')
+  ref_whitelist = orm.Optional(str)  # newline separated list of accepted Git refs
 
   def url(self, **kwargs):
     return url_for('view_repo', path=self.name, **kwargs)
@@ -154,18 +137,22 @@ class Repository(Base):
   def validate_ref_whitelist(self, value, oldvalue, initiator):
     return '\n'.join(filter(bool, (x.strip() for x in value.split('\n'))))
 
+  def most_recent_build(self):
+    return self.builds.select().order_by(desc(Build.date_started)).first()
 
-class Build(Base):
-  ''' Represents a build that is generated on a push to a
-  repository. The build is initially queued and then processed
-  when a slot is available. The build directory is generated
-  from the configured root directory and the build :attr:`uuid`.
-  The log file has the exact same path with the ``.log``
-  suffix appended. After the build is complete (whether
-  successful or errornous), the build directory is zipped and
-  the original directory is removed. '''
 
-  __tablename__ = 'builds'
+class Build(db.Entity):
+  """
+  Represents a build that is generated on a push to a repository. The build is
+  initially queued and then processed when a slot is available. The build
+  directory is generated from the configured root directory and the build
+  #uuid. The log file has the exact same path with the `.log` suffix appended.
+
+  After the build is complete (whether successful or errornous), the build
+  directory is zipped and the original directory is removed.
+  """
+
+  _table_ = 'builds'
 
   Status_Queued = 'queued'
   Status_Building = 'building'
@@ -182,16 +169,22 @@ class Build(Base):
   class CanNotDelete(Exception):
     pass
 
-  id = Column(Integer, primary_key=True)
-  repo_id = Column(Integer, ForeignKey('repos.id'))
-  repo = relationship("Repository", back_populates="builds", lazy='joined')
-  ref = Column(String)
-  commit_sha = Column(String)
-  num = Column(Integer)
-  status = Column(Enum(*Status, name='status'))
-  date_queued = Column(DateTime)
-  date_started = Column(DateTime)
-  date_finished = Column(DateTime)
+  id = orm.PrimaryKey(int)
+  repo = orm.Required(Repository, column='repo_id')
+  ref = orm.Required(str)
+  commit_sha = orm.Required(str)
+  num = orm.Required(int)
+  status = orm.Required(str)  # One of the Status strings
+  date_queued = orm.Required(datetime.datetime, default=datetime.datetime.now)
+  date_started = orm.Optional(datetime.datetime)
+  date_finished = orm.Optional(datetime.datetime)
+
+  def __init__(self, **kwargs):
+    # Backwards compatibility for when SQLAlchemy was used, Auto Increment
+    # was not enabled there.
+    if 'id' not in kwargs:
+      kwargs['id'] = orm.max(x.id for x in Build) + 1
+    super(Build, self).__init__(**kwargs)
 
   def url(self, data=None, **kwargs):
     path = self.repo.name + '/' + str(self.num)
@@ -234,49 +227,48 @@ class Build(Base):
     else:
       raise ValueError('invalid value for data: {!r}'.format(data))
 
-  def delete(self):
+  def delete_build(self):
     if self.status == self.Status_Building:
       raise self.CanNotDelete('can not delete build in progress')
     try:
       os.remove(self.path(self.Data_Artifact))
     except OSError as exc:
-      print(exc)
+      app.logger.exception(exc)
     try:
       os.remove(self.path(self.Data_Log))
     except OSError as exc:
-      print(exc)
+      app.logger.exception(exc)
+
+  # db.Entity Overrides
+
+  def before_delete(self):
+    self.delete_build()
 
 
-def get_target_for(session, path):
-  ''' Given a path, returns either a :class:`Repository` or :class:`Build`
-  based on the format and value. Returns None if the path is invalid or
-  the repository or build does not exist. '''
+def get_target_for(path):
+  """
+  Given an URL path, returns either a #Repository or #Build that the path
+  identifies. #None will be retunred if the path points to an unknown
+  repository or build.
+
+  Examples:
+
+      /User/repo    => Repository(User/repo)
+      /User/repo/1  => Build(1, Repository(User/repo))
+  """
 
   parts = path.split('/')
   if len(parts) not in (2, 3):
     return None
   repo_name = parts[0] + '/' + parts[1]
-  repo = session.query(Repository).filter_by(name=repo_name).one_or_none()
+  repo = Repository.get(name=repo_name)
   if not repo:
     return None
   if len(parts) == 3:
     try: num = int(parts[2])
     except ValueError: return None
-    return session.query(Build).filter_by(repo=repo, num=num).one_or_none()
+    return Build.get(repo=repo, num=num)
   return repo
 
 
-def get_public_key():
-  ''' Returns the servers SSH public key. '''
-
-  # XXX Support all valid options and eventually parse the config file?
-  filename = config.ssh_identity_file or os.path.expanduser('~/.ssh/id_rsa')
-  if not filename.endswith('.pub'):
-    filename += '.pub'
-  if os.path.isfile(filename):
-    with open(filename) as fp:
-      return fp.read()
-  return None
-
-
-Base.metadata.create_all(engine)
+db.generate_mapping(create_tables=False)  # TODO

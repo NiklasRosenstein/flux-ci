@@ -48,7 +48,7 @@
     </dl>
   {% endif %}
   {% if repo.builds %}
-    {% for build in repo.builds[page_from:page_to] %}
+    {% for build in repo.builds.select()[page_from:page_to] %}
       <a class="block-link" href="{{ build.url() }}">
         <span class="block">
           <span class="left-side">

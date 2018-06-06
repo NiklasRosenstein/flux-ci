@@ -69,8 +69,8 @@ def main():
 
   # Make sure the root user exists and has all privileges, and that
   # the password is up to date.
-  with models.Session() as session:
-    models.User.create_or_update_root(session)
+  with models.session():
+    models.User.create_or_update_root()
 
   # Create a dispatcher for the sub-url under which the app is run.
   url_prefix = urlparse(config.app_url).path

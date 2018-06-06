@@ -64,7 +64,7 @@
   </form>
 
   <h2>Login Sessions</h2>
-  {% for token in request.db_session.query(flux.models.LoginToken).filter_by(user=request.user.id).order_by(flux.models.desc(flux.models.LoginToken.created)) %}
+  {% for token in request.user.login_tokens.select().order_by(flux.models.desc(flux.models.LoginToken.created)) %}
     <div class="login-session{{ ' expired' if token.expired() else ''}}">
       <div class="login-session-ip">{{ token.ip }}</div>
       <div class="login-session-date">{{ token.created.strftime('%Y-%m-%d %H:%M') }}</div>
