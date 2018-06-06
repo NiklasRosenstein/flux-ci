@@ -3,6 +3,7 @@ This is the Flux configuration file.
 '''
 
 import os
+from datetime import timedelta
 from flux.config import prepend_path
 
 ## If your system does not provide the required Git version (>= 2.3),
@@ -90,3 +91,7 @@ ssh_identity_file = None
 
 ## True if SSH verbose mode should be used.
 ssh_verbose = False
+
+## The time that a login token should be valid for. Specify "None" to
+## prevent login tokens from expiring.
+login_token_duration = timedelta(hours=6)

@@ -18,7 +18,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import os, shutil
+import datetime
+import hashlib
+import os
+import shutil
+import uuid
 
 from sqlalchemy import create_engine, desc
 from sqlalchemy import Column, Boolean, Integer, Enum, String, DateTime, ForeignKey
@@ -76,6 +80,50 @@ class User(Base):
   @classmethod
   def get_by(cls, session, user_name, passhash):
     return session.query(cls).filter_by(name=user_name, passhash=passhash).one_or_none()
+
+
+class LoginToken(Base):
+  """
+  A login token represents the credentials that we can savely store in the
+  browser's session and it will not reveal any information about the users
+  password. For additional security, a login token is bound to the IP that
+  the user logged in from an has an expiration date.
+
+  The expiration duration can be set with the `login_token_duration`
+  configuration value. Setting this option to #None will prevent tokens
+  from expiring.
+  """
+
+  __tablename__ = 'logintokens'
+
+  id = Column(Integer, primary_key=True)
+  ip = Column(String)
+  user = Column(Integer, ForeignKey("users.id"))
+  token = Column(String, unique=True)
+  created = Column(DateTime)
+
+  @classmethod
+  def create(cls, ip, user):
+    """
+    Create a new login token assigned to the specified IP and user.
+    """
+
+    created = datetime.datetime.now()
+    token = str(uuid.uuid4()).replace('-', '')
+    token += hashlib.md5((token + str(created)).encode()).hexdigest()
+    return cls(ip=ip, user=user.id, token=token, created=created)
+
+  @classmethod
+  def get(cls, session, token_string):
+    return session.query(cls).filter_by(token=token_string).one_or_none()
+
+  def __repr__(self):
+    return '<LoginToken id={!r} user={!r} token={!r} created={!r}>'\
+      .format(self.id, self.user, self.token, self.created)
+
+  def expired(self):
+    if config.login_token_duration is None: return False
+    return (self.created + config.login_token_duration) < datetime.datetime.now()
 
 
 class Repository(Base):

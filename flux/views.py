@@ -23,7 +23,7 @@ import uuid
 
 from . import app, config, utils
 from .build import enqueue, terminate_build
-from .models import Session, User, Repository, Build, get_target_for, get_public_key
+from .models import Session, User, LoginToken, Repository, Build, get_target_for, get_public_key
 from flask import request, session, redirect, url_for, render_template, abort
 from datetime import datetime
 
@@ -210,6 +210,7 @@ def dashboard():
   context['user'] = request.user
   return render_template('dashboard.html', **context)
 
+
 @app.route('/repositories')
 @utils.requires_auth
 @utils.with_dbsession
@@ -217,6 +218,7 @@ def repositories():
   session = request.db_session
   repositories = session.query(Repository).order_by(Repository.name).all()
   return render_template('repositories.html', user=request.user, repositories=repositories)
+
 
 @app.route('/users')
 @utils.requires_auth
@@ -228,12 +230,14 @@ def users():
   users = session.query(User).all()
   return render_template('users.html', user=request.user, users=users)
 
+
 @app.route('/integration')
 @utils.requires_auth
 def integration():
   if not request.user.can_manage:
     return abort(403)
   return render_template('integration.html', user=request.user, public_key=get_public_key())
+
 
 @app.route('/login', methods=['GET', 'POST'])
 @utils.with_dbsession
@@ -245,20 +249,23 @@ def login():
     user_password = request.form['user_password']
     user = User.get_by(db_session, user_name, utils.hash_pw(user_password))
     if user:
-      # XXX User login keys rather than storing the password hash
-      # in a cookie. See issue #16.
-      session['user_name'] = user.name
-      session['user_passhash'] = user.passhash
+      token = LoginToken.create(request.remote_addr, user)
+      db_session.add(token)
+      db_session.commit()
+      session['flux_login_token'] = token.token
       return redirect(url_for('dashboard'))
     errors.append('Username or password invalid.')
   return render_template('login.html', errors=errors)
 
 
 @app.route('/logout')
+@utils.requires_auth
 @utils.with_dbsession
 def logout():
-  session.pop('user_name', '')
-  session.pop('user_passhash', '')
+  if request.login_token:
+    request.db_session.delete(request.login_token)
+    request.db_session.commit()
+  session.pop('flux_login_token')
   return redirect(url_for('dashboard'))
 
 
