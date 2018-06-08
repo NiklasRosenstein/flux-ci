@@ -97,8 +97,6 @@ class BuildConsumer(object):
             break
           build_id = self._queue.popleft()
         with models.session():
-          # TODO: Now with PonyORM, we must keep the transactio for the
-          # whole build process. I am not sure if that is a good idea, though.
           build = Build.get(id=build_id)
           if not build or build.status != Build.Status_Queued:
             continue
