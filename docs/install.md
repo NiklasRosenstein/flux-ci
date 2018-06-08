@@ -51,7 +51,25 @@ server {
 
 ## Docker Setup
 
-*TODO ...*
+### Building the Docker Image
+
+    $ docker build -t flux .
+
+### Running the container
+
+Make sure that the `flux_config.py` exists in the `data/` directory.
+
+> *Important note for Windows*: Mounting volumes in Docker on Windows is
+> a bit different and using a local path like `./data` creates a new volume
+> instead.
+
+    $ docker run --rm -it \
+      -e FLUX_HOST=0.0.0.0 \
+      -e FLUX_SERVER_NAME=localhost:4042 \
+      -e FLUX_ROOT=/opt/flux \
+      -p 4042:4042 \
+      -v ./data:/opt/flux \
+      flux
 
 ## Manage the server
 

@@ -39,7 +39,11 @@ app_url = os.environ.get('FLUX_APP_URL', 'http://{}:{}'.format(host, port))
 ## The server name. This is important for redirects, especially when
 ## behind a proxy eg. via NGinx. Make sure to set the 'Host' header
 ## to this server name when passing the request to the Flux app.
-server_name = app_url.replace('http://', '').replace('https://', '')
+##
+## When deploying flux in a Docker container. you must set this to the
+## name that is addressable from the outside of the container, eg.
+## "localhost:4042".
+server_name = os.environ.get('FLUX_SERVER_NAME', app_url.replace('http://', '').replace('https://', ''))
 
 ## Secret key required for HTTP session. Use your own random key
 ## for deployment! Here's a useful link to quickly get a bunch of

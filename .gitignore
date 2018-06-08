@@ -1,5 +1,6 @@
 *.py[cod]
 *.sqlite
+*.egg-info
 __pycache__/
 dist/
 build/
