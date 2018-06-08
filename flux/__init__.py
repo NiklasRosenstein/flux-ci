@@ -40,6 +40,7 @@ app = flask.Flask(__name__)
 app.template_folder = os.path.join(os.path.dirname(__file__), 'templates')
 app.static_folder = os.path.join(os.path.dirname(__file__), 'static')
 
+sys.path.insert(0, '.')
 from . import config, utils
 app.jinja_env.globals['config'] = config
 app.jinja_env.globals['flux'] = sys.modules[__name__]
