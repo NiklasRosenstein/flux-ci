@@ -208,7 +208,7 @@ def hook_push(logger):
 @utils.requires_auth
 def dashboard():
   context = {}
-  context['builds'] = select(x for x in Build).order_by(Build.date_queued).limit(10)
+  context['builds'] = select(x for x in Build).order_by(desc(Build.date_queued)).limit(10)
   context['user'] = request.user
   return render_template('dashboard.html', **context)
 
