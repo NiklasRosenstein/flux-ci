@@ -20,7 +20,7 @@
 
 from flux import app, config, models, utils
 from flux.build import enqueue, terminate_build
-from flux.models import User, LoginToken, Repository, Build, get_target_for, select
+from flux.models import User, LoginToken, Repository, Build, get_target_for, select, desc
 from flask import request, session, redirect, url_for, render_template, abort
 from datetime import datetime
 
@@ -280,11 +280,13 @@ def view_repo(path):
     context['page_number'] = int(request.args.get('page', 1))
   except:
     context['page_number'] = 1
-  context['page_from'] = (context['page_number'] - 1) * page_size
-  context['page_to'] = context['page_from'] + page_size
-  context['next_page'] = None if context['page_number'] <= 1 else context['page_number'] - 1
-  context['previous_page'] = None if len(repo.builds) <= context['page_to'] else context['page_number'] + 1
 
+  page_from = (context['page_number'] - 1) * page_size
+  page_to = page_from + page_size
+
+  context['next_page'] = None if context['page_number'] <= 1 else context['page_number'] - 1
+  context['previous_page'] = None if len(repo.builds) <= page_to else context['page_number'] + 1
+  context['builds'] = repo.builds.select().order_by(desc(Build.date_queued))[page_from:page_to]
   return render_template('view_repo.html', user=request.user, repo=repo, **context)
 
 
