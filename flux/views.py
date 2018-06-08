@@ -196,6 +196,7 @@ def hook_push(logger):
     date_finished=None)
   repo.build_count += 1
 
+  models.commit()
   enqueue(build)
   logger.info('Build #{} for repository {} queued'.format(build.num, repo.name))
   logger.info(utils.strip_url_path(config.app_url) + build.url())
@@ -509,10 +510,8 @@ def build():
     date_finished=None)
   repo.build_count += 1
 
+  models.commit()
   enqueue(build)
-  print('Build #{} for repository {} queued'.format(build.num, repo.name))
-  print(utils.strip_url_path(config.app_url) + build.url())
-
   return redirect(repo.url())
 
 @app.route('/ping-repo', methods=['POST'])

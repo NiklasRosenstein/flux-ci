@@ -53,8 +53,9 @@ class BuildConsumer(object):
   def put(self, build):
     if not isinstance(build, Build):
       raise TypeError('expected Build instance')
-    if not build.id:
-      raise RuntimeError('Build.id is not set, is the build committed?')
+    assert build.id is not None
+    # TODO: Check if the build is commited to the database, we should'nt
+    #       enqueue it before it is.
     if build.status != Build.Status_Queued:
       raise TypeError('build status must be {!r}'.format(Build.Status_Queued))
     with self._cond:
