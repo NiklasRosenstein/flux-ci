@@ -1,4 +1,12 @@
-.gitignore
-LICENSE.txt
-README.md
-Makefile
+*.py[cod]
+*.sqlite
+*.egg-info
+__pycache__/
+dist/
+build/
+builds/
+overrides/
+venv/
+.venv/
+.env/
+Dockerfile

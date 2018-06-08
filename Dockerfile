@@ -1,4 +1,4 @@
-# Dockerfile for Flux
+# Dockerfile for Flux-CI.
 
 FROM library/alpine:3.4
 
@@ -11,10 +11,19 @@ RUN apk update && apk upgrade && \
     apk add --no-cache python3 && \
     apk add --no-cache sqlite
 
+# Install Python dependencies.
 COPY requirements.txt /opt/requirements.txt
 RUN pip3 install -r /opt/requirements.txt
+RUN rm /opt/requirements.txt
 
-COPY . /app
-WORKDIR /app
+# Install Flux-CI.
+COPY . /opt/flux
+RUN pip3 install /opt/flux
+RUN rm -r /opt/flux
 
-CMD ["python3", "flux_run.py"]
+# Copy Flux-CI configuration.
+RUN mkdir -p /opt/flux
+COPY flux_config.py /opt/flux
+
+ENV PYTHONPATH=/opt/flux
+CMD flux-ci --web
