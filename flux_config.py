@@ -56,7 +56,8 @@ secret_key = 'ThAHy8oxRiNIQDBnVlNjEVY78fXdWHdi'
 ## https://ponyorm.com/
 database = {
   'provider': 'sqlite',
-  'filename': '{}/db.sqlite'.format(root_dir)
+  'filename': '{}/db.sqlite'.format(root_dir),
+  'create_db': True
 }
 
 ## Username and password of the root user with full access.

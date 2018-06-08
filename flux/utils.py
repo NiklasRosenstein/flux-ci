@@ -105,7 +105,7 @@ def requires_auth(func):
   def wrapper(*args, **kwargs):
     ip = request.remote_addr
     token_string = session.get('flux_login_token')
-    token = models.LoginToken.get(token=token_string)
+    token = models.LoginToken.select(lambda t: t.token == token_string).first()
     if not token or token.ip != ip or token.expired():
       if token and token.expired():
         flash("Your login session has expired.")

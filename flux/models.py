@@ -286,4 +286,4 @@ def get_target_for(path):
   return repo
 
 
-db.generate_mapping(create_tables=False)  # TODO
+db.generate_mapping(create_tables=True)
