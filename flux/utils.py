@@ -251,13 +251,27 @@ def zipdir(dirname, filename):
   zipf.close()
 
 
-def run(command, logger, cwd=None, env=None, shell=False, return_stdout=False):
-  ''' Run a subprocess with the specified *command*. The command
-  and output of the command is logged to *logger*. *command* will
-  automatically be converted to a string or list of command arguments
-  based on the *shell* parameter.
+def run(command, logger, cwd=None, env=None, shell=False, return_stdout=False,
+        inherit_env=True):
+  """
+  Run a subprocess with the specified command. The command and output of is
+  logged to logger. The command will automatically be converted to a string
+  or list of command arguments based on the *shell* parameter.
 
-  Returns the exit code of the command. '''
+  # Parameters
+  command (str, list): A command-string or list of command arguments.
+  logger (logging.Logger): A logger that will receive the command output.
+  cwd (str, None): The current working directory.
+  env (dict, None): The environment for the subprocess.
+  shell (bool): If set to #True, execute the command via the system shell.
+  return_stdout (bool): Return the output of the command (including stderr)
+      to the caller. The result will be a tuple of (returncode, output).
+  inherit_env (bool): Inherit the current process' environment.
+
+  # Return
+  int, tuple of (int, str): The return code, or the returncode and the
+      output of the command.
+  """
 
   if shell:
     if not isinstance(command, str):
@@ -269,6 +283,11 @@ def run(command, logger, cwd=None, env=None, shell=False, return_stdout=False):
       command = shlex.split(command)
     if logger:
       logger.info('$ ' + ' '.join(map(shlex.quote, command)))
+
+  if env is None:
+    env = {}
+  if inherit_env:
+    env = {**os.environ, **env}
 
   popen = subprocess.Popen(
     command, cwd=cwd, env=env, shell=shell, stdout=subprocess.PIPE,
