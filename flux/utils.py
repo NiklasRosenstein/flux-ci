@@ -24,6 +24,7 @@ import hashlib
 import hmac
 import logging
 import os
+import re
 import shlex
 import shutil
 import stat
@@ -32,7 +33,7 @@ import urllib.parse
 import uuid
 import zipfile
 
-from . import config, models
+from . import app, config, models
 from urllib.parse import urlparse
 from flask import request, session, redirect, url_for, Response
 from datetime import datetime
@@ -251,6 +252,21 @@ def zipdir(dirname, filename):
   zipf.close()
 
 
+def quote(s, for_ninja=False):
+  """
+  Enhanced implementation of #shlex.quote().
+  Does not generate single-quotes on Windows.
+  """
+
+  if os.name == 'nt' and os.sep == '\\':
+    s = s.replace('"', '\\"')
+    if re.search('\s', s) or any(c in s for c in '<>'):
+      s = '"' + s + '"'
+  else:
+    s = shlex.quote(s)
+  return s
+
+
 def run(command, logger, cwd=None, env=None, shell=False, return_stdout=False,
         inherit_env=True):
   """
@@ -275,14 +291,14 @@ def run(command, logger, cwd=None, env=None, shell=False, return_stdout=False,
 
   if shell:
     if not isinstance(command, str):
-      command = ' '.join(shlex.quote(x) for x in command)
+      command = ' '.join(quote(x) for x in command)
     if logger:
       logger.info('$ ' + command)
   else:
     if isinstance(command, str):
       command = shlex.split(command)
     if logger:
-      logger.info('$ ' + ' '.join(map(shlex.quote, command)))
+      logger.info('$ ' + ' '.join(map(quote, command)))
 
   if env is None:
     env = {}
@@ -388,9 +404,9 @@ def ping_repo(repo_url):
     return 1
 
   ssh_cmd = ssh_command(None, identity_file=config.ssh_identity_file)
-  env = {'GIT_SSH_COMMAND': ' '.join(map(shlex.quote, ssh_cmd))}
+  env = {'GIT_SSH_COMMAND': ' '.join(map(quote, ssh_cmd))
   ls_remote = ['git', 'ls-remote', '--exit-code', repo_url]
-  res = run(ls_remote, None, env=env)
+  res = run(ls_remote, app.logger, env=env)
   return res
 
 
