@@ -67,9 +67,7 @@ class BuildConsumer(object):
         self._terminate_events[build.id].set()
       elif build.id in self._queue:
         self._queue.remove(build.id)
-        with Session() as session:
-          build.status = build.Status_Stopped
-          session.add(build)
+      build.status = build.Status_Stopped
 
   def stop(self, join=True):
     with self._cond:
