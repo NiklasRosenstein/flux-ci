@@ -23,15 +23,21 @@ more threads (based on the ``parallel_builds`` configuration value)
 that will process the queue.
 '''
 
-import os, stat, shlex, shutil, subprocess
-import time, traceback
-
-from . import config, utils
-from .models import Session, Build
+from flux import app, config, utils, models
+from flux.models import select, Build
 from collections import deque
 from threading import Event, Condition, Thread
 from datetime import datetime
 from distutils import dir_util
+
+import contextlib
+import os
+import shlex
+import shutil
+import stat
+import subprocess
+import time
+import traceback
 
 
 class BuildConsumer(object):
@@ -48,6 +54,9 @@ class BuildConsumer(object):
   def put(self, build):
     if not isinstance(build, Build):
       raise TypeError('expected Build instance')
+    assert build.id is not None
+    # TODO: Check if the build is commited to the database, we should'nt
+    #       enqueue it before it is.
     if build.status != Build.Status_Queued:
       raise TypeError('build status must be {!r}'.format(Build.Status_Queued))
     with self._cond:
@@ -87,14 +96,14 @@ class BuildConsumer(object):
           if not self._running:
             break
           build_id = self._queue.popleft()
-        with Session() as session:
-          build = session.query(Build).get(build_id)
+        with models.session():
+          build = Build.get(id=build_id)
           if not build or build.status != Build.Status_Queued:
             continue
         with self._cond:
           do_terminate = self._terminate_events[build_id] = Event()
         try:
-          do_build(build, do_terminate)
+          do_build(build_id, do_terminate)
         except BaseException as exc:
           traceback.print_exc()
         finally:
@@ -110,6 +119,10 @@ class BuildConsumer(object):
       self._threads = [Thread(target=worker) for i in range(num_threads)]
       [t.start() for t in self._threads]
 
+  def is_running(self, build):
+    with self._cond:
+      return build.id in self._queue
+
 
 _consumer = BuildConsumer()
 enqueue = _consumer.put
@@ -124,58 +137,79 @@ def update_queue(consumer=None):
 
   if consumer is None:
     consumer = _consumer
-  with Session() as session:
-    for build in session.query(Build).filter_by(status=Build.Status_Queued):
+  with models.session():
+    for build in select(x for x in Build if x.status == Build.Status_Queued):
       enqueue(build)
+    for build in select(x for x in Build if x.status == Build.Status_Building):
+      if not consumer.is_running(build):
+        build.status = Build.Status_Stopped
 
 
-def do_build(build, terminate_event):
-  print(' * build {}#{} started'.format(build.repo.name, build.num))
-  assert build.status == Build.Status_Queued
-
-  with Session() as session:
-    # Mark the build as started.
-    build.status = Build.Status_Building
-    build.date_started = datetime.now()
-    session.add(build)
+def do_build(build_id, terminate_event):
+  """
+  Performs the build step for the build in the database with the specified
+  *build_id*.
+  """
 
   logfile = None
   logger = None
+  status = None
 
-  try:
-    build_path = build.path()
-    override_path = build.path(Build.Data_OverrideDir)
-    utils.makedirs(os.path.dirname(build_path))
-    logfile = open(build.path(build.Data_Log), 'w')
-    logger = utils.create_logger(logfile)
+  with contextlib.ExitStack() as stack:
+    try:
+      try:
+        # Retrieve the current build information.
+        with models.session():
+          build = Build.get(id=build_id)
+          app.logger.info('Build {}#{} started.'.format(build.repo.name, build.num))
 
-    if do_build_(build, build_path, override_path, logger, logfile, terminate_event):
-      build.status = Build.Status_Success
-    else:
-      if terminate_event.is_set():
-        build.status = Build.Status_Stopped
-      else:
+          build.status = Build.Status_Building
+          build.date_started = datetime.now()
+
+          build_path = build.path()
+          override_path = build.path(Build.Data_OverrideDir)
+          utils.makedirs(os.path.dirname(build_path))
+          logfile = stack.enter_context(open(build.path(build.Data_Log), 'w'))
+          logger = utils.create_logger(logfile)
+
+          # Prefetch the repository member as it is required in do_build_().
+          build.repo
+
+        # Execute the actual build process (must not perform writes to the
+        # 'build' object as the DB session is over).
+        if do_build_(build, build_path, override_path, logger, logfile, terminate_event):
+          status = Build.Status_Success
+        else:
+          if terminate_event.is_set():
+            status = Build.Status_Stopped
+          else:
+            status = Build.Status_Error
+
+      finally:
+        # Create a ZIP from the build directory.
+        if os.path.isdir(build_path):
+          logger.info('[Flux]: Zipping build directory...')
+          utils.zipdir(build_path, build_path + '.zip')
+          utils.rmtree(build_path, remove_write_protection=True)
+          logger.info('[Flux]: Done')
+
+    except BaseException as exc:
+      with models.session():
+        build = Build.get(id=build_id)
         build.status = Build.Status_Error
-  except BaseException as exc:
-    build.status = Build.Status_Error
-    if logger:
-      logger.exception(exc)
-    else:
-      traceback.print_exc()
-  finally:
-    # Create a ZIP from the build directory.
-    if os.path.isdir(build_path):
-      logger.info('[Flux]: Zipping build directory...')
-      utils.zipdir(build_path, build_path + '.zip')
-      utils.rmtree(build_path, remove_write_protection=True)
-      logger.info('[Flux]: Done')
-    if logfile:
-      logfile.close()
-    build.date_finished = datetime.now()
-    with Session() as session:
-      session.add(build)
+        if logger:
+          logger.exception(exc)
+        else:
+          app.logger.exception(exc)
 
-  return build.status == Build.Status_Success
+    finally:
+      with models.session():
+        build = Build.get(id=build_id)
+        if status is not None:
+          build.status = status
+        build.date_finished = datetime.now()
+
+  return status == Build.Status_Success
 
 
 def do_build_(build, build_path, override_path, logger, logfile, terminate_event):
@@ -215,7 +249,8 @@ def do_build_(build, build_path, override_path, logger, logfile, terminate_event
     get_ref_sha_cmd = ['git', 'rev-parse', 'HEAD']
     res_ref_sha, res_ref_sha_stdout = utils.run(get_ref_sha_cmd, logger, cwd=build_path, return_stdout=True)
     if res_ref_sha == 0 and res_ref_sha_stdout != None:
-      build.commit_sha = res_ref_sha_stdout.strip()
+      with models.session():
+        Build.get(id=build.id).commit_sha = res_ref_sha_stdout.strip()
     else:
       logger.error('[Flux]: failed to read current sha')
       return False
@@ -223,7 +258,8 @@ def do_build_(build, build_path, override_path, logger, logfile, terminate_event
     get_ref_cmd = ['git', 'rev-parse', '--symbolic-full-name', build_start_point]
     res_ref, res_ref_stdout = utils.run(get_ref_cmd, logger, cwd=build_path, return_stdout=True)
     if res_ref == 0 and res_ref_stdout != None and res_ref_stdout.strip() != 'HEAD' and res_ref_stdout.strip() != '':
-      build.ref = res_ref_stdout.strip()
+      with models.session():
+        Build.get(id=build.id).ref = res_ref_stdout.strip()
     elif res_ref_stdout.strip() == '':
       # keep going, used ref was probably commit sha
       pass

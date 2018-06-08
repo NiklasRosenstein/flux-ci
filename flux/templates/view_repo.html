@@ -47,8 +47,8 @@
       <dd>{{ repo.clone_url }}</dd>
     </dl>
   {% endif %}
-  {% if repo.builds %}
-    {% for build in repo.builds[page_from:page_to] %}
+  {% if builds %}
+    {% for build in builds %}
       <a class="block-link" href="{{ build.url() }}">
         <span class="block">
           <span class="left-side">

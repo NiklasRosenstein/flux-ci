@@ -24,6 +24,7 @@ import hashlib
 import hmac
 import logging
 import os
+import re
 import shlex
 import shutil
 import stat
@@ -32,7 +33,7 @@ import urllib.parse
 import uuid
 import zipfile
 
-from . import config
+from . import app, config, models
 from urllib.parse import urlparse
 from flask import request, session, redirect, url_for, Response
 from datetime import datetime
@@ -100,22 +101,19 @@ def basic_auth(message='Login required'):
 def requires_auth(func):
   ''' Decorator for view functions that require basic authentication. '''
 
-  from .models import Session, User, LoginToken
-
   @functools.wraps(func)
   def wrapper(*args, **kwargs):
     ip = request.remote_addr
     token_string = session.get('flux_login_token')
-    with Session() as db_session:
-      token = LoginToken.get(db_session, token_string)
-      if not token or token.ip != ip or token.expired():
-        if token and token.expired():
-          flash("Your login session has expired.")
-          db_session.delete(token)
-        return redirect(url_for('login'))
+    token = models.LoginToken.select(lambda t: t.token == token_string).first()
+    if not token or token.ip != ip or token.expired():
+      if token and token.expired():
+        flash("Your login session has expired.")
+        token.delete()
+      return redirect(url_for('login'))
 
     request.login_token = token
-    request.user = db_session.query(User).get(token.user)
+    request.user = token.user
     return func(*args, **kwargs)
 
   return wrapper
@@ -172,21 +170,6 @@ def with_logger(kwarg='logger', stream_dest_kwarg='stream', replace=True):
     return wrapper
 
   return decorator
-
-
-def with_dbsession(func):
-  ''' Decorator that adds a :class:`Session` object as ``db_session``
-  to the Flask request. '''
-
-  from .models import Session
-
-  @functools.wraps(func)
-  def wrapper(*args, **kwargs):
-    with Session() as session:
-      request.db_session = session
-      return func(*args, **kwargs)
-
-  return wrapper
 
 
 def create_logger(stream, name=__name__, fmt=None):
@@ -269,6 +252,21 @@ def zipdir(dirname, filename):
   zipf.close()
 
 
+def quote(s, for_ninja=False):
+  """
+  Enhanced implementation of #shlex.quote().
+  Does not generate single-quotes on Windows.
+  """
+
+  if os.name == 'nt' and os.sep == '\\':
+    s = s.replace('"', '\\"')
+    if re.search('\s', s) or any(c in s for c in '<>'):
+      s = '"' + s + '"'
+  else:
+    s = shlex.quote(s)
+  return s
+
+
 def run(command, logger, cwd=None, env=None, shell=False, return_stdout=False,
         inherit_env=True):
   """
@@ -293,14 +291,14 @@ def run(command, logger, cwd=None, env=None, shell=False, return_stdout=False,
 
   if shell:
     if not isinstance(command, str):
-      command = ' '.join(shlex.quote(x) for x in command)
+      command = ' '.join(quote(x) for x in command)
     if logger:
       logger.info('$ ' + command)
   else:
     if isinstance(command, str):
       command = shlex.split(command)
     if logger:
-      logger.info('$ ' + ' '.join(map(shlex.quote, command)))
+      logger.info('$ ' + ' '.join(map(quote, command)))
 
   if env is None:
     env = {}
@@ -400,18 +398,21 @@ def is_page_active(page, user):
     return True
   return False
 
+
 def ping_repo(repo_url):
   if not repo_url or repo_url == '':
     return 1
 
   ssh_cmd = ssh_command(None, identity_file=config.ssh_identity_file)
-  env = {'GIT_SSH_COMMAND': ' '.join(map(shlex.quote, ssh_cmd))}
+  env = {'GIT_SSH_COMMAND': ' '.join(map(quote, ssh_cmd))}
   ls_remote = ['git', 'ls-remote', '--exit-code', repo_url]
-  res = run(ls_remote, None, env=env)
+  res = run(ls_remote, app.logger, env=env)
   return res
+
 
 def get_override_build_script_path(repo):
   return os.path.join(config.override_dir, repo.name.replace('/', os.sep), config.build_scripts[0])
+
 
 def read_override_build_script(repo):
   build_script_path = get_override_build_script_path(repo)
@@ -421,6 +422,7 @@ def read_override_build_script(repo):
     build_script_file.close()
     return build_script
   return ''
+
 
 def write_override_build_script(repo, build_script):
   build_script_path = get_override_build_script_path(repo)
@@ -432,3 +434,18 @@ def write_override_build_script(repo, build_script):
     build_script_file = open(build_script_path, mode='w')
     build_script_file.write(build_script.replace('\r', ''))
     build_script_file.close()
+
+
+def get_public_key():
+  """
+  Returns the servers SSH public key.
+  """
+
+  # XXX Support all valid options and eventually parse the config file?
+  filename = config.ssh_identity_file or os.path.expanduser('~/.ssh/id_rsa')
+  if not filename.endswith('.pub'):
+    filename += '.pub'
+  if os.path.isfile(filename):
+    with open(filename) as fp:
+      return fp.read()
+  return None

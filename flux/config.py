@@ -30,3 +30,14 @@ def prepend_path(path):
   os.environ['PATH'] = path + os.pathsep + os.environ['PATH']
 
 from flux_config import *
+
+# Backwards-compatibility for the db_url that we used with SQLAlchemy.
+# We only support parsing the sqlite:// schema here.
+if 'db_url' in globals():
+  if not db_url.startswith('sqlite://'):
+    raise EnvironmentError('The db_url backwards compatibility is only '
+                           'implemented for sqlite:// schema.')
+  database = {
+    'provider': 'sqlite',
+    'filename': db_url[9:].lstrip('/'),
+  }

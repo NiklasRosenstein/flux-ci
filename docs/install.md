@@ -7,11 +7,8 @@ ordering = 1
 
 * Python 3
 * Git 2.3 (for `GIT_SSH_COMMAND`)
-* [Flask][]
-* [SQLAlchemy][]
-
-[Flask]: http://flask.pocoo.org/
-[SQLAlchemy]: http://www.sqlalchemy.org/
+* [Flask](http://flask.pocoo.org/)
+* [PonyORM](https://ponyorm.com/)
 
 ## Manual Installation
 

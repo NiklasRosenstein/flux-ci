@@ -34,7 +34,7 @@
             </span>
           </span>
           {% if repo.builds %}
-          {% set build = repo.builds[0] %}
+            {% set build = repo.most_recent_build() %}
             <span class="right-side">
               <span class="block-item repository-last-build-info">
                 <span class="block-top-item">

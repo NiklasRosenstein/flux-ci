@@ -18,14 +18,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import json
-import uuid
-
-from . import app, config, utils
-from .build import enqueue, terminate_build
-from .models import Session, User, LoginToken, Repository, Build, get_target_for, get_public_key
+from flux import app, config, models, utils
+from flux.build import enqueue, terminate_build
+from flux.models import User, LoginToken, Repository, Build, get_target_for, select, desc
 from flask import request, session, redirect, url_for, render_template, abort
 from datetime import datetime
+
+import json
+import uuid
 
 API_GOGS = 'gogs'
 API_GITHUB = 'github'
@@ -38,7 +38,7 @@ API_GITLAB = 'gitlab'
 @app.route('/hook/push', methods=['POST'])
 @utils.with_io_response(mimetype='text/plain')
 @utils.with_logger()
-@utils.with_dbsession
+@models.session
 def hook_push(logger):
   ''' PUSH event webhook. The URL parameter ``api`` must be specified
   for Flux to expect the correct JSON payload format. Supported values
@@ -174,8 +174,7 @@ def hook_push(logger):
 
   name = owner + '/' + name
 
-  session = request.db_session
-  repo = session.query(Repository).filter_by(name=name).one_or_none()
+  repo = Repository.get(name=name)
   if not repo:
     logger.error('PUSH event rejected (unknown repository)')
     return 400
@@ -186,14 +185,18 @@ def hook_push(logger):
     logger.info('Git ref {!r} not whitelisted. No build dispatched'.format(ref))
     return 200
 
-  build = Build(repo=repo, commit_sha=commit, num=repo.build_count, ref=ref,
-    status=Build.Status_Queued, date_queued=datetime.now(), date_started=None,
+  build = Build(
+    repo=repo,
+    commit_sha=commit,
+    num=repo.build_count,
+    ref=ref,
+    status=Build.Status_Queued,
+    date_queued=datetime.now(),
+    date_started=None,
     date_finished=None)
   repo.build_count += 1
-  session.add(repo)
-  session.add(build)
-  session.commit()
 
+  models.commit()
   enqueue(build)
   logger.info('Build #{} for repository {} queued'.format(build.num, repo.name))
   logger.info(utils.strip_url_path(config.app_url) + build.url())
@@ -201,57 +204,52 @@ def hook_push(logger):
 
 
 @app.route('/')
+@models.session
 @utils.requires_auth
-@utils.with_dbsession
 def dashboard():
-  session = request.db_session
   context = {}
-  context['builds'] = session.query(Build).order_by(Build.date_queued.desc()).limit(10).all()
+  context['builds'] = select(x for x in Build).order_by(desc(Build.date_queued)).limit(10)
   context['user'] = request.user
   return render_template('dashboard.html', **context)
 
 
 @app.route('/repositories')
+@models.session
 @utils.requires_auth
-@utils.with_dbsession
 def repositories():
-  session = request.db_session
-  repositories = session.query(Repository).order_by(Repository.name).all()
+  repositories = select(x for x in Repository).order_by(Repository.name)
   return render_template('repositories.html', user=request.user, repositories=repositories)
 
 
 @app.route('/users')
+@models.session
 @utils.requires_auth
-@utils.with_dbsession
 def users():
   if not request.user.can_manage:
     return abort(403)
-  session = request.db_session
-  users = session.query(User).all()
+  users = select(x for x in User)
   return render_template('users.html', user=request.user, users=users)
 
 
 @app.route('/integration')
+@models.session
 @utils.requires_auth
 def integration():
   if not request.user.can_manage:
     return abort(403)
-  return render_template('integration.html', user=request.user, public_key=get_public_key())
+  return render_template('integration.html', user=request.user, public_key=utils.get_public_key())
 
 
 @app.route('/login', methods=['GET', 'POST'])
-@utils.with_dbsession
+@models.session
 def login():
-  db_session = request.db_session
   errors = []
   if request.method == 'POST':
     user_name = request.form['user_name']
     user_password = request.form['user_password']
-    user = User.get_by(db_session, user_name, utils.hash_pw(user_password))
+    user = User.get(name=user_name, passhash=utils.hash_pw(user_password))
     if user:
       token = LoginToken.create(request.remote_addr, user)
-      db_session.add(token)
-      db_session.commit()
       session['flux_login_token'] = token.token
       return redirect(url_for('dashboard'))
     errors.append('Username or password invalid.')
@@ -259,23 +257,20 @@ def login():
 
 
 @app.route('/logout')
+@models.session
 @utils.requires_auth
-@utils.with_dbsession
 def logout():
   if request.login_token:
-    request.db_session.delete(request.login_token)
-    request.db_session.commit()
+    request.login_token.delete()
   session.pop('flux_login_token')
   return redirect(url_for('dashboard'))
 
 
 @app.route('/repo/<path:path>')
+@models.session
 @utils.requires_auth
-@utils.with_dbsession
 def view_repo(path):
-  session = request.db_session
-  repo = get_target_for(session, path)
-
+  repo = get_target_for(path)
   if not isinstance(repo, Repository):
     return abort(404)
 
@@ -286,32 +281,32 @@ def view_repo(path):
     context['page_number'] = int(request.args.get('page', 1))
   except:
     context['page_number'] = 1
-  context['page_from'] = (context['page_number'] - 1) * page_size
-  context['page_to'] = context['page_from'] + page_size
-  context['next_page'] = None if context['page_number'] <= 1 else context['page_number'] - 1
-  context['previous_page'] = None if len(repo.builds) <= context['page_to'] else context['page_number'] + 1
 
+  page_from = (context['page_number'] - 1) * page_size
+  page_to = page_from + page_size
+
+  context['next_page'] = None if context['page_number'] <= 1 else context['page_number'] - 1
+  context['previous_page'] = None if len(repo.builds) <= page_to else context['page_number'] + 1
+  context['builds'] = repo.builds.select().order_by(desc(Build.date_queued))[page_from:page_to]
   return render_template('view_repo.html', user=request.user, repo=repo, **context)
 
 
 @app.route('/build/<path:path>')
+@models.session
 @utils.requires_auth
-@utils.with_dbsession
 def view_build(path):
-  session = request.db_session
-  build = get_target_for(session, path)
+  build = get_target_for(path)
   if not isinstance(build, Build):
     return abort(404)
 
   restart = request.args.get('restart', '').strip().lower() == 'true'
   if restart:
     if build.status != Build.Status_Building:
-      build.delete()
+      build.delete_build()
       build.status = Build.Status_Queued
       build.date_started = None
       build.date_finished = None
-      request.db_session.add(build)
-      request.db_session.commit()
+      models.commit()
       enqueue(build)
     return redirect(build.url())
 
@@ -321,8 +316,6 @@ def view_build(path):
       build.status = Build.Status_Stopped
     elif build.status == Build.Status_Building:
       terminate_build(build)
-      session.add(build)
-      session.commit()
     return redirect(build.url())
 
   return render_template('view_build.html', user=request.user, build=build)
@@ -330,14 +323,13 @@ def view_build(path):
 
 @app.route('/edit/repo', methods=['GET', 'POST'], defaults={'repo_id': None})
 @app.route('/edit/repo/<int:repo_id>', methods=['GET', 'POST'])
+@models.session
 @utils.requires_auth
-@utils.with_dbsession
 def edit_repo(repo_id):
-  session = request.db_session
   if not request.user.can_manage:
     return abort(403)
   if repo_id is not None:
-    repo = session.query(Repository).get(repo_id)
+    repo = Repository.get(id=repo_id)
   else:
     repo = None
 
@@ -352,13 +344,17 @@ def edit_repo(repo_id):
       errors.append('Invalid repository name. Format must be owner/repo')
     if not clone_url:
       errors.append('No clone URL specified')
-    other = session.query(Repository).filter_by(name=repo_name).one_or_none()
+    other = Repository.get(name=repo_name)
     if (other and not repo) or (other and other.id != repo.id):
       errors.append('Repository {!r} already exists'.format(repo_name))
     if not errors:
       if not repo:
-        repo = Repository(name=repo_name, clone_url=clone_url, secret=secret,
-          build_count=0, ref_whitelist=ref_whitelist)
+        repo = Repository(
+          name=repo_name,
+          clone_url=clone_url,
+          secret=secret,
+          build_count=0,
+          ref_whitelist=ref_whitelist)
       else:
         repo.name = repo_name
         repo.clone_url = clone_url
@@ -368,8 +364,6 @@ def edit_repo(repo_id):
         utils.write_override_build_script(repo, build_script)
       except:
         errors.append('Could not make change on build script')
-      session.add(repo)
-      session.commit()
       if not errors:
         return redirect(repo.url())
 
@@ -378,13 +372,12 @@ def edit_repo(repo_id):
 
 @app.route('/user/new', defaults={'user_id': None}, methods=['GET', 'POST'])
 @app.route('/user/<int:user_id>', methods=['GET', 'POST'])
+@models.session
 @utils.requires_auth
-@utils.with_dbsession
 def edit_user(user_id):
-  session = request.db_session
   cuser = None
   if user_id is not None:
-    cuser = session.query(User).get(user_id)
+    cuser = User.get(id=user_id)
     if not cuser:
       return abort(404)
     if cuser.id != request.user.id and not request.user.can_manage:
@@ -405,7 +398,7 @@ def edit_user(user_id):
 
     if not cuser:  # Create a new user
       assert request.user.can_manage
-      other = session.query(User).filter_by(name=user_name).one_or_none()
+      other = User.get(name=user_name)
       if other:
         errors.append('User {!r} already exists'.format(user_name))
       elif len(user_name) == 0:
@@ -425,21 +418,20 @@ def edit_user(user_id):
         cuser.can_view_buildlogs = can_view_buildlogs
         cuser.can_download_artifacts = can_download_artifacts
     if not errors:
-      session.add(cuser)
-      session.commit()
       return redirect(cuser.url())
+    models.rollback()
 
   return render_template('edit_user.html', user=request.user, cuser=cuser,
     errors=errors)
 
 
 @app.route('/download/<int:build_id>/<string:data>')
+@models.session
 @utils.requires_auth
-@utils.with_dbsession
 def download(build_id, data):
   if data not in (Build.Data_Artifact, Build.Data_Log):
     return abort(404)
-  build = request.db_session.query(Build).get(build_id)
+  build = Build.get(id=build_id)
   if not build:
     return abort(404)
   if not build.check_download_permission(data, request.user):
@@ -452,28 +444,27 @@ def download(build_id, data):
 
 
 @app.route('/delete')
+@models.session
 @utils.requires_auth
-@utils.with_dbsession
 def delete():
   repo_id = request.args.get('repo_id', '')
   build_id = request.args.get('build_id', '')
   user_id = request.args.get('user_id', '')
 
-  session = request.db_session
   delete_target = None
   return_to = 'dashboard'
   if build_id:
-    delete_target = session.query(Build).get(build_id)
+    delete_target = Build.get(id=build_id)
     return_to = delete_target.repo.url()
     if not request.user.can_manage:
       return abort(403)
   elif repo_id:
-    delete_target = session.query(Repository).get(repo_id)
+    delete_target = Repository.get(id=repo_id)
     return_to = url_for('repositories')
     if not request.user.can_manage:
       return abort(403)
   elif user_id:
-    delete_target = session.query(User).get(user_id)
+    delete_target = User.get(id=user_id)
     return_to = url_for('users')
     if delete_target and delete_target.id != request.user.id and not request.user.can_manage:
       return abort(403)
@@ -482,10 +473,9 @@ def delete():
     return abort(404)
 
   try:
-    session.delete(delete_target)
-    session.commit()
+    delete_target.delete()
   except Build.CanNotDelete as exc:
-    session.rollback()
+    models.rollback()
     utils.flash(str(exc))
     referer = request.headers.get('Referer', return_to)
     return redirect(referer)
@@ -495,34 +485,35 @@ def delete():
 
 
 @app.route('/build')
+@models.session
 @utils.requires_auth
-@utils.with_dbsession
 def build():
   repo_id = request.args.get('repo_id', '')
   ref_name = request.args.get('ref', '')
-  session = request.db_session
   if not repo_id or not ref_name:
     return abort(400)
   if not request.user.can_manage:
     return abort(403)
 
   commit = '0' * 32
-  repo = session.query(Repository).get(repo_id)
-  build = Build(repo=repo, commit_sha=commit, num=repo.build_count, ref=ref_name,
-    status=Build.Status_Queued, date_queued=datetime.now(), date_started=None,
+  repo = Repository.get(id=repo_id)
+  build = Build(
+    repo=repo,
+    commit_sha=commit,
+    num=repo.build_count,
+    ref=ref_name,
+    status=Build.Status_Queued,
+    date_queued=datetime.now(),
+    date_started=None,
     date_finished=None)
   repo.build_count += 1
-  session.add(repo)
-  session.add(build)
-  session.commit()
 
+  models.commit()
   enqueue(build)
-  print('Build #{} for repository {} queued'.format(build.num, repo.name))
-  print(utils.strip_url_path(config.app_url) + build.url())
-
   return redirect(repo.url())
 
 @app.route('/ping-repo', methods=['POST'])
+@models.session
 @utils.requires_auth
 def ping_repo():
   repo_url = request.form.get('url')
