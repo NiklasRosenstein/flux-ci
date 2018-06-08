@@ -25,6 +25,8 @@ import hmac
 import logging
 import os
 import shlex
+import shutil
+import stat
 import subprocess
 import urllib.parse
 import uuid
@@ -239,6 +241,22 @@ def makedirs(path):
 
   if not os.path.exists(path):
     os.makedirs(path)
+
+
+def rmtree(path, remove_write_protection=False):
+  """
+  A wrapper for #shutil.rmtree() that can try to remove write protection
+  if removing fails, if enabled.
+  """
+
+  if remove_write_protection:
+    def on_rm_error(func, path, exc_info):
+      os.chmod(path, stat.S_IWRITE)
+      os.unlink(path)
+  else:
+    on_rm_error = None
+
+  shutil.rmtree(path, onerror=on_rm_error)
 
 
 def zipdir(dirname, filename):
