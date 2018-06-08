@@ -313,6 +313,8 @@ def view_build(path):
       build.status = Build.Status_Stopped
     elif build.status == Build.Status_Building:
       terminate_build(build)
+      session.add(build)
+      session.commit()
     return redirect(build.url())
 
   return render_template('view_build.html', user=request.user, build=build)

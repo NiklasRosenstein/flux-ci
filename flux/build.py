@@ -74,8 +74,7 @@ class BuildConsumer(object):
         self._terminate_events[build.id].set()
       elif build.id in self._queue:
         self._queue.remove(build.id)
-        build.status = build.Status_Stopped
-        models.commit()
+      build.status = build.Status_Stopped
 
   def stop(self, join=True):
     with self._cond:
@@ -183,7 +182,7 @@ def do_build(build, terminate_event):
     if os.path.isdir(build_path):
       logger.info('[Flux]: Zipping build directory...')
       utils.zipdir(build_path, build_path + '.zip')
-      shutil.rmtree(build_path)
+      utils.rmtree(build_path, remove_write_protection=True)
       logger.info('[Flux]: Done')
     if logfile:
       logfile.close()
@@ -250,7 +249,7 @@ def do_build_(build, build_path, override_path, logger, logfile, terminate_event
     return False
 
   # Delete the .git folder to save space. We don't need it anymore.
-  shutil.rmtree(os.path.join(build_path, '.git'))
+  utils.rmtree(os.path.join(build_path, '.git'), remove_write_protection=True)
 
   # Copy over overridden files if any
   if os.path.exists(override_path):
