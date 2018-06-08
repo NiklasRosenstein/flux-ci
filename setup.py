@@ -1,6 +1,14 @@
 
+import os
 import setuptools
 import sys
+
+def package_files(directory):
+  paths = []
+  for (path, directories, filenames) in os.walk(directory):
+    for filename in filenames:
+      paths.append(os.path.join('..', path, filename))
+  return paths
 
 if sys.version[:3] < '3.4':
   raise EnvironmentError('Flux CI is not compatible with Python {}'
@@ -24,6 +32,9 @@ setuptools.setup(
   url = 'https://github.com/NiklasRosenstein/flux-ci',
   install_requires = requirements,
   packages = setuptools.find_packages(),
+  package_data = {
+    'flux': package_files('flux/static') + package_files('flux/templates')
+  },
   entry_points = dict(
     console_scripts = ['flux-ci=flux.main:_entry_point']
   )
