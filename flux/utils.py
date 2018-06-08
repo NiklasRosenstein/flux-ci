@@ -404,7 +404,7 @@ def ping_repo(repo_url):
     return 1
 
   ssh_cmd = ssh_command(None, identity_file=config.ssh_identity_file)
-  env = {'GIT_SSH_COMMAND': ' '.join(map(quote, ssh_cmd))
+  env = {'GIT_SSH_COMMAND': ' '.join(map(quote, ssh_cmd))}
   ls_remote = ['git', 'ls-remote', '--exit-code', repo_url]
   res = run(ls_remote, app.logger, env=env)
   return res
