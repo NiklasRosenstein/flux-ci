@@ -1,11 +1,11 @@
-# Flux &ndash; Lightweight CI Server ![](http://i.imgur.com/A0PsiQs.png) ![](http://i.imgur.com/uuTtLzU.png)
+# Flux-CI
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Flux is a simple and lightweight continuous integration server that responds
 to Webhooks that can be triggered by various Git hosting services.
 
-Flux should be deployed over an SSL encrpyted proxy pass server and be used
+Flux should be deployed over an SSL encrypted proxy pass server and be used
 for internal purposes only since it does not provide mechanisms to prevent
 bad code execution.
 
