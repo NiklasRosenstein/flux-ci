@@ -91,7 +91,6 @@ def start_web():
   # Create a dispatcher for the sub-url under which the app is run.
   url_prefix = urlparse(config.app_url).path
   if url_prefix and url_prefix != '/':
-    print(url_prefix)
     from werkzeug.wsgi import DispatcherMiddleware
     target_app = DispatcherMiddleware(flask.Flask('_dummy_app'), {
       url_prefix: app,
@@ -104,7 +103,8 @@ def start_web():
   build.update_queue()
   try:
     from werkzeug.serving import run_simple
-    run_simple(config.host, config.port, target_app, use_reloader=False)
+    run_simple(config.host, config.port, target_app,
+      use_debugger=config.debug, use_reloader=False)
   finally:
     app.logger.info('Stopping builder threads...')
     build.stop_consumers()
