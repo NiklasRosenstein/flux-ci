@@ -1,6 +1,10 @@
 
 """
 This package provides the database models using PonyORM.
+
+Note that we do not rely on the auto increment feature as the previous
+SQLAlchemy implementation did not set AUTO INCREMENT on the ID fields,
+as PonyORM would.
 """
 
 from flask import url_for
@@ -31,6 +35,11 @@ class User(db.Entity):
   can_download_artifacts = orm.Required(bool)
   can_view_buildlogs = orm.Required(bool)
   login_tokens = orm.Set('LoginToken')
+
+  def __init__(self, **kwargs):
+    if 'id' not in kwargs:
+      kwargs['id'] = (orm.max(x.id for x in User) or 0) + 1
+    super().__init__(**kwargs)
 
   def set_password(self, password):
     self.passhash = utils.hash_pw(password)
@@ -94,10 +103,11 @@ class LoginToken(db.Entity):
   def create(cls, ip, user):
     " Create a new login token assigned to the specified IP and user. "
 
+    id = (orm.max(x.id for x in cls) or 0) + 1
     created = datetime.datetime.now()
     token = str(uuid.uuid4()).replace('-', '')
     token += hashlib.md5((token + str(created)).encode()).hexdigest()
-    return cls(ip=ip, user=user, token=token, created=created)
+    return cls(id=id, ip=ip, user=user, token=token, created=created)
 
   def expired(self):
     " Returns #True if the token is expired, #False otherwise. "
@@ -124,6 +134,11 @@ class Repository(db.Entity):
   build_count = orm.Required(int, default=0)
   builds = orm.Set('Build')
   ref_whitelist = orm.Optional(str)  # newline separated list of accepted Git refs
+
+  def __init__(self, **kwargs):
+    if 'id' not in kwargs:
+      kwargs['id'] = (orm.max(x.id for x in Repository) or 0) + 1
+    super().__init__(**kwargs)
 
   def url(self, **kwargs):
     return url_for('view_repo', path=self.name, **kwargs)
@@ -183,7 +198,7 @@ class Build(db.Entity):
     # Backwards compatibility for when SQLAlchemy was used, Auto Increment
     # was not enabled there.
     if 'id' not in kwargs:
-      kwargs['id'] = orm.max(x.id for x in Build) + 1
+      kwargs['id'] = (orm.max(x.id for x in Build) or 0) + 1
     super(Build, self).__init__(**kwargs)
 
   def url(self, data=None, **kwargs):
