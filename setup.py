@@ -25,6 +25,6 @@ setuptools.setup(
   install_requires = requirements,
   packages = setuptools.find_packages(),
   entry_points = dict(
-    console_scripts = ['flux-ci=flux:main']
+    console_scripts = ['flux-ci=flux.main:_entry_point']
   )
 )
