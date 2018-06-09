@@ -707,7 +707,7 @@ def overrides_actions(action):
     return abort(404)
 
   if action == OVERRIDES_ACTION_CREATEFOLDER:
-    name = request.args.get('name', '').replace('../', '')
+    name = secure_filename(request.args.get('name', ''))
     try:
       file_utils.create_folder(os.path.join(utils.get_override_path(repo), path.replace('/', os.sep)), name)
       utils.flash('Folder was created.')
@@ -717,7 +717,7 @@ def overrides_actions(action):
       session['errors'].append('Could not create folder.')
       return redirect(url_for('overrides_list', path = separator.join([repo.name, path]).replace('//', '/')))
   elif action == OVERRIDES_ACTION_CREATEFILE:
-    name = request.args.get('name', '').replace('../', '')
+    name = secure_filename(request.args.get('name', ''))
     try:
       file_utils.create_file(os.path.join(utils.get_override_path(repo), path.replace('/', os.sep)), name)
       utils.flash('File was created.')
