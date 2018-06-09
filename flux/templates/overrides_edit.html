@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% from "macros.html" import render_error_list %}
+{% set page_title = "Overrides edit" %}
+{% block toolbar %}
+  <li>
+    <a href="{{ url_for('overrides_list', path = dir_path) }}">
+      <i class="fa fa-chevron-left"></i>Parent folder
+    </a>
+  </li>
+{% endblock toolbar %}
+{% block body %}
+  {{ render_error_list(errors) }}
+  <h3>/{{ overrides_path }}</h3>
+  <form method="post">
+    <div class="field">
+      <textarea id="override_content" name="override_content">{{ content }}</textarea>
+    </div>
+    <button class="btn-primary">Save</button>
+  </form>
+{% endblock body %}

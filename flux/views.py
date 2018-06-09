@@ -18,13 +18,15 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from flux import app, config, models, utils
+from flux import app, config, file_utils, models, utils
 from flux.build import enqueue, terminate_build
 from flux.models import User, LoginToken, Repository, Build, get_target_for, select, desc
 from flask import request, session, redirect, url_for, render_template, abort
 from datetime import datetime
+from werkzeug.utils import secure_filename
 
 import json
+import os
 import uuid
 
 API_GOGS = 'gogs'
@@ -522,6 +524,207 @@ def ping_repo():
     return 'ok', 200
   else:
     return 'fail', 404
+
+@app.route('/overrides/list/<path:path>')
+@models.session
+@utils.requires_auth
+def overrides_list(path):
+  if not request.user.can_manage:
+    return abort(403)
+
+  separator = "/"
+  errors = []
+  errors = errors + session.pop('errors', [])
+  context = {}
+
+  repo_path, context['overrides_path'] = file_utils.split_url_path(path)
+  context['repo'] = get_target_for(repo_path)
+  context['list_path'] = url_for('overrides_list', path = path)
+  context['edit_path'] = url_for('overrides_edit', path = path)
+  context['delete_path'] = url_for('overrides_delete', path = path)
+  context['download_path'] = url_for('overrides_download', path = path)
+  context['upload_path'] = url_for('overrides_upload', path = path)
+  if context['overrides_path'] != '' and context['overrides_path'] != None:
+    context['parent_name'] = separator.join(context['overrides_path'].split(separator)[:-1])
+    context['parent_path'] = url_for('overrides_list', path = separator.join(path.split(separator)[:-1]))
+
+  if not isinstance(context['repo'], Repository):
+    return abort(404)
+
+  try:
+    cwd = os.path.join(utils.get_override_path(context['repo']), context['overrides_path'].replace('/', os.sep))
+    utils.makedirs(os.path.dirname(cwd))
+    context['files'] = file_utils.list_folder(cwd)
+  except:
+    errors.append('Could not read overrides for this repository.')
+
+  return render_template('overrides_list.html', user=request.user, **context, errors=errors)
+
+@app.route('/overrides/edit/<path:path>', methods=['GET', 'POST'])
+@models.session
+@utils.requires_auth
+def overrides_edit(path):
+  if not request.user.can_manage:
+    return abort(403)
+
+  separator = "/"
+  context = {}
+  errors = []
+
+  repo_path, context['overrides_path'] = file_utils.split_url_path(path)
+  context['repo'] = get_target_for(repo_path)
+  file_path = os.path.join(utils.get_override_path(context['repo']), context['overrides_path'].replace('/', os.sep))
+
+  if request.method == 'POST':
+    override_content = request.form.get('override_content')
+    try:
+      file_utils.write_file(file_path, override_content)
+      utils.flash('Changes in file was saved.')
+    except:
+      errors.append('Could not write into file.')
+
+  dir_path_parts = path.split("/")
+  context['dir_path'] = separator.join(dir_path_parts[:-1])
+
+  try:
+    context['content'] = file_utils.read_file(file_path)
+  except:
+    errors.append('Could not read file.')
+
+  return render_template('overrides_edit.html', user=request.user, **context, errors=errors)
+
+OVERRIDES_ACTION_CREATEFOLDER = 'createNewFolder'
+OVERRIDES_ACTION_CREATEFILE = 'createNewFile'
+OVERRIDES_ACTION_RENAME = 'rename'
+
+@app.route('/overrides/delete/<path:path>')
+@models.session
+@utils.requires_auth
+def overrides_delete(path):
+  if not request.user.can_manage:
+    return abort(403)
+
+  separator = "/"
+
+  repo_path, overrides_path = file_utils.split_url_path(path)
+  repo = get_target_for(repo_path)
+  return_path_parts = path.split(separator)
+  return_path = separator.join(return_path_parts[:-1])
+
+  if not isinstance(repo, Repository):
+    return abort(404)
+
+  cwd = os.path.join(utils.get_override_path(repo), overrides_path.replace('/', os.sep))
+
+  session['errors'] = []
+  try:
+    file_utils.delete(cwd)
+    utils.flash('Object was deleted.')
+  except:
+    session['errors'].append('Could not delete \'' + return_path_parts[-1] + '\'.')
+
+  return redirect(url_for('overrides_list', path = return_path))
+
+@app.route('/overrides/download/<path:path>')
+@models.session
+@utils.requires_auth
+def overrides_download(path):
+  if not request.user.can_manage:
+    return abort(403)
+
+  repo_path, overrides_path = file_utils.split_url_path(path)
+  repo = get_target_for(repo_path)
+  file_path = os.path.join(utils.get_override_path(repo), overrides_path.replace('/', os.sep))
+
+  return utils.stream_file(file_path, mime='application/octet-stream')
+
+@app.route('/overrides/upload/<path:path>', methods=['GET', 'POST'])
+@models.session
+@utils.requires_auth
+def overrides_upload(path):
+  if not request.user.can_manage:
+    return abort(403)
+
+  separator = "/"
+  context = {}
+  errors = [] + session.pop('errors', [])
+
+  repo_path, context['overrides_path'] = file_utils.split_url_path(path)
+  repo = get_target_for(repo_path)
+  context['list_path'] = url_for('overrides_list', path = path)
+  cwd = os.path.join(utils.get_override_path(repo), context['overrides_path'].replace('/', os.sep))
+
+  if request.method == 'POST':
+    session['errors'] = []
+    files = request.files.getlist('upload_file')
+    if not files:
+      utils.flash('No file was uploaded.')
+    else:
+      file_uploads = []
+      for file in files:
+        filepath = os.path.join(cwd, secure_filename(file.filename))
+        try:
+          file.save(filepath)
+          file_uploads.append("File '{}' was uploaded.".format(file.filename))
+        except:
+          session['errors'].append("Could not upload '{}'.".format(file.filename))
+      utils.flash(" ".join(file_uploads))
+      if not session['errors']:
+        return redirect(url_for('overrides_list', path = path))
+
+  dir_path_parts = path.split("/")
+  context['dir_path'] = separator.join(dir_path_parts[:-1])
+
+  return render_template('overrides_upload.html', user=request.user, **context, errors=errors)
+
+@app.route('/overrides/<string:action>')
+@models.session
+@utils.requires_auth
+def overrides_actions(action):
+  if not request.user.can_manage:
+    return abort(403)
+
+  separator = "/"
+  session['errors'] = []
+  repo_id = request.args.get('repo_id', '')
+  path = request.args.get('path', '')
+
+  repo = Repository.get(id=repo_id)
+  if not repo:
+    return abort(404)
+
+  if action == OVERRIDES_ACTION_CREATEFOLDER:
+    name = request.args.get('name', '').replace('../', '')
+    try:
+      file_utils.create_folder(os.path.join(utils.get_override_path(repo), path.replace('/', os.sep)), name)
+      utils.flash('Folder was created.')
+      return redirect(url_for('overrides_list', path = separator.join([repo.name, path, name]).replace('//', '/')))
+    except:
+      session['errors'].append('Could not create folder.')
+      return redirect(url_for('overrides_list', path = separator.join([repo.name, path]).replace('//', '/')))
+  elif action == OVERRIDES_ACTION_CREATEFILE:
+    name = request.args.get('name', '').replace('../', '')
+    try:
+      file_utils.create_file(os.path.join(utils.get_override_path(repo), path.replace('/', os.sep)), name)
+      utils.flash('File was created.')
+      return redirect(url_for('overrides_edit', path = separator.join([repo.name, path, name]).replace('//', '/')))
+    except:
+      session['errors'].append('Could not create file.')
+      return redirect(url_for('overrides_list', path = separator.join([repo.name, path]).replace('//', '/')))
+  elif action == OVERRIDES_ACTION_RENAME:
+    name = request.args.get('name', '').replace('../', '')
+    original_name = request.args.get('original_name', '').replace('../', '')
+    new_path = os.path.join(utils.get_override_path(repo), path.replace('/', os.sep), name)
+    original_path = os.path.join(utils.get_override_path(repo), path.replace('/', os.sep), original_name)
+
+    try:
+      file_utils.rename(original_path, new_path)
+      utils.flash('Object was renamed.')
+    except:
+      session['errors'].append('Could not rename \'' + original_name + '\'.')
+    return redirect(url_for('overrides_list', path = separator.join([repo.name, path]).replace('//', '/')))
+
+  return abort(404)
 
 @app.errorhandler(403)
 def error_403(e):

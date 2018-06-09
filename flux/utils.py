@@ -388,7 +388,7 @@ def is_page_active(page, user):
 
   if page == 'dashboard' and (not path or path == '/'):
     return True
-  elif page == 'repositories' and (path.startswith('/repositories') or path.startswith('/repo') or path.startswith('/edit/repo') or path.startswith('/build')):
+  elif page == 'repositories' and (path.startswith('/repositories') or path.startswith('/repo') or path.startswith('/edit/repo') or path.startswith('/build') or path.startswith('/overrides')):
     return True
   elif page == 'users' and (path.startswith('/users') or (path.startswith('/user') and path != ('/user/' + str(user.id)))):
     return True
@@ -409,10 +409,11 @@ def ping_repo(repo_url):
   res = run(ls_remote, app.logger, env=env)
   return res
 
+def get_override_path(repo):
+  return os.path.join(config.override_dir, repo.name.replace('/', os.sep))
 
 def get_override_build_script_path(repo):
-  return os.path.join(config.override_dir, repo.name.replace('/', os.sep), config.build_scripts[0])
-
+  return os.path.join(get_override_path(repo), config.build_scripts[0])
 
 def read_override_build_script(repo):
   build_script_path = get_override_build_script_path(repo)
@@ -434,7 +435,6 @@ def write_override_build_script(repo, build_script):
     build_script_file = open(build_script_path, mode='w')
     build_script_file.write(build_script.replace('\r', ''))
     build_script_file.close()
-
 
 def get_public_key():
   """

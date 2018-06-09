@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+{% from "macros.html" import render_error_list %}
+{% set page_title = "Overrides" %}
+{% block head %}
+<script>
+  function createNewFolder(repoId) {
+    return function(input) {
+      if (input.length > 0) {
+        var url = "{{ url_for('overrides_actions', action = 'createNewFolder') }}" + '?repo_id=' + repoId + '&path=' + encodeURI('{{overrides_path}}') + '&name=' + encodeURI(input);
+        window.location = url;
+      }
+    };
+  }
+
+  function createNewFile(repoId) {
+    return function(input) {
+      if (input.length > 0) {
+        var url = "{{ url_for('overrides_actions', action = 'createNewFile') }}" + '?repo_id=' + repoId + '&path=' + encodeURI('{{overrides_path}}') + '&name=' + encodeURI(input);
+        window.location = url;
+      }
+    };
+  }
+
+  function rename(repoId, originalName) {
+    return function(input) {
+      if (input.length > 0) {
+        var url = "{{ url_for('overrides_actions', action = 'rename') }}" + '?repo_id=' + repoId + '&path=' + encodeURI('{{overrides_path}}') + '&original_name=' + encodeURI(originalName) + '&name=' + encodeURI(input);
+        window.location = url;
+      }
+    };
+  }
+</script>
+{% endblock head%}
+
+{% block toolbar %}
+  {% if overrides_path != None and overrides_path != '' %}
+    <li>
+      <a href="{{ parent_path }}">
+        <i class="fa fa-chevron-left"></i>/{{ parent_name }}
+      </a>
+    </li>
+  {% else %}
+  <li>
+    <a href="{{ repo.url() }}">
+      <i class="fa fa-chevron-left"></i>{{ repo.name }}
+    </a>
+  </li>
+  {% endif %}
+  <li class="dropdown-list">
+    <a href="#" class="dropdown">
+      <i class="fa fa-cog"></i>Options
+    </a>
+    <div class="dropdown-menu">
+      <a href="#" data-input-message="Specify name for a new folder:" data-input-callback="createNewFolder({{ repo.id }})">
+        <i class="fa fa-folder-o"></i>Create folder
+      </a>
+      <a href="#" data-input-message="Specify name for a new file:" data-input-callback="createNewFile({{ repo.id }})">
+        <i class="fa fa-file-o"></i>Create file
+      </a>
+      <a href="{{ upload_path }}"><i class="fa fa-upload"></i>Upload file</a>
+    </div>
+  </li>
+  <noscript>
+    <li>
+      <a href="{{ upload_path }}"><i class="fa fa-upload"></i>Upload file</a>
+    </li>
+  </noscript>
+{% endblock toolbar %}
+
+{% block body %}
+  {{ render_error_list(errors) }}
+  <h3>/{{ overrides_path }}</h3>
+  {% if overrides_path != None and overrides_path != '' %}
+    <span class="block-link">
+      <span class="block">
+        <span class="left-side">
+          <span class="block-item block-icon">
+            <i class="fa fa-folder-o"></i>
+          </span>
+          <span class="block-item">
+            <a href="{{ list_path + ('' if list_path.endswith('/') else '/') }}../">
+              ../
+            </a>
+          </span>
+        </span>
+      </span>
+    </span>
+  {% endif %}
+  {% if files %}
+    {% for file in files %}
+      <span class="block-link">
+        <span class="block">
+          <span class="left-side">
+            <span class="block-item block-icon">
+              <i class="fa {{ 'fa-folder-o' if file.type == 'folder' else 'fa-file-o' }}"></i>
+            </span>
+            <span class="block-item"></span>
+            <span class="block-item">
+              <span class="block-top-item">
+                {% set url_path = list_path if file.type == 'folder' else edit_path %}
+                <a href="{{ url_path + ('' if url_path.endswith('/') else '/') + file.filename }}">
+                  {{ file.filename }}
+                </a>
+              </span>
+              <span class="block-bottom-item">
+                {% if file.type == 'file' %}
+                  {{ file.filesize_readable }}
+                {% else %}
+                  &nbsp;
+                {% endif %}
+              </span>
+            </span>
+          </span>
+          <span class="right-side">
+            <span class="block-item">
+              <span class="block-top-item">&nbsp;</span>
+              <span class="block-bottom-item">&nbsp;</span>
+            </span>
+            <span class="block-item block-buttons">
+              {% if file.type == 'file' %}
+                <a href="{{ download_path + ('' if download_path.endswith('/') else '/') + file.filename }}"
+                    class="btn"
+                    title="Download">
+                  <i class="fa fa-download"></i>
+                </a>
+              {% endif %}
+              <a href="#"
+                  data-input-message="Specify new name for '{{ file.filename }}' file:"
+                  data-input-callback="rename({{ repo.id }}, '{{ file.filename }}')"
+                  data-input-text="{{ file.filename }}"
+                  class="btn"
+                  title="Rename">
+                <i class="fa fa-pencil"></i>
+              </a>
+              <a href="{{ delete_path + ('' if delete_path.endswith('/') else '/') + file.filename }}"
+                  data-confirmation="Are you sure you want to delete '{{ file.filename }}'{{ ' with all content' if file.type == 'folder' }}? This operation can not be undone."
+                  class="btn"
+                  title="Delete">
+                <i class="fa fa-trash"></i>
+              </a>
+            </span>
+          </span>
+        </span>
+      </span>
+    {% endfor %}
+  {% elif not files and (overrides_path == None or overrides_path == '') %}
+    <div class="messages info">
+      <span class="icon">
+        <i class="fa fa-info-circle"></i>
+      </span>
+      <div>No files in this directory.</div>
+    </div>
+  {% endif %}
+{% endblock body %}

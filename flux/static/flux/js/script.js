@@ -20,15 +20,21 @@ $(document).ready(function() {
 		toggleConfirmDialog();
 	});
 
-	$('#action-new-build').click(function (event) {
+	$('[data-input-callback]').click(function (event) {
 		event.preventDefault();
 		event.stopPropagation();
-		let caller = $(this);
-		let field = $('#input-dialog .input-text')[0];
-		$('#input-dialog .input-message').text('Specify a Git ref to check out and build:');
+		var caller = $(this);
+		var field = $('#input-dialog .input-text');
+		var inputText = caller.attr('data-input-text');
+		field.val(inputText !== undefined ? inputText : '');
+		if (field.val() !== '') {
+			field[0].select();
+		}
+
+		$('#input-dialog .input-message').text($(this).attr('data-input-message'));
 		$('#input-dialog .input-cancel').off('click');
 		$('#input-dialog .input-cancel').click(function (event) {
-			field.value = '';
+			field.val('');
 			toggleInputDialog();
 		});
 		$('#input-dialog .input-ok').off('click');
@@ -36,16 +42,13 @@ $(document).ready(function() {
 			event.preventDefault();
 			event.stopPropagation();
 			toggleInputDialog();
-			let input = field.value;
-			field.value = '';
-			if (input.length > 0) {
-				let repoId = caller.attr('data-repository')
-				let url = start_build_url + '?repo_id=' + repoId + '&ref=' + input;
-				window.location = url;
-			}
+			var input = field.val();
+			field.val('');
+			var callback = caller.attr('data-input-callback');
+			eval(callback)(input);
 		});
-		toggleInputDialog()
-		field.focus();
+		toggleInputDialog();
+		field[0].focus();
 	});
 
 	$('#confirm-dialog .confirm-no').click(function (event) {
@@ -117,5 +120,11 @@ $(document).ready(function() {
 		$('.dropdown-menu').hide();
 	});
 
-
+	$('.upload-form input[type=file]').on('change', function() {
+		if ('files' in $(this)[0]) {
+			if ($(this)[0].files.length > 0) {
+				$(this).parent('.upload-form').submit();
+			}
+		}
+	});
 });
