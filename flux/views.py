@@ -21,9 +21,9 @@
 from flux import app, config, file_utils, models, utils
 from flux.build import enqueue, terminate_build
 from flux.models import User, LoginToken, Repository, Build, get_target_for, select, desc
+from flux.utils import secure_filename
 from flask import request, session, redirect, url_for, render_template, abort
 from datetime import datetime
-from werkzeug.utils import secure_filename
 
 import json
 import os

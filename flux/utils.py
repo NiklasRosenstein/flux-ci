@@ -31,6 +31,7 @@ import stat
 import subprocess
 import urllib.parse
 import uuid
+import werkzeug
 import zipfile
 
 from . import app, config, models
@@ -250,6 +251,28 @@ def zipdir(dirname, filename):
       arcname = os.path.join(os.path.relpath(root, dirname), fname)
       zipf.write(os.path.join(root, fname), arcname)
   zipf.close()
+
+
+def secure_filename(filename):
+  """
+  Similar to #werkzeug.secure_filename(), but preserves leading dots in
+  the filename.
+  """
+
+  while True:
+    filename = filename.lstrip('/').lstrip('\\')
+    if filename.startswith('..') and filename[2:3] in '/\\':
+      filename = filename[3:]
+    elif filename.startswith('.') and filename[1:2] in '/\\':
+      filename = filename[2:]
+    else:
+      break
+
+  has_dot = filename.startswith('.')
+  filename = werkzeug.secure_filename(filename)
+  if has_dot:
+    filename = '.' + filename
+  return filename
 
 
 def quote(s, for_ninja=False):
