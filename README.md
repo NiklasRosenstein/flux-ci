@@ -1,6 +1,7 @@
 # Flux-CI
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) 
+[![Join the chat at https://gitter.im/flux-ci/Lobby](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/flux-ci/Lobby)
 
 Flux is a simple and lightweight continuous integration server that responds
 to Webhooks that can be triggered by various Git hosting services.
@@ -9,8 +10,7 @@ Flux should be deployed over an SSL encrypted proxy pass server and be used
 for internal purposes only since it does not provide mechanisms to prevent
 bad code execution.
 
-* [View the full documentation ▸](https://niklasrosenstein.github.io/flux-ci)  
-* [Join the Discussion at #flux-ci:matrix.org](https://matrix.to/#/#flux-ci:matrix.org)
+[View the full documentation ▸](https://niklasrosenstein.github.io/flux-ci)  
 
 ## Screenshots
 
