@@ -9,7 +9,8 @@ Flux should be deployed over an SSL encrypted proxy pass server and be used
 for internal purposes only since it does not provide mechanisms to prevent
 bad code execution.
 
-[View the full documentation ▸](https://niklasrosenstein.github.io/flux-ci)
+* [View the full documentation ▸](https://niklasrosenstein.github.io/flux-ci)  
+* [Join the Discussion at #flux-ci:matrix.org](https://matrix.to/#/#flux-ci:matrix.org)
 
 ## Screenshots
 
