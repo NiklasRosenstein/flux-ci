@@ -75,7 +75,7 @@ def create_file(cwd, file_name):
 
   path = os.path.join(cwd, file_name)
   if not os.path.exists(path):
-    os.mknod(path)
+    open(path, 'w').close()
     return path
   return ''
 
