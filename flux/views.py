@@ -575,6 +575,9 @@ def overrides_edit(path):
 
   repo_path, context['overrides_path'] = file_utils.split_url_path(path)
   context['repo'] = get_target_for(repo_path)
+  if not isinstance(context['repo'], Repository):
+    return abort(404)
+
   file_path = os.path.join(utils.get_override_path(context['repo']), context['overrides_path'].replace('/', os.sep))
 
   if request.method == 'POST':
@@ -612,12 +615,11 @@ def overrides_delete(path):
 
   repo_path, overrides_path = file_utils.split_url_path(path)
   repo = get_target_for(repo_path)
-  return_path_parts = path.split(separator)
-  return_path = separator.join(return_path_parts[:-1])
-
   if not isinstance(repo, Repository):
     return abort(404)
 
+  return_path_parts = path.split(separator)
+  return_path = separator.join(return_path_parts[:-1])
   cwd = os.path.join(utils.get_override_path(repo), overrides_path.replace('/', os.sep))
 
   session['errors'] = []
@@ -639,8 +641,10 @@ def overrides_download(path):
 
   repo_path, overrides_path = file_utils.split_url_path(path)
   repo = get_target_for(repo_path)
-  file_path = os.path.join(utils.get_override_path(repo), overrides_path.replace('/', os.sep))
+  if not isinstance(repo, Repository):
+    return abort(404)
 
+  file_path = os.path.join(utils.get_override_path(repo), overrides_path.replace('/', os.sep))
   return utils.stream_file(file_path, mime='application/octet-stream')
 
 @app.route('/overrides/upload/<path:path>', methods=['GET', 'POST'])
@@ -656,6 +660,9 @@ def overrides_upload(path):
 
   repo_path, context['overrides_path'] = file_utils.split_url_path(path)
   repo = get_target_for(repo_path)
+  if not isinstance(repo, Repository):
+    return abort(404)
+
   context['list_path'] = url_for('overrides_list', path = path)
   cwd = os.path.join(utils.get_override_path(repo), context['overrides_path'].replace('/', os.sep))
 
