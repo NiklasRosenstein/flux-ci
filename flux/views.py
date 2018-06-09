@@ -281,7 +281,7 @@ def view_repo(path):
 
   try:
     context['page_number'] = int(request.args.get('page', 1))
-  except:
+  except ValueError:
     context['page_number'] = 1
 
   page_from = (context['page_number'] - 1) * page_size
@@ -364,7 +364,8 @@ def edit_repo(repo_id):
         repo.ref_whitelist = ref_whitelist
       try:
         utils.write_override_build_script(repo, build_script)
-      except:
+      except BaseException as exc:
+        app.logger.info(exc)
         errors.append('Could not make change on build script')
       if not errors:
         return redirect(repo.url())
@@ -555,7 +556,8 @@ def overrides_list(path):
     cwd = os.path.join(utils.get_override_path(context['repo']), context['overrides_path'].replace('/', os.sep))
     utils.makedirs(os.path.dirname(cwd))
     context['files'] = file_utils.list_folder(cwd)
-  except:
+  except BaseException as exc:
+    app.logger.info(exc)
     errors.append('Could not read overrides for this repository.')
 
   return render_template('overrides_list.html', user=request.user, **context, errors=errors)
@@ -580,7 +582,8 @@ def overrides_edit(path):
     try:
       file_utils.write_file(file_path, override_content)
       utils.flash('Changes in file was saved.')
-    except:
+    except BaseException as exc:
+      app.logger.info(exc)
       errors.append('Could not write into file.')
 
   dir_path_parts = path.split("/")
@@ -588,7 +591,8 @@ def overrides_edit(path):
 
   try:
     context['content'] = file_utils.read_file(file_path)
-  except:
+  except BaseException as exc:
+    app.logger.info(exc)
     errors.append('Could not read file.')
 
   return render_template('overrides_edit.html', user=request.user, **context, errors=errors)
@@ -620,7 +624,8 @@ def overrides_delete(path):
   try:
     file_utils.delete(cwd)
     utils.flash('Object was deleted.')
-  except:
+  except BaseException as exc:
+    app.logger.info(exc)
     session['errors'].append('Could not delete \'' + return_path_parts[-1] + '\'.')
 
   return redirect(url_for('overrides_list', path = return_path))
@@ -666,7 +671,8 @@ def overrides_upload(path):
         try:
           file.save(filepath)
           file_uploads.append("File '{}' was uploaded.".format(file.filename))
-        except:
+        except BaseException as exc:
+          app.logger.info(exc)
           session['errors'].append("Could not upload '{}'.".format(file.filename))
       utils.flash(" ".join(file_uploads))
       if not session['errors']:
@@ -699,7 +705,8 @@ def overrides_actions(action):
       file_utils.create_folder(os.path.join(utils.get_override_path(repo), path.replace('/', os.sep)), name)
       utils.flash('Folder was created.')
       return redirect(url_for('overrides_list', path = separator.join([repo.name, path, name]).replace('//', '/')))
-    except:
+    except BaseException as exc:
+      app.logger.info(exc)
       session['errors'].append('Could not create folder.')
       return redirect(url_for('overrides_list', path = separator.join([repo.name, path]).replace('//', '/')))
   elif action == OVERRIDES_ACTION_CREATEFILE:
@@ -708,7 +715,8 @@ def overrides_actions(action):
       file_utils.create_file(os.path.join(utils.get_override_path(repo), path.replace('/', os.sep)), name)
       utils.flash('File was created.')
       return redirect(url_for('overrides_edit', path = separator.join([repo.name, path, name]).replace('//', '/')))
-    except:
+    except BaseException as exc:
+      app.logger.info(exc)
       session['errors'].append('Could not create file.')
       return redirect(url_for('overrides_list', path = separator.join([repo.name, path]).replace('//', '/')))
   elif action == OVERRIDES_ACTION_RENAME:
@@ -720,7 +728,8 @@ def overrides_actions(action):
     try:
       file_utils.rename(original_path, new_path)
       utils.flash('Object was renamed.')
-    except:
+    except BaseException as exc:
+      app.logger.info(exc)
       session['errors'].append('Could not rename \'' + original_name + '\'.')
     return redirect(url_for('overrides_list', path = separator.join([repo.name, path]).replace('//', '/')))
 
