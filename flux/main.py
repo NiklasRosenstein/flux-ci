@@ -91,6 +91,7 @@ def start_web():
   # Create a dispatcher for the sub-url under which the app is run.
   url_prefix = urlparse(config.app_url).path
   if url_prefix and url_prefix != '/':
+    import flask
     from werkzeug.wsgi import DispatcherMiddleware
     target_app = DispatcherMiddleware(flask.Flask('_dummy_app'), {
       url_prefix: app,
