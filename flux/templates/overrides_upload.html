@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% from "macros.html" import render_error_list %}
+{% set page_title = "Overrides upload" %}
+
+{% block toolbar %}
+  <li>
+    <a href="{{ list_path }}">
+      <i class="fa fa-chevron-left"></i>Back
+    </a>
+  </li>
+{% endblock toolbar %}
+
+{% block body %}
+  {{ render_error_list(errors) }}
+  <h3>/{{ overrides_path }}</h3>
+  <form method="post" enctype="multipart/form-data" class="upload-form">
+    <div class="block-link">
+      <div class="block">
+        <i class="fa fa-upload"></i>
+        <span>Choose a file or Drag &amp; Drop it.</span>
+        <input id="upload_file" name="upload_file" type="file" multiple />
+      </div>
+    </div>
+    <noscript>
+      <button class="btn-primary">Upload</button>
+    </noscript>
+  </form>
+{% endblock body %}

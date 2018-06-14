@@ -119,6 +119,37 @@ input[type="checkbox"] {
 	outline: 0;
 }
 
+.upload-form .block {
+	position: relative;
+	z-index: 0;
+}
+
+.upload-form .fa {
+	color: #CFD8DC;
+	font-size: 8rem;
+	left: calc(50% - 4rem);
+	position: absolute;
+	top: 1rem;
+	z-index: -1;
+}
+
+.upload-form input[type=file] {
+	cursor: pointer;
+	height: 100%;
+	left: 0;
+	opacity: 0;
+	position: absolute;
+	top: 0;
+	width: 100%;
+}
+
+.upload-form span {
+	display: block;
+	font-weight: bold;
+	padding: 5rem 0;
+	text-align: center;
+}
+
 textarea {
 	resize: vertical;
 }
@@ -503,6 +534,7 @@ main {
 #toolbar li .fa {
 	color: #455A64;
 	margin-right: .25rem;
+	min-width: 0.6875rem;
 }
 
 #toolbar li .dropdown-menu {
@@ -550,7 +582,7 @@ main {
 	margin-bottom: -1px;
 }
 
-.block-link, .block-link:hover {
+.block-link, .block-link:hover, .block a, .block a:hover {
 	color: #263238;
 	text-decoration: none;
 }
@@ -564,7 +596,7 @@ main {
 	line-height: 1rem;
 }
 
-a .block:hover {
+a .block:hover, .block-link .block:hover {
 	background-color: #ECEFF1;
 }
 
@@ -591,7 +623,7 @@ a .block:hover {
 	color: #263238;
 }
 
-.block-icon .fa.fa-share-alt, .block-icon .fa.fa-user {
+.block-icon .fa.fa-share-alt, .block-icon .fa.fa-user, .block-icon .fa.fa-file-o, .block-icon .fa.fa-folder-o {
 	color: #B0BEC5;
 }
 
@@ -644,6 +676,23 @@ a .block:hover {
 
 .btn-older .fa {
 	margin: 0 0 0 .25rem;
+}
+
+.block-buttons {
+	text-align: right;
+	font-size: 0;
+}
+
+.block-buttons .btn:first-child {
+	margin-left: 0;
+}
+
+.block-buttons .btn {
+	margin-left: 0.25rem;
+}
+
+.block-buttons .btn .fa {
+	margin-right: 0;
 }
 
 .paging::after {
@@ -801,6 +850,10 @@ a .block:hover {
 	min-height: 10rem;
 }
 
+#override_content {
+	min-height: 20rem;
+}
+
 /* footer */
 footer {
 	background-color: #ECEFF1;
@@ -883,3 +936,7 @@ footer {
 .fa-stop-circle:before { content: '\f28d'; }
 .fa-stop-circle-o:before { content: '\f28e'; }
 .fa-wait-spin:before { content: '\e834'; }
+.fa-folder-o:before { content: '\f114'; }
+.fa-file-o:before { content: '\e813'; }
+.fa-upload:before { content: '\e814'; }
+.fa-clone:before { content: '\f24d'; }
