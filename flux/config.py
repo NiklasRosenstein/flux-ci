@@ -22,14 +22,27 @@ Processes the ``flux_config.py`` module.
 '''
 
 import os
+import importlib
+import sys
 
-def prepend_path(path):
+def prepend_path(path, envvar='PATH'):
   ''' Prepend *path* to the ``PATH`` environment variable. '''
 
   path = os.path.normpath(os.path.abspath(os.path.expanduser(path)))
-  os.environ['PATH'] = path + os.pathsep + os.environ['PATH']
+  os.environ[envvar] = path + os.pathsep + os.environ[envvar]
+  return os.environ[envvar]
 
-from flux_config import *
+# Import config file more failsafe, without user getting python exception if missing
+if importlib.util.find_spec("flux_config") is None and 'FLUX_ROOT' in os.environ:
+  sys.path.append(os.environ['FLUX_ROOT'])
+if importlib.util.find_spec("flux_config") is None and os.path.isfile(os.path.join(os.getcwd(), 'data', 'flux_config.py')):
+  sys.path.append(os.path.join(os.getcwd(), 'data'))
+if importlib.util.find_spec("flux_config") is not None:
+  from flux_config import *
+else:
+  msg = "Error: File 'flux_config.py' not found. Looked in working directory and FLUX_ROOT."
+  print(msg, file=sys.stderr)
+  sys.exit(1)
 
 # Backwards-compatibility for the db_url that we used with SQLAlchemy.
 # We only support parsing the sqlite:// schema here.

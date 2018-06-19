@@ -12,6 +12,37 @@ bad code execution.
 
 [View the full documentation ▸](https://niklasrosenstein.github.io/flux-ci)  
 
+## Development
+We recommend using a Python virtualenv to install Flux CI and its dependencies into.
+Rerun the last command to restart Flux CI with latest local changes.
+
+
+<table><tr><th>virtualenv</th><th>Pipenv</th><th>Execute main directly</th></tr>
+<tr><td>
+
+```
+virtualenv .venv
+source .venv/bin/activate
+pip install -e .
+flux-ci --web
+```
+
+</td><td>
+
+```
+PIPENV_VENV_IN_PROJECT=1 pipenv install -e .
+pipenv run flux-ci --web
+```
+
+</td><td>
+
+```
+python -m flux.main
+```
+
+</td></tr>
+</table>
+
 ## Screenshots
 
 <table>
