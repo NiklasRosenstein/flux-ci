@@ -17,13 +17,31 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
-'''
-Processes the ``flux_config.py`` module.
-'''
+
+"""
+Loads the Python configuration file for Flux CI.
+"""
 
 import os
-import importlib
 import sys
+
+loaded = False
+
+def load(filename=None):
+  global loaded
+  if filename is None:
+    filename = os.getenv('FLUX_CONFIG', 'flux_config.py')
+  filename = os.path.expanduser(filename)
+  if not os.path.isabs(filename):
+    for path in [os.getenv('FLUX_ROOT'), '.', 'data']:
+      if not path: continue
+      if os.path.isfile(os.path.join(path, filename)):
+        filename = os.path.join(path, filename)
+        break
+  filename = os.path.normpath(filename)
+  with open(filename) as fp:
+    exec(compile(fp.read(), filename, 'exec'), globals())
+  loaded = True
 
 def prepend_path(path, envvar='PATH'):
   ''' Prepend *path* to the ``PATH`` environment variable. '''
@@ -31,31 +49,3 @@ def prepend_path(path, envvar='PATH'):
   path = os.path.normpath(os.path.abspath(os.path.expanduser(path)))
   os.environ[envvar] = path + os.pathsep + os.environ[envvar]
   return os.environ[envvar]
-
-# Import config file more failsafe, without user getting python exception if missing
-if importlib.util.find_spec("flux_config") is None and 'FLUX_ROOT' in os.environ:
-  sys.path.append(os.environ['FLUX_ROOT'])
-if importlib.util.find_spec("flux_config") is None and os.path.isfile(os.path.join(os.getcwd(), 'data', 'flux_config.py')):
-  sys.path.append(os.path.join(os.getcwd(), 'data'))
-if importlib.util.find_spec("flux_config") is not None:
-  from flux_config import *
-else:
-  msg = "Error: File 'flux_config.py' not found. Looked in working directory and FLUX_ROOT."
-  print(msg, file=sys.stderr)
-  sys.exit(1)
-
-for dirvar in ['root_dir', 'build_dir', 'override_dir']:
-  if dirvar in globals():
-    if not os.path.exists(globals()[dirvar]):
-        os.makedirs(globals()[dirvar])
-
-# Backwards-compatibility for the db_url that we used with SQLAlchemy.
-# We only support parsing the sqlite:// schema here.
-if 'db_url' in globals():
-  if not db_url.startswith('sqlite://'):
-    raise EnvironmentError('The db_url backwards compatibility is only '
-                           'implemented for sqlite:// schema.')
-  database = {
-    'provider': 'sqlite',
-    'filename': db_url[9:].lstrip('/'),
-  }

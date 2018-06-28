@@ -49,6 +49,7 @@ def main(argv=None, prog=None):
 
   # Load config as global
   from flux import config
+  config.load(args.config_file)
 
   start_web()
 
@@ -75,6 +76,7 @@ def start_web():
 
   import flux
   from flux import app, config, utils
+
   app.jinja_env.globals['config'] = config
   app.jinja_env.globals['flux'] = flux
   app.secret_key = config.secret_key
@@ -85,6 +87,11 @@ def start_web():
 
   from flux import views, build, models
   from urllib.parse import urlparse
+
+  # Ensure that some of the required directories exist.
+  for dirname in [config.root_dir, config.build_dir, config.override_dir, config.customs_dir]:
+    if not os.path.exists(dirname):
+        os.makedirs(dirname)
 
   # Make sure the root user exists and has all privileges, and that
   # the password is up to date.
