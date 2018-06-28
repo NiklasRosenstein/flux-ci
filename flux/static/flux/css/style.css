@@ -687,6 +687,14 @@ a .block:hover, .block-link .block:hover {
 	font-size: 0;
 }
 
+.float-right {
+	float: right;
+}
+
+.float-left {
+	float: left;
+}
+
 .block-buttons .btn:first-child {
 	margin-left: 0;
 }

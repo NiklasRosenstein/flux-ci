@@ -276,8 +276,6 @@ def view_repo(path):
   if not isinstance(repo, Repository):
     return abort(404)
 
-  errors = [] + session.pop('errors', [])
-
   context = {}
   page_size = 10
 
@@ -292,8 +290,7 @@ def view_repo(path):
   context['next_page'] = None if context['page_number'] <= 1 else context['page_number'] - 1
   context['previous_page'] = None if len(repo.builds) <= page_to else context['page_number'] + 1
   context['builds'] = repo.builds.select().order_by(desc(Build.date_queued))[page_from:page_to]
-  context['has_keypair'] = os.path.isfile(utils.get_repo_private_key_path(repo)) and os.path.isfile(utils.get_repo_public_key_path(repo))
-  return render_template('view_repo.html', user=request.user, repo=repo, **context, errors = errors)
+  return render_template('view_repo.html', user=request.user, repo=repo, **context)
 
 
 @app.route('/repo/generate-keypair/<path:path>')
@@ -337,7 +334,7 @@ def generate_keypair(path):
     app.logger.info(exc)
     session['errors'].append('Could not generate new SSH keypair.')
 
-  return redirect(url_for('view_repo', path = path))
+  return redirect(url_for('edit_repo', repo_id = repo.id))
 
 
 @app.route('/repo/remove-keypair/<path:path>')
@@ -364,7 +361,7 @@ def remove_keypair(path):
     app.logger.info(exc)
     session['errors'].append('Could not remove SSH keypair.')
 
-  return redirect(url_for('view_repo', path = path))
+  return redirect(url_for('edit_repo', repo_id = repo.id))
 
 
 @app.route('/build/<path:path>')
