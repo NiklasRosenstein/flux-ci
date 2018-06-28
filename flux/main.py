@@ -25,13 +25,14 @@ import argparse
 import re
 import subprocess
 import sys
+import os
 
 
 def get_argument_parser(prog=None):
   parser = argparse.ArgumentParser(prog=prog)
-  parser.add_argument('--web', action='store_true')
+  parser.add_argument('--web', action='store_true', help='launch builtin webserver')
+  parser.add_argument('-c','--config-file', help='Flux CI config file to load')
   return parser
-
 
 def main(argv=None, prog=None):
   parser = get_argument_parser(prog)
@@ -41,10 +42,12 @@ def main(argv=None, prog=None):
     parser.print_usage()
     return 0
 
-  import sys
-
-  # The flux_config module could be found here.
+  # Add possible locations of flux config
   sys.path.insert(0, '.')
+  if args.config_file and os.path.isfile(args.config_file):
+    sys.path.insert(0, os.path.dirname(args.config_file))
+
+  # Load config as global
   from flux import config
 
   start_web()

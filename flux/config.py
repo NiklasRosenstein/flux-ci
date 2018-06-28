@@ -44,6 +44,11 @@ else:
   print(msg, file=sys.stderr)
   sys.exit(1)
 
+for dirvar in ['root_dir', 'build_dir', 'override_dir']:
+  if dirvar in globals():
+    if not os.path.exists(globals()[dirvar]):
+        os.makedirs(globals()[dirvar])
+
 # Backwards-compatibility for the db_url that we used with SQLAlchemy.
 # We only support parsing the sqlite:// schema here.
 if 'db_url' in globals():
