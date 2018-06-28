@@ -322,8 +322,7 @@ def generate_keypair(path):
 
       try:
         os.chmod(private_key_path, 0o600)
-
-        utils.flash('New SSH keypair is generated. Public key is available in Edit Repository.')
+        utils.flash('SSH keypair generated.')
       except BaseException as exc:
         app.logger.info(exc)
         session['errors'].append('Could not set permissions to newly generated private key.')
@@ -356,7 +355,7 @@ def remove_keypair(path):
   try:
     file_utils.delete(private_key_path)
     file_utils.delete(public_key_path)
-    utils.flash('SSH keypair was removed.')
+    utils.flash('SSH keypair removed.')
   except BaseException as exc:
     app.logger.info(exc)
     session['errors'].append('Could not remove SSH keypair.')

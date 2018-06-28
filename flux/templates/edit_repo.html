@@ -7,14 +7,6 @@
       <i class="fa fa-chevron-left"></i>{{ repo.name if repo else "Repositories" }}
     </a>
   </li>
-  {% if repo and not public_key %}
-    <li>
-      <a href="{{ url_for('generate_keypair', path=repo.name) }}"
-          data-confirmation="Are you sure you want to generate unique SSH keypair for this repository? Unsaved changes will be lost.">
-        <i class="fa fa-key"></i>Generate SSH Keypair
-      </a>
-    </li>
-  {% endif %}
 {% endblock toolbar %}
 
 {% block body %}
@@ -61,16 +53,32 @@
       </div>
       <textarea id="repo_build_script" name="repo_build_script">{{ flux.utils.read_override_build_script(repo) if repo else "" }}</textarea>
     </div>
-    {% if repo and public_key %}
+    {% if repo %}
       <div class="field">
         <label>Public Key</label>
-        <pre>{{ public_key }}</pre>
+        {% if public_key %}
+          <pre>{{ public_key }}</pre>
+        {% else %}
+          <p><em>
+            You can generate a unique SSH keypair that will be used to clone this repository
+            when it is built. In that case, the public key is displayed here so you can add it
+            to your hosted Git repository.
+          </em></p>
+        {% endif %}
       </div>
-      <a href="{{ url_for('remove_keypair', path=repo.name) }}"
-          class="btn float-right"
-          data-confirmation="Are you sure you want to delete unique SSH keypair of this repository? This operation can not be undone. Unsaved changes will be lost.">
-        <i class="fa fa-key"></i>Remove SSH Keypair
-      </a>
+      {% if public_key %}
+        <a href="{{ url_for('remove_keypair', path=repo.name) }}"
+            class="btn float-right"
+            data-confirmation="Are you sure you want to delete unique SSH keypair of this repository? This operation can not be undone. Unsaved changes will be lost.">
+          <i class="fa fa-key"></i>Remove SSH Keypair
+        </a>
+      {% else %}
+        <a href="{{ url_for('generate_keypair', path=repo.name) }}"
+            class="btn float-right"
+            data-confirmation="Are you sure you want to generate unique SSH keypair for this repository? Unsaved changes will be lost.">
+          <i class="fa fa-key"></i>Generate SSH Keypair
+        </a>
+      {% endif %}
     {% endif %}
     <button class="btn-primary">{{ "Update" if repo else "Add Repository" }}</button>
   </form>
