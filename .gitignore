@@ -6,6 +6,7 @@ dist/
 build/
 builds/
 overrides/
+customs/
 venv/
 .venv/
 .env/

@@ -7,6 +7,14 @@
       <i class="fa fa-chevron-left"></i>{{ repo.name if repo else "Repositories" }}
     </a>
   </li>
+  {% if repo and not public_key %}
+    <li>
+      <a href="{{ url_for('generate_keypair', path=repo.name) }}"
+          data-confirmation="Are you sure you want to generate unique SSH keypair for this repository? Unsaved changes will be lost.">
+        <i class="fa fa-key"></i>Generate SSH Keypair
+      </a>
+    </li>
+  {% endif %}
 {% endblock toolbar %}
 
 {% block body %}
@@ -53,6 +61,17 @@
       </div>
       <textarea id="repo_build_script" name="repo_build_script">{{ flux.utils.read_override_build_script(repo) if repo else "" }}</textarea>
     </div>
+    {% if repo and public_key %}
+      <div class="field">
+        <label>Public Key</label>
+        <pre>{{ public_key }}</pre>
+      </div>
+      <a href="{{ url_for('remove_keypair', path=repo.name) }}"
+          class="btn float-right"
+          data-confirmation="Are you sure you want to delete unique SSH keypair of this repository? This operation can not be undone. Unsaved changes will be lost.">
+        <i class="fa fa-key"></i>Remove SSH Keypair
+      </a>
+    {% endif %}
     <button class="btn-primary">{{ "Update" if repo else "Add Repository" }}</button>
   </form>
   <script>
@@ -66,7 +85,7 @@
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
         },
-        data: "url=" + encodeURI($('#repo_clone_url').val()),
+        data: "url=" + encodeURI($('#repo_clone_url').val()) + "&repo=" + encodeURI($('#repo_name').val()),
         success: function() {
           result.addClass('ok')[0].innerHTML = '<i class="fa fa-check"></i>Git repository is accessible.';
         },

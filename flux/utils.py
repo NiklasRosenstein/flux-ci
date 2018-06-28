@@ -38,6 +38,9 @@ from . import app, config, models
 from urllib.parse import urlparse
 from flask import request, session, redirect, url_for, Response
 from datetime import datetime
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.backends import default_backend
 
 
 def get_raise(data, key, expect_type=None):
@@ -422,15 +425,25 @@ def is_page_active(page, user):
   return False
 
 
-def ping_repo(repo_url):
+def ping_repo(repo_url, repo = None):
   if not repo_url or repo_url == '':
     return 1
 
-  ssh_cmd = ssh_command(None, identity_file=config.ssh_identity_file)
+  if repo and os.path.isfile(get_repo_private_key_path(repo)):
+    identity_file = get_repo_private_key_path(repo)
+  else:
+    identity_file = config.ssh_identity_file
+
+  ssh_cmd = ssh_command(None, identity_file=identity_file)
   env = {'GIT_SSH_COMMAND': ' '.join(map(quote, ssh_cmd))}
   ls_remote = ['git', 'ls-remote', '--exit-code', repo_url]
   res = run(ls_remote, app.logger, env=env)
   return res
+
+
+def get_customs_path(repo):
+  return os.path.join(config.customs_dir, repo.name.replace('/', os.sep))
+
 
 def get_override_path(repo):
   return os.path.join(config.override_dir, repo.name.replace('/', os.sep))
@@ -472,3 +485,39 @@ def get_public_key():
     with open(filename) as fp:
       return fp.read()
   return None
+
+
+def generate_ssh_keypair():
+  """
+  Generates new RSA ssh keypair.
+
+  Return:
+  tuple(str, str): generated private and public keys
+  """
+
+  key = rsa.generate_private_key(backend=default_backend(), public_exponent=65537, key_size=4096)
+  private_key = key.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8, serialization.NoEncryption())
+  public_key = key.public_key().public_bytes(serialization.Encoding.OpenSSH, serialization.PublicFormat.OpenSSH)
+
+  return private_key, public_key
+
+
+def get_repo_private_key_path(repo):
+  """
+  Returns path of private key for repository from Customs folder.
+
+  Return:
+  str: path to custom private SSH key
+  """
+
+  return os.path.join(get_customs_path(repo), 'id_rsa')
+
+def get_repo_public_key_path(repo):
+  """
+  Returns path of public key for repository from Customs folder.
+
+  Return:
+  str: path to custom public SSH key
+  """
+
+  return os.path.join(get_customs_path(repo), 'id_rsa.pub')

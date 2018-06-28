@@ -293,6 +293,77 @@ def view_repo(path):
   return render_template('view_repo.html', user=request.user, repo=repo, **context)
 
 
+@app.route('/repo/generate-keypair/<path:path>')
+@models.session
+@utils.requires_auth
+def generate_keypair(path):
+  if not request.user.can_manage:
+    return abort(403)
+
+  repo = get_target_for(path)
+  if not isinstance(repo, Repository):
+    return abort(404)
+
+  session['errors'] = []
+
+  utils.makedirs(utils.get_customs_path(repo))
+
+  try:
+    private_key, public_key = utils.generate_ssh_keypair()
+    private_key_path = utils.get_repo_private_key_path(repo)
+    public_key_path = utils.get_repo_public_key_path(repo)
+
+    try:
+      file_utils.create_file_path(private_key_path)
+      file_utils.create_file_path(public_key_path)
+
+      file_utils.write_file(private_key_path, private_key.decode())
+      file_utils.write_file(public_key_path, public_key.decode())
+
+      try:
+        os.chmod(private_key_path, 0o600)
+
+        utils.flash('New SSH keypair is generated. Public key is available in Edit Repository.')
+      except BaseException as exc:
+        app.logger.info(exc)
+        session['errors'].append('Could not set permissions to newly generated private key.')
+    except BaseException as exc:
+      app.logger.info(exc)
+      session['errors'].append('Could not save generated SSH keypair.')
+  except BaseException as exc:
+    app.logger.info(exc)
+    session['errors'].append('Could not generate new SSH keypair.')
+
+  return redirect(url_for('edit_repo', repo_id = repo.id))
+
+
+@app.route('/repo/remove-keypair/<path:path>')
+@models.session
+@utils.requires_auth
+def remove_keypair(path):
+  if not request.user.can_manage:
+    return abort(403)
+
+  repo = get_target_for(path)
+  if not isinstance(repo, Repository):
+    return abort(404)
+
+  session['errors'] = []
+
+  private_key_path = utils.get_repo_private_key_path(repo)
+  public_key_path = utils.get_repo_public_key_path(repo)
+
+  try:
+    file_utils.delete(private_key_path)
+    file_utils.delete(public_key_path)
+    utils.flash('SSH keypair was removed.')
+  except BaseException as exc:
+    app.logger.info(exc)
+    session['errors'].append('Could not remove SSH keypair.')
+
+  return redirect(url_for('edit_repo', repo_id = repo.id))
+
+
 @app.route('/build/<path:path>')
 @models.session
 @utils.requires_auth
@@ -336,6 +407,16 @@ def edit_repo(repo_id):
     repo = None
 
   errors = []
+
+  context = {}
+  if repo and repo.name:
+    if os.path.isfile(utils.get_repo_public_key_path(repo)):
+      try:
+        context['public_key'] = file_utils.read_file(utils.get_repo_public_key_path(repo))
+      except BaseException as exc:
+        app.logger.info(exc)
+        errors.append('Could not read public key for this repository.')
+
   if request.method == 'POST':
     secret = request.form.get('repo_secret', '')
     clone_url = request.form.get('repo_clone_url', '')
@@ -370,7 +451,7 @@ def edit_repo(repo_id):
       if not errors:
         return redirect(repo.url())
 
-  return render_template('edit_repo.html', user=request.user, repo=repo, errors=errors)
+  return render_template('edit_repo.html', user=request.user, repo=repo, errors=errors, **context)
 
 
 @app.route('/user/new', defaults={'user_id': None}, methods=['GET', 'POST'])
@@ -520,7 +601,11 @@ def build():
 @utils.requires_auth
 def ping_repo():
   repo_url = request.form.get('url')
-  res = utils.ping_repo(repo_url)
+  repo_name = request.form.get('repo')
+
+  repo = type('',(object,),{'name' : repo_name})()
+
+  res = utils.ping_repo(repo_url, repo)
   if (res == 0):
     return 'ok', 200
   else:
