@@ -1,3 +1,4 @@
 Flask>=0.10.1
 pony>=0.7.3
 pyOpenSSL>=0.15.1
+cryptography>=2.0

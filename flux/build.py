@@ -216,7 +216,12 @@ def do_build_(build, build_path, override_path, logger, logfile, terminate_event
   logger.info('[Flux]: build {}#{} started'.format(build.repo.name, build.num))
 
   # Clone the repository.
-  ssh_command = utils.ssh_command(None, identity_file=config.ssh_identity_file)  # Enables batch mode
+  if build.repo and os.path.isfile(utils.get_repo_private_key_path(build.repo)):
+    identity_file = utils.get_repo_private_key_path(build.repo)
+  else:
+    identity_file = config.ssh_identity_file
+
+  ssh_command = utils.ssh_command(None, identity_file=identity_file)  # Enables batch mode
   env = {'GIT_SSH_COMMAND': ' '.join(map(shlex.quote, ssh_command))}
   logger.info('[Flux]: GIT_SSH_COMMAND={!r}'.format(env['GIT_SSH_COMMAND']))
   clone_cmd = ['git', 'clone', build.repo.clone_url, build_path, '--recursive']

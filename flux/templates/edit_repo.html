@@ -53,6 +53,12 @@
       </div>
       <textarea id="repo_build_script" name="repo_build_script">{{ flux.utils.read_override_build_script(repo) if repo else "" }}</textarea>
     </div>
+    {% if public_key %}
+      <div class="field">
+        <label>Public Key</label>
+        <pre>{{ public_key }}</pre>
+      </div>
+    {% endif %}
     <button class="btn-primary">{{ "Update" if repo else "Add Repository" }}</button>
   </form>
   <script>
@@ -66,7 +72,7 @@
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
         },
-        data: "url=" + encodeURI($('#repo_clone_url').val()),
+        data: "url=" + encodeURI($('#repo_clone_url').val()) + "&repo=" + encodeURI($('#repo_name').val()),
         success: function() {
           result.addClass('ok')[0].innerHTML = '<i class="fa fa-check"></i>Git repository is accessible.';
         },

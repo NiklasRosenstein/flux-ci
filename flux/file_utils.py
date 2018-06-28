@@ -79,6 +79,25 @@ def create_file(cwd, file_name):
     return path
   return ''
 
+def create_file_path(file_path):
+  """
+  Creates file defined by *file_path*.
+  If does not exist, it creates it and return new path of file.
+  If already exists, it returns empty str.
+
+  # Parameters
+  cwd (str): The absolute path, where file should be created.
+  file_name (str): The name of file to be created.
+
+  # Return
+  str: Path of newly created file, if it does not already exist.
+  """
+
+  if not os.path.exists(file_path):
+    open(file_path, 'w').close()
+    return file_path
+  return ''
+
 def read_file(path):
   """
   Reads file located in defined *path*.

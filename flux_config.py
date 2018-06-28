@@ -93,6 +93,10 @@ build_dir = os.path.join(root_dir, 'builds')
 ## build_dir/<owner>/<repo>/<build_num>/icon.png
 override_dir = os.path.join(root_dir, 'overrides')
 
+## The directory which contains custom files for each repository.
+## Usage of files could be variable.
+customs_dir = os.path.join(root_dir, 'customs')
+
 ## Full path to the SSH identity file, or None to let SSH decide.
 ssh_identity_file = None
 
