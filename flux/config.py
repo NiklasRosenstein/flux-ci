@@ -27,6 +27,7 @@ import sys
 
 loaded = False
 
+
 def load(filename=None):
   global loaded
   if filename is None:
@@ -42,6 +43,7 @@ def load(filename=None):
   with open(filename) as fp:
     exec(compile(fp.read(), filename, 'exec'), globals())
   loaded = True
+
 
 def prepend_path(path, envvar='PATH'):
   ''' Prepend *path* to the ``PATH`` environment variable. '''

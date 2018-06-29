@@ -610,6 +610,7 @@ def ping_repo():
   else:
     return 'fail', 404
 
+
 @app.route('/overrides/list/<path:path>')
 @models.session
 @utils.requires_auth
@@ -645,6 +646,7 @@ def overrides_list(path):
     errors.append('Could not read overrides for this repository.')
 
   return render_template('overrides_list.html', user=request.user, **context, errors=errors)
+
 
 @app.route('/overrides/edit/<path:path>', methods=['GET', 'POST'])
 @models.session
@@ -684,9 +686,11 @@ def overrides_edit(path):
 
   return render_template('overrides_edit.html', user=request.user, **context, errors=errors)
 
+
 OVERRIDES_ACTION_CREATEFOLDER = 'createNewFolder'
 OVERRIDES_ACTION_CREATEFILE = 'createNewFile'
 OVERRIDES_ACTION_RENAME = 'rename'
+
 
 @app.route('/overrides/delete/<path:path>')
 @models.session
@@ -716,6 +720,7 @@ def overrides_delete(path):
 
   return redirect(url_for('overrides_list', path = return_path))
 
+
 @app.route('/overrides/download/<path:path>')
 @models.session
 @utils.requires_auth
@@ -730,6 +735,7 @@ def overrides_download(path):
 
   file_path = os.path.join(utils.get_override_path(repo), overrides_path.replace('/', os.sep))
   return utils.stream_file(file_path, mime='application/octet-stream')
+
 
 @app.route('/overrides/upload/<path:path>', methods=['GET', 'POST'])
 @models.session
@@ -773,6 +779,7 @@ def overrides_upload(path):
   context['dir_path'] = separator.join(dir_path_parts[:-1])
 
   return render_template('overrides_upload.html', user=request.user, **context, errors=errors)
+
 
 @app.route('/overrides/<string:action>')
 @models.session
@@ -825,6 +832,7 @@ def overrides_actions(action):
     return redirect(url_for('overrides_list', path = separator.join([repo.name, path]).replace('//', '/')))
 
   return abort(404)
+
 
 @app.errorhandler(403)
 def error_403(e):

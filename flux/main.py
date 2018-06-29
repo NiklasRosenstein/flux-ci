@@ -34,6 +34,7 @@ def get_argument_parser(prog=None):
   parser.add_argument('-c','--config-file', help='Flux CI config file to load')
   return parser
 
+
 def main(argv=None, prog=None):
   parser = get_argument_parser(prog)
   args = parser.parse_args(argv)

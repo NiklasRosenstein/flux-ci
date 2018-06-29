@@ -1,5 +1,8 @@
+# -*- coding: utf8 -*-
+
 import os
 import shutil
+
 
 def split_url_path(path):
   """
@@ -15,6 +18,7 @@ def split_url_path(path):
   separator = '/'
   parts = path.split(separator)
   return separator.join(parts[0:2]), separator.join(parts[2:])
+
 
 def list_folder(cwd):
   """
@@ -39,6 +43,7 @@ def list_folder(cwd):
   result = dirs + files
   return result
 
+
 def create_folder(cwd, folder_name):
   """
   Creates folder named *folder_name* on defined *cwd* path.
@@ -58,6 +63,7 @@ def create_folder(cwd, folder_name):
     os.makedirs(path)
     return path
   return ''
+
 
 def create_file(cwd, file_name):
   """
@@ -79,6 +85,7 @@ def create_file(cwd, file_name):
     return path
   return ''
 
+
 def create_file_path(file_path):
   """
   Creates file defined by *file_path*.
@@ -97,6 +104,7 @@ def create_file_path(file_path):
     open(file_path, 'w').close()
     return file_path
   return ''
+
 
 def read_file(path):
   """
@@ -117,6 +125,7 @@ def read_file(path):
     return content
   return ''
 
+
 def write_file(path, data):
   """
   Writes *data* into file located in *path*, only if it already exists.
@@ -132,6 +141,7 @@ def write_file(path, data):
     file.write(data.replace('\r', ''))
     file.close()
 
+
 def rename(path, new_path):
   """
   Performs rename operation from *path* to *new_path*. This operation
@@ -144,6 +154,7 @@ def rename(path, new_path):
 
   if (os.path.isfile(path) and not os.path.isfile(new_path)) or (os.path.isdir(path) and not os.path.isdir(new_path)):
     os.rename(path, new_path)
+
 
 def delete(path):
   """
@@ -159,6 +170,7 @@ def delete(path):
     os.remove(path)
   elif os.path.isdir(path):
     shutil.rmtree(path)
+
 
 def human_readable_size(filesize = 0):
   """
@@ -177,6 +189,7 @@ def human_readable_size(filesize = 0):
       return "{} {}B".format("{:.2f}".format(filesize).rstrip('0').rstrip('.'), unit)
     filesize = filesize / 1024
   return '0 B'
+
 
 class File:
   TYPE_FOLDER = 'folder'

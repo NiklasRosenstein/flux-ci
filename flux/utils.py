@@ -448,8 +448,10 @@ def get_customs_path(repo):
 def get_override_path(repo):
   return os.path.join(config.override_dir, repo.name.replace('/', os.sep))
 
+
 def get_override_build_script_path(repo):
   return os.path.join(get_override_path(repo), config.build_scripts[0])
+
 
 def read_override_build_script(repo):
   build_script_path = get_override_build_script_path(repo)
@@ -471,6 +473,7 @@ def write_override_build_script(repo, build_script):
     build_script_file = open(build_script_path, mode='w')
     build_script_file.write(build_script.replace('\r', ''))
     build_script_file.close()
+
 
 def get_public_key():
   """
@@ -511,6 +514,7 @@ def get_repo_private_key_path(repo):
   """
 
   return os.path.join(get_customs_path(repo), 'id_rsa')
+
 
 def get_repo_public_key_path(repo):
   """
