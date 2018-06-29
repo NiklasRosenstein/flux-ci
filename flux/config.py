@@ -39,9 +39,12 @@ def load(filename=None):
       if os.path.isfile(os.path.join(path, filename)):
         filename = os.path.join(path, filename)
         break
-  filename = os.path.normpath(filename)
+  filename = os.path.normpath(os.path.abspath(filename))
   with open(filename) as fp:
-    exec(compile(fp.read(), filename, 'exec'), globals())
+    scope = {'__file__': filename}
+    exec(compile(fp.read(), filename, 'exec'), scope)
+    del scope['__file__']
+    globals().update(scope)
   loaded = True
 
 
