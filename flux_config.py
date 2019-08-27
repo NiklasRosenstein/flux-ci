@@ -3,6 +3,7 @@ This is the Flux configuration file.
 '''
 
 import os
+from enum import Enum
 from datetime import timedelta
 from flux.config import prepend_path
 
@@ -12,6 +13,11 @@ from flux.config import prepend_path
 ## the next line and adjust path to update the PATH environment variable
 ## so flux can find the newer Git version.
 # prepend_path('~/git')
+
+class GitFolderHandling(Enum):
+  DELETE_BEFORE_BUILD = 1
+  DELETE_AFTER_BUILD = 2
+  DISABLE_DELETE = 3
 
 ## Root directory where the flux data is stored, repositories are checked
 ## out and built. Defaults to the flux application directory.
@@ -106,3 +112,9 @@ ssh_verbose = False
 ## The time that a login token should be valid for. Specify "None" to
 ## prevent login tokens from expiring.
 login_token_duration = timedelta(hours=6)
+
+## Defines, how .git folder should be handled during build process, it uses values from GitFolderHandling enum:
+## * DELETE_BEFORE_BUILD - Native behaviour, that deletes .git folder before .flux-build runs.
+## * DELETE_AFTER_BUILD - Deletes .git folder after .flux-build successfully runs, before artifact is zipped.
+## * DISABLE_DELETE - .git folder is never deleted, it will be part of artifact ZIP.
+git_folder_handling = GitFolderHandling.DELETE_BEFORE_BUILD
