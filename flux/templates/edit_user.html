@@ -63,7 +63,7 @@
     {% endif %}
   </form>
 
-  {% if cuser.id == request.user.id or request.user.can_manage %}
+  {% if not is_new and (cuser.id == request.user.id or request.user.can_manage) %}
     <h2>Login Sessions</h2>
     {% for token in cuser.login_tokens.order_by('lambda x: desc(x.created)') %}
       <div class="login-session{{ ' expired' if token.expired() else ''}}">
