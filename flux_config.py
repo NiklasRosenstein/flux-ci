@@ -3,9 +3,9 @@ This is the Flux configuration file.
 '''
 
 import os
-from enum import Enum
 from datetime import timedelta
 from flux.config import prepend_path
+from flux.enums import GitFolderHandling
 
 ## If your system does not provide the required Git version (>= 2.3),
 ## you can compile it by yourself and install it locally (or not install
@@ -13,11 +13,6 @@ from flux.config import prepend_path
 ## the next line and adjust path to update the PATH environment variable
 ## so flux can find the newer Git version.
 # prepend_path('~/git')
-
-class GitFolderHandling(Enum):
-  DELETE_BEFORE_BUILD = 1
-  DELETE_AFTER_BUILD = 2
-  DISABLE_DELETE = 3
 
 ## Root directory where the flux data is stored, repositories are checked
 ## out and built. Defaults to the flux application directory.

@@ -24,6 +24,7 @@ that will process the queue.
 '''
 
 from flux import app, config, utils, models
+from flux.enums import GitFolderHandling
 from flux.models import select, Build
 from collections import deque
 from threading import Event, Condition, Thread
@@ -279,7 +280,7 @@ def do_build_(build, build_path, override_path, logger, logfile, terminate_event
     return False
 
   # Deletes .git folder before build, if is configured so.
-  if config.git_folder_handling == config.GitFolderHandling.DELETE_BEFORE_BUILD or config.git_folder_handling == None:
+  if config.git_folder_handling == GitFolderHandling.DELETE_BEFORE_BUILD or config.git_folder_handling == None:
     logger.info('[Flux]: removing .git folder before build')
     deleteGitFolder(build_path)
 
@@ -322,7 +323,7 @@ def do_build_(build, build_path, override_path, logger, logfile, terminate_event
     return False
 
   # Deletes .git folder after build, if is configured so.
-  if config.git_folder_handling == config.GitFolderHandling.DELETE_AFTER_BUILD:
+  if config.git_folder_handling == GitFolderHandling.DELETE_AFTER_BUILD:
     logger.info('[Flux]: removing .git folder after build')
     deleteGitFolder(build_path)
 
