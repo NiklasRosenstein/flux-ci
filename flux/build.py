@@ -24,6 +24,7 @@ that will process the queue.
 '''
 
 from flux import app, config, utils, models
+from flux.enums import GitFolderHandling
 from flux.models import select, Build
 from collections import deque
 from threading import Event, Condition, Thread
@@ -144,6 +145,8 @@ def update_queue(consumer=None):
       if not consumer.is_running(build):
         build.status = Build.Status_Stopped
 
+def deleteGitFolder(build_path):
+  shutil.rmtree(os.path.join(build_path, '.git'))
 
 def do_build(build_id, terminate_event):
   """
@@ -276,8 +279,10 @@ def do_build_(build, build_path, override_path, logger, logfile, terminate_event
     logger.info('[Flux]: build stopped')
     return False
 
-  # Delete the .git folder to save space. We don't need it anymore.
-  utils.rmtree(os.path.join(build_path, '.git'), remove_write_protection=True)
+  # Deletes .git folder before build, if is configured so.
+  if config.git_folder_handling == GitFolderHandling.DELETE_BEFORE_BUILD or config.git_folder_handling == None:
+    logger.info('[Flux]: removing .git folder before build')
+    deleteGitFolder(build_path)
 
   # Copy over overridden files if any
   if os.path.exists(override_path):
@@ -316,6 +321,11 @@ def do_build_(build, build_path, override_path, logger, logfile, terminate_event
       logger.exception(exc)
     logger.error('[Flux]: build stopped. build script terminated')
     return False
+
+  # Deletes .git folder after build, if is configured so.
+  if config.git_folder_handling == GitFolderHandling.DELETE_AFTER_BUILD:
+    logger.info('[Flux]: removing .git folder after build')
+    deleteGitFolder(build_path)
 
   logger.info('[Flux]: exit-code {}'.format(popen.returncode))
   return popen.returncode == 0

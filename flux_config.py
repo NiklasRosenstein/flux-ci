@@ -5,6 +5,7 @@ This is the Flux configuration file.
 import os
 from datetime import timedelta
 from flux.config import prepend_path
+from flux.enums import GitFolderHandling
 
 ## If your system does not provide the required Git version (>= 2.3),
 ## you can compile it by yourself and install it locally (or not install
@@ -106,3 +107,9 @@ ssh_verbose = False
 ## The time that a login token should be valid for. Specify "None" to
 ## prevent login tokens from expiring.
 login_token_duration = timedelta(hours=6)
+
+## Defines, how .git folder should be handled during build process, it uses values from GitFolderHandling enum:
+## * DELETE_BEFORE_BUILD - Native behaviour, that deletes .git folder before .flux-build runs.
+## * DELETE_AFTER_BUILD - Deletes .git folder after .flux-build successfully runs, before artifact is zipped.
+## * DISABLE_DELETE - .git folder is never deleted, it will be part of artifact ZIP.
+git_folder_handling = GitFolderHandling.DELETE_BEFORE_BUILD
