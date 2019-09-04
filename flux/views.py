@@ -249,11 +249,12 @@ def login():
   if request.method == 'POST':
     user_name = request.form['user_name']
     user_password = request.form['user_password']
-    user = User.get(name=user_name, passhash=utils.hash_pw(user_password))
-    if user:
-      token = LoginToken.create(request.remote_addr, user)
-      session['flux_login_token'] = token.token
-      return redirect(url_for('dashboard'))
+    if user_name and user_password:
+      user = User.get(name=user_name, passhash=utils.hash_pw(user_password))
+      if user:
+        token = LoginToken.create(request.remote_addr, user)
+        session['flux_login_token'] = token.token
+        return redirect(url_for('dashboard'))
     errors.append('Username or password invalid.')
   return render_template('login.html', errors=errors)
 
