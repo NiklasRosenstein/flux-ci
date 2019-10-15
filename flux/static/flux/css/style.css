@@ -866,6 +866,10 @@ a .block:hover, .block-link .block:hover {
 	min-height: 20rem;
 }
 
+.toggable {
+	display: none;
+}
+
 /* footer */
 footer {
 	background-color: #ECEFF1;

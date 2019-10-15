@@ -127,4 +127,11 @@ $(document).ready(function() {
 			}
 		}
 	});
+
+	$('[data-toggle]').click(function(event) {
+		event.preventDefault();
+		event.stopPropagation();
+		var id = $(this).attr('data-toggle');
+		$(id).toggle();
+	});
 });

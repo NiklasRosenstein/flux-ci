@@ -69,8 +69,51 @@
           <td><a href="https://gogs.io">Gogs</a></td>
           <td><code>?api=gogs</code></td>
         </tr>
+        <tr>
+          <td><img class="service-icon" src="{{ url_for('static', filename='flux/img/bare.png') }}"></td>
+          <td><a href="#" data-toggle="#bare-info">Bare repository</a></td>
+          <td><code>?api=bare</code></td>
+        </tr>
       </tbody>
     </table>
+    <div id="bare-info" class="toggable messages">
+      <a href="#" class="close">
+        <i class="fa fa-times"></i>
+      </a>
+      <div>
+        Application supports also <a href="https://git-scm.com/book/en/v1/Git-on-the-Server">bare repositories</a>,
+        these repositories supports custom <a href="https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks">hooks</a>.
+        These hooks could be used for sending webhooks, e.g. with curl.
+	<p>
+	  <strong>Example of custom webhook request:</strong>
+	</p>
+        <code>
+          <pre>{
+  "owner": "owner",
+  "name": "name",
+  "ref": "refs/tags/1.0",
+  "commit": "0000000000000000000000000000000000000000",
+  "secret": "custom-project-secret-in-plain-text"
+}</pre>
+        </code>
+	<p>
+	  <strong>Example of custom update hook:</strong>
+	</p>
+        <code>
+          <pre>#!/bin/sh
+refname="$1"
+newrev="$3"
+
+if [ "$newrev" =  "0000000000000000000000000000000000000000" ]; then
+        exit 0  
+fi
+
+curl --header "Content-Type: application/json" --request POST --data "{\"owner\": \"owner\", \"name\": \"name\", \"ref\": \"$refname\", \"commit\": \"$newrev\", \"secret\": \"custom-project-secret-in-plain-text\"}" http://localhost/flux/hook/push?api=bare > /dev/null
+
+exit 0</pre>
+        </code>
+      </div>
+    </div>
   {% endif %}
 
 {% endblock body %}
