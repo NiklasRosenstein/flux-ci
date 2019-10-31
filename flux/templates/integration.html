@@ -81,9 +81,8 @@
         <i class="fa fa-times"></i>
       </a>
       <div>
-        Application supports also <a href="https://git-scm.com/book/en/v1/Git-on-the-Server">bare repositories</a>,
-        these repositories supports custom <a href="https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks">hooks</a>.
-        These hooks could be used for sending webhooks, e.g. with curl.
+        The <code>bare</code> API is a simplified JSON payload for the purpose of using Flux CI
+        with <a href="https://git-scm.com/book/en/v1/Git-on-the-Server">bare repositories</a>.
 	<p>
 	  <strong>Example of custom webhook request:</strong>
 	</p>
@@ -105,7 +104,7 @@ refname="$1"
 newrev="$3"
 
 if [ "$newrev" =  "0000000000000000000000000000000000000000" ]; then
-        exit 0  
+        exit 0
 fi
 
 curl --header "Content-Type: application/json" --request POST --data "{\"owner\": \"owner\", \"name\": \"name\", \"ref\": \"$refname\", \"commit\": \"$newrev\", \"secret\": \"custom-project-secret-in-plain-text\"}" http://localhost/flux/hook/push?api=bare > /dev/null
