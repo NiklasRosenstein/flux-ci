@@ -286,7 +286,7 @@ def do_build_(build, build_path, override_path, logger, logfile, terminate_event
 
   # Copy over overridden files if any
   if os.path.exists(override_path):
-    dir_util.copy_tree(override_path, build_path);
+    dir_util.copy_tree(override_path, build_path)
 
   # Find the build script that we need to execute.
   script_fn = None
