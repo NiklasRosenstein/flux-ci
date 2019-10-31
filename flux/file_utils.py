@@ -1,5 +1,6 @@
 # -*- coding: utf8 -*-
 
+import io
 import os
 import shutil
 
@@ -126,7 +127,7 @@ def read_file(path):
   return ''
 
 
-def write_file(path, data):
+def write_file(path, data, encoding='utf8'):
   """
   Writes *data* into file located in *path*, only if it already exists.
   As workaround, it replaces \r symbol.
@@ -137,7 +138,7 @@ def write_file(path, data):
   """
 
   if os.path.isfile(path):
-    file = open(path, mode='w')
+    file = io.open(path, mode='w', encoding=encoding)
     file.write(data.replace('\r', ''))
     file.close()
 

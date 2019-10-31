@@ -493,7 +493,7 @@ def get_public_key():
   return None
 
 
-def generate_ssh_keypair():
+def generate_ssh_keypair(public_key_comment):
   """
   Generates new RSA ssh keypair.
 
@@ -502,8 +502,11 @@ def generate_ssh_keypair():
   """
 
   key = rsa.generate_private_key(backend=default_backend(), public_exponent=65537, key_size=4096)
-  private_key = key.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8, serialization.NoEncryption())
-  public_key = key.public_key().public_bytes(serialization.Encoding.OpenSSH, serialization.PublicFormat.OpenSSH)
+  private_key = key.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8, serialization.NoEncryption()).decode('ascii')
+  public_key = key.public_key().public_bytes(serialization.Encoding.OpenSSH, serialization.PublicFormat.OpenSSH).decode('ascii')
+
+  if public_key_comment:
+    public_key += ' ' + public_key_comment
 
   return private_key, public_key
 

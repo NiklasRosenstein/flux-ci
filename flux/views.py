@@ -310,7 +310,7 @@ def generate_keypair(path):
   utils.makedirs(utils.get_customs_path(repo))
 
   try:
-    private_key, public_key = utils.generate_ssh_keypair()
+    private_key, public_key = utils.generate_ssh_keypair(repo.name + '@FluxCI')
     private_key_path = utils.get_repo_private_key_path(repo)
     public_key_path = utils.get_repo_public_key_path(repo)
 
@@ -318,8 +318,8 @@ def generate_keypair(path):
       file_utils.create_file_path(private_key_path)
       file_utils.create_file_path(public_key_path)
 
-      file_utils.write_file(private_key_path, private_key.decode())
-      file_utils.write_file(public_key_path, public_key.decode())
+      file_utils.write_file(private_key_path, private_key)
+      file_utils.write_file(public_key_path, public_key)
 
       try:
         os.chmod(private_key_path, 0o600)
