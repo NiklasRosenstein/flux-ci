@@ -363,7 +363,10 @@ def ssh_command(url, *args, no_ptty=False, identity_file=None,
   if no_ptty:
     command.append('-T')
   if identity_file:
-    command += ['-i', identity_file]
+    command += ['-o', 'IdentitiesOnly=yes']
+    # NOTE: Workaround for windows, as the backslashes are gone at the time
+    #   Git tries to use the GIT_SSH_COMMAND.
+    command += ['-i', identity_file.replace('\\', '/')]
   if verbose:
     command.append('-v')
   if args:
@@ -490,7 +493,7 @@ def get_public_key():
   return None
 
 
-def generate_ssh_keypair():
+def generate_ssh_keypair(public_key_comment):
   """
   Generates new RSA ssh keypair.
 
@@ -499,8 +502,11 @@ def generate_ssh_keypair():
   """
 
   key = rsa.generate_private_key(backend=default_backend(), public_exponent=65537, key_size=4096)
-  private_key = key.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8, serialization.NoEncryption())
-  public_key = key.public_key().public_bytes(serialization.Encoding.OpenSSH, serialization.PublicFormat.OpenSSH)
+  private_key = key.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8, serialization.NoEncryption()).decode('ascii')
+  public_key = key.public_key().public_bytes(serialization.Encoding.OpenSSH, serialization.PublicFormat.OpenSSH).decode('ascii')
+
+  if public_key_comment:
+    public_key += ' ' + public_key_comment
 
   return private_key, public_key
 
