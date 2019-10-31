@@ -363,7 +363,10 @@ def ssh_command(url, *args, no_ptty=False, identity_file=None,
   if no_ptty:
     command.append('-T')
   if identity_file:
-    command += ['-i', identity_file]
+    command += ['-o', 'IdentitiesOnly=yes']
+    # NOTE: Workaround for windows, as the backslashes are gone at the time
+    #   Git tries to use the GIT_SSH_COMMAND.
+    command += ['-i', identity_file.replace('\\', '/')]
   if verbose:
     command.append('-v')
   if args:
