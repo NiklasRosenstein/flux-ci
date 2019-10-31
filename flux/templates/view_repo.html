@@ -54,8 +54,6 @@
 {% block body %}
   {% if user.can_manage %}
     <dl>
-      <dt>Secret</dt>
-      <dd>{{ repo.secret }}</dd>
       <dt>Clone URL</dt>
       <dd>{{ repo.clone_url }}</dd>
     </dl>
