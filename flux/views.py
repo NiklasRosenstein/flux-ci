@@ -36,6 +36,7 @@ API_GITBUCKET = 'gitbucket'
 API_BITBUCKET = 'bitbucket'
 API_BITBUCKET_CLOUD = 'bitbucket-cloud'
 API_GITLAB = 'gitlab'
+API_BARE = 'bare'
 
 @app.route('/hook/push', methods=['POST'])
 @utils.with_io_response(mimetype='text/plain')
@@ -53,12 +54,13 @@ def hook_push(logger):
   * ``bitbucket``
   * ``bitbucket-cloud``
   * ``gitlab``
+  * ``bare``
 
   If no or an invalid value is specified for this parameter, a 400
   Invalid Request response is generator. '''
 
   api = request.args.get('api')
-  if api not in (API_GOGS, API_GITHUB, API_GITEA, API_GITBUCKET, API_BITBUCKET, API_BITBUCKET_CLOUD, API_GITLAB):
+  if api not in (API_GOGS, API_GITHUB, API_GITEA, API_GITBUCKET, API_BITBUCKET, API_BITBUCKET_CLOUD, API_GITLAB, API_BARE):
     logger.error('invalid `api` URL parameter: {!r}'.format(api))
     return 400
 
@@ -152,6 +154,13 @@ def hook_push(logger):
     ref = utils.get(data, 'ref', str)
     commit = utils.get(data, 'checkout_sha', str)
     secret = request.headers.get('X-Gitlab-Token')
+    get_repo_secret = lambda r: r.secret
+  elif api == API_BARE:
+    owner = utils.get(data, 'owner', str)
+    name = utils.get(data, 'name', str)
+    ref = utils.get(data, 'ref', str)
+    commit = utils.get(data, 'commit', str)
+    secret = utils.get(data, 'secret', str)
     get_repo_secret = lambda r: r.secret
   else:
     assert False, "unreachable"
