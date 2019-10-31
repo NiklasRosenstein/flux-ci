@@ -245,7 +245,7 @@ def do_build_(build, build_path, override_path, logger, logfile, terminate_event
     is_ref_build = False
 
   # Checkout the correct build_start_point.
-  checkout_cmd = ['git', 'checkout', build_start_point]
+  checkout_cmd = ['git', 'checkout', '-q', build_start_point]
   res = utils.run(checkout_cmd, logger, cwd=build_path)
   if res != 0:
     logger.error('[Flux]: failed to checkout {!r}'.format(build_start_point))
