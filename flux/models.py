@@ -129,7 +129,7 @@ class Repository(db.Entity):
 
   id = orm.PrimaryKey(int)
   name = orm.Required(str)
-  secret = orm.Required(str)
+  secret = orm.Optional(str)
   clone_url = orm.Required(str)
   build_count = orm.Required(int, default=0)
   builds = orm.Set('Build')
