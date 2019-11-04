@@ -3,6 +3,8 @@ description: Flux-CI is your own lightweight CI server.
 license: MIT
 url: 'https://github.com/NiklasRosenstein/flux-ci'
 
+main_python_file: src/flux/__init__.py
+
 requirements:
   - Flask>=0.10.1
   - pony>=0.7.3
