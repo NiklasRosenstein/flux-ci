@@ -1,3 +1,4 @@
+include LICENSE.txt
 include README.md
-recursive-include flux/server/static *
-recursive-include flux/server/templates *
+recursive-include src/flux/server/static *
+recursive-include src/flux/server/templates *

@@ -17,5 +17,5 @@ requirements:
   - requests
 
 package_data:
-  - flux/server/static/**
-  - flux/server/templates/**
+  - src/flux/server/static/**
+  - src/flux/server/templates/**
