@@ -6,6 +6,8 @@ import os
 from datetime import timedelta
 from flux.config import prepend_path
 from flux.enums import GitFolderHandling
+from flux.core.build_manager.host import HostBuildManager
+from flux.core.scheduler.naive import NaiveScheduler
 
 ## If your system does not provide the required Git version (>= 2.3),
 ## you can compile it by yourself and install it locally (or not install
@@ -35,7 +37,8 @@ app_title = 'Flux CI'
 
 ## The application URL that is required in various places. Adjust
 ## if it differs from the HOST:PORT combination.
-app_url = os.environ.get('FLUX_APP_URL', 'http://{}:{}'.format(host, port))
+internal_app_url = os.environ.get('FLUX_APP_URL', 'http://{}:{}'.format(host, port))
+app_url = internal_app_url
 
 ## The server name. This is important for redirects, especially when
 ## behind a proxy eg. via NGinx. Make sure to set the 'Host' header
@@ -113,3 +116,6 @@ login_token_duration = timedelta(hours=6)
 ## * DELETE_AFTER_BUILD - Deletes .git folder after .flux-build successfully runs, before artifact is zipped.
 ## * DISABLE_DELETE - .git folder is never deleted, it will be part of artifact ZIP.
 git_folder_handling = GitFolderHandling.DELETE_BEFORE_BUILD
+
+build_manager = HostBuildManager()
+scheduler = NaiveScheduler()

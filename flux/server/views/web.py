@@ -18,10 +18,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from flux import app, config, file_utils, models, utils
-from flux.build import enqueue, terminate_build
-from flux.models import User, LoginToken, Repository, Build, get_target_for, select, desc
-from flux.utils import secure_filename
+from .. import app
+from ... import config, file_utils, models, utils
+from ...clients.local import LocalBuildClient
+from ...core.build_manager import BuildNotRunningError
+from ...models import User, LoginToken, Repository, Build, get_target_for, select, desc
+from ...utils import secure_filename
+
 from flask import request, session, redirect, url_for, render_template, abort
 from datetime import datetime
 
@@ -208,7 +211,6 @@ def hook_push(logger):
   repo.build_count += 1
 
   models.commit()
-  enqueue(build)
   logger.info('Build #{} for repository {} queued'.format(build.num, repo.name))
   logger.info(utils.strip_url_path(config.app_url) + build.url())
   return 200
@@ -384,12 +386,8 @@ def view_build(path):
   restart = request.args.get('restart', '').strip().lower() == 'true'
   if restart:
     if build.status != Build.Status_Building:
-      build.delete_build()
-      build.status = Build.Status_Queued
-      build.date_started = None
-      build.date_finished = None
+      build.transition(Build.Status_Queued)
       models.commit()
-      enqueue(build)
     return redirect(build.url())
 
   stop = request.args.get('stop', '').strip().lower() == 'true'
@@ -397,7 +395,12 @@ def view_build(path):
     if build.status == Build.Status_Queued:
       build.status = Build.Status_Stopped
     elif build.status == Build.Status_Building:
-      terminate_build(build)
+      try:
+        config.build_manager.cancel_build(build.id, LocalBuildClient())
+      except BuildNotRunningError:
+        # Maybe the server was stopped before the build finished?
+        build.transition(Build.Status_Stopped)
+
     return redirect(build.url())
 
   return render_template('view_build.html', user=request.user, build=build)
@@ -602,7 +605,6 @@ def build():
   repo.build_count += 1
 
   models.commit()
-  enqueue(build)
   return redirect(repo.url())
 
 @app.route('/ping-repo', methods=['POST'])

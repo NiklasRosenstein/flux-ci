@@ -346,7 +346,7 @@ def run(command, logger, cwd=None, env=None, shell=False, return_stdout=False,
   return popen.returncode
 
 
-def ssh_command(url, *args, no_ptty=False, identity_file=None,
+def ssh_command(url=None, *args, no_ptty=False, identity_file=None,
     verbose=None, options=None):
   ''' Helper function to generate an SSH command. If not options are
   specified, the default option ``BatchMode=yes`` will be set. '''
@@ -354,7 +354,9 @@ def ssh_command(url, *args, no_ptty=False, identity_file=None,
   if options is None:
     options = {'BatchMode': 'yes'}
   if verbose is None:
-    verbose = config.ssh_verbose
+    # TODO (@NiklasRosenstein): When this is called from the host_runner,
+    #   the config is not loaded and will always be False.
+    verbose = getattr(config, 'ssh_verbose', False)
 
   command = ['ssh']
   if url is not None:

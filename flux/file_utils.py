@@ -3,6 +3,7 @@
 import io
 import os
 import shutil
+import stat
 
 
 def split_url_path(path):
@@ -157,7 +158,7 @@ def rename(path, new_path):
     os.rename(path, new_path)
 
 
-def delete(path):
+def delete(path, force=False):
   """
   Performs delete operation on file or folder stored on *path*.
   If on *path* is file, it performs os.remove().
@@ -167,10 +168,19 @@ def delete(path):
   path (str): The absolute path of file or folder to be deleted.
   """
 
+  onerror = None
+  if force:
+    def onerror(func, path, exc_info):
+      if not os.access(path, os.W_OK):
+          os.chmod(path, stat.S_IWUSR)
+          func(path)
+      else:
+          raise
+
   if os.path.isfile(path):
     os.remove(path)
   elif os.path.isdir(path):
-    shutil.rmtree(path)
+    shutil.rmtree(path, onerror=onerror)
 
 
 def human_readable_size(filesize = 0):

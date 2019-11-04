@@ -9,15 +9,18 @@ as PonyORM would.
 
 from flask import url_for
 from flux import app, config, utils
+from . import file_utils
+from .core.build_manager import BuildData
 
 import datetime
+import errno
 import hashlib
 import os
 import pony.orm as orm
 import shutil
 import uuid
 
-db = orm.Database(**config.database)
+db = orm.Database()
 session = orm.db_session
 commit = orm.commit
 rollback = orm.rollback
@@ -190,7 +193,7 @@ class Build(db.Entity):
   commit_sha = orm.Required(str)
   num = orm.Required(int)
   status = orm.Required(str)  # One of the Status strings
-  date_queued = orm.Required(datetime.datetime, default=datetime.datetime.now)
+  date_queued = orm.Required(datetime.datetime, default=datetime.datetime.utcnow)
   date_started = orm.Optional(datetime.datetime)
   date_finished = orm.Optional(datetime.datetime)
 
@@ -246,13 +249,58 @@ class Build(db.Entity):
     if self.status == self.Status_Building:
       raise self.CanNotDelete('can not delete build in progress')
     try:
+      file_utils.delete(self.path(), force=True)
+    except OSError as exc:
+      if exc.errno != errno.ENOENT:
+        app.logger.exception(exc)
+    try:
       os.remove(self.path(self.Data_Artifact))
     except OSError as exc:
-      app.logger.exception(exc)
+      if exc.errno != errno.ENOENT:
+        app.logger.exception(exc)
     try:
       os.remove(self.path(self.Data_Log))
     except OSError as exc:
-      app.logger.exception(exc)
+      if exc.errno != errno.ENOENT:
+        app.logger.exception(exc)
+
+  def get_build_data(self):  # type: () -> BuildData
+    if self.repo and os.path.isfile(utils.get_repo_private_key_path(self.repo)):
+      identity_file = utils.get_repo_private_key_path(self.repo)
+    else:
+      identity_file = config.ssh_identity_file
+    return BuildData(
+      identity_file,
+      self.repo.id,
+      self.repo.name,
+      self.repo.clone_url,
+      self.id,
+      self.ref,
+      self.commit_sha,
+      config.internal_app_url + '/api/internal',
+      'FOOBAR') # TODO (@NiklasRosenstein)
+
+  def transition(self, status):  # type: (str)
+    if status not in self.Status:
+      raise ValueError('invalid status: {!r}'.format(status))
+    if self.status == self.Status_Queued:
+      if status == self.Status_Building:
+        self.date_started = datetime.datetime.utcnow()
+      else:
+        self.date_finished = datetime.datetime.utcnow()
+    elif self.status == self.Status_Building:
+      if status == self.Status_Queued:
+        raise ValueError('cannot transition from building to queued')
+      self.date_finished = datetime.datetime.utcnow()
+    else:
+      if status == self.Status_Queued:
+        self.delete_build()
+        self.date_started = None
+        self.date_finished = None
+      else:
+        raise ValueError('cannot transition from {} to {}'.format(
+          self.status, status))
+    self.status = status
 
   # db.Entity Overrides
 
@@ -284,6 +332,3 @@ def get_target_for(path):
     except ValueError: return None
     return Build.get(repo=repo, num=num)
   return repo
-
-
-db.generate_mapping(create_tables=True)

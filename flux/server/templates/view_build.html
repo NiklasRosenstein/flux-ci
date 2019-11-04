@@ -2,8 +2,8 @@
 {% from "macros.html" import build_icon, build_ref, fmtdate %}
 {% set page_title = build.repo.name + " #" + build.num|string %}
 {% block head %}
-  {% if build.status == build.Status_Building %}
-    <meta http-equiv="refresh" content="5" />
+  {% if build.status == build.Status_Building or build.status == build.Status_Queued %}
+  <meta http-equiv="refresh" content="5" />
   {% endif %}
 {% endblock head %}
 

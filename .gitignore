@@ -13,3 +13,4 @@ venv/
 Pipfile
 Pipfile.lock
 *.geany
+.pytest_cache

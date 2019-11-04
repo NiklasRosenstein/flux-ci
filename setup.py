@@ -32,10 +32,5 @@ setuptools.setup(
   url = 'https://github.com/NiklasRosenstein/flux-ci',
   install_requires = requirements,
   packages = setuptools.find_packages(),
-  package_data = {
-    'flux': package_files('flux/static') + package_files('flux/templates')
-  },
-  entry_points = dict(
-    console_scripts = ['flux-ci=flux.main:_entry_point']
-  )
+  include_package_data = True,
 )

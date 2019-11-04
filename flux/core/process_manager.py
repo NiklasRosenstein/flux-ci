@@ -19,8 +19,11 @@
 # THE SOFTWARE.
 
 from functools import partial
+from nr.types.interface import Interface
+
 import collections
 import heapq
+import json
 import logging
 import os
 import subprocess
@@ -28,8 +31,7 @@ import time
 import threading
 
 
-
-class ProcessEventSink(object):
+class ProcessEventSink(Interface):
 
   def process_finished(self, process_id, process):
     pass
@@ -39,6 +41,14 @@ class ProcessConfiguration(object):
 
   def __init__(self, command, stdout=None, stderr=None, stdin=None,
                cwd=None, env=None, inherit_environment=True):
+    if stdin == 'pipe':
+      stdin = subprocess.PIPE
+    if stdout == 'pipe':
+      stdout = subprocess.PIPE
+    if stderr == 'stdout':
+      stderr = subprocess.STDOUT
+    elif stderr == 'pipe':
+      stderr = subprocess.PIPE
     self.command = command
     self.stdout = stdout
     self.stderr = stderr
@@ -92,13 +102,18 @@ class ProcessManager(object):
     self._thread.daemon = True
     self._thread.start()
 
-  def stop(self, wait=True):
-    """ Stops the polling thread. """
+  def stop(self, wait=True, terminate_processes=False):
+    """ Stops the polling thread. If *terminate_processes* is set to True,
+    all currently running processes are terminated before waiting for the
+    background thread to finish. """
 
     with self._lock:
       if not self.started:
         raise RuntimeError('ProcessManager not started.')
       self._stop_event.set()
+      if terminate_processes:
+        for process in self._processes.values():
+          process.terminate()
     if wait:
       self._thread.join()
 
@@ -125,6 +140,21 @@ class ProcessManager(object):
       process = self._processes[process_id] = process_config.create()
       self._requeue(process_id, poll_interval)
       self._logger.info('Process {!r} started.'.format(process_id))
+
+    return process
+
+  def terminate_process(self, process_id):
+    # type: (str)
+    """ Sends a terminate signal to the process with the specified
+    *process_id*. If the process does not exist in the process manager, a
+    #ValueError is raised. """
+
+    with self._lock:
+      try:
+        process = self._processes[process_id]
+      except KeyError:
+        raise ValueError(process_id)
+      process.terminate()
 
   def _run(self, poll_threshold, wait_on_stop):
     while True:
@@ -170,7 +200,8 @@ class ProcessManager(object):
           item.process_id, code))
         self.event_sink.process_finished(item.process_id, process)
       except:
-        traceback.print_exc()
+        self._logger.exception('Error {}.process_finished()'.format(
+          type(self.event_sink).__name__))
 
   def _requeue(self, process_id, poll_interval, poll_next=None):
     next_poll_time = self.time_provider() + (poll_next or poll_interval)
