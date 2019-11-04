@@ -19,7 +19,7 @@
 # THE SOFTWARE.
 
 __author__ = 'Niklas Rosenstein <rosensteinniklas@gmail.com>'
-__version__ = '1.1.0'
+__version__ = '1.2.0.dev0'
 
 import flask
 import os
